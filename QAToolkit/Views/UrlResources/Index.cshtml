@@ -1,0 +1,144 @@
+@model IEnumerable<QAToolkit.Models.UrlResource>
+@{
+    ViewData["Title"] = "URL Manager";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-link-45deg"></i> URL Manager</h2>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add URL
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in ViewBag.Categories as List<string?>)
+                    {
+                        <option value="@cat" selected="@(ViewBag.SelectedCategory == cat)">@cat</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Project</label>
+                <select name="project" class="form-select">
+                    <option value="">All Projects</option>
+                    @foreach (var proj in ViewBag.Projects as List<string?>)
+                    {
+                        <option value="@proj" selected="@(ViewBag.SelectedProject == proj)">@proj</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary me-2">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                <a href="/UrlResources" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- URL List -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table mb-0 google-sheet-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px; text-align: center; vertical-align: middle;"></th>
+                    <th style="width: 18%; text-align: center; vertical-align: middle;">Name</th>
+                    <th style="width: 35%; text-align: center; vertical-align: middle;">URL</th>
+                    <th style="width: 12%; text-align: center; vertical-align: middle;">Category</th>
+                    <th style="width: 12%; text-align: center; vertical-align: middle;">Environment</th>
+                    <th style="width: 13%; text-align: center; vertical-align: middle;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="text-center" style="vertical-align: middle;">
+                            <form asp-action="ToggleFavorite" asp-route-id="@item.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-link p-0">
+                                    @if (item.IsFavorite)
+                                    {
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-star text-muted"></i>
+                                    }
+                                </button>
+                            </form>
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            <div>@item.Name</div>
+                            @if (!string.IsNullOrEmpty(item.Project))
+                            {
+                                <small class="text-muted">@item.Project</small>
+                            }
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            <div class="d-inline-flex align-items-center justify-content-center">
+                                <a href="@item.Url" target="_blank" class="text-decoration-none text-truncate">
+                                    @item.Url
+                                </a>
+                                <button class="btn btn-sm btn-link p-0" onclick="copyToClipboard('@item.Url', this)" title="Copy URL" style="margin-left: 2px;">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            @if (!string.IsNullOrEmpty(item.Category))
+                            {
+                                <span class="badge bg-secondary">@item.Category</span>
+                            }
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            @if (!string.IsNullOrEmpty(item.Environment))
+                            {
+                                var envClass = item.Environment?.ToLower() switch
+                                {
+                                    "dev" => "badge-env-dev",
+                                    "live" => "badge-env-prod",
+                                    "alpha" => "badge-env-qa",
+                                    "rc" => "badge-env-staging",
+                                    _ => "bg-secondary"
+                                };
+                                <span class="badge @envClass">@item.Environment</span>
+                            }
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="@item.Url" target="_blank" class="btn btn-sm btn-outline-primary" title="Open">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this URL?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-link-45deg fs-1"></i>
+            <p class="mt-2">No URLs found. <a asp-action="Create">Add your first URL</a></p>
+        </div>
+    }
+</div>

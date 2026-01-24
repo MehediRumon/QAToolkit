@@ -1,0 +1,75 @@
+@model QAToolkit.Models.TestNote
+@{
+    ViewData["Title"] = "Add Test Note";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-plus-lg"></i> Add Test Note</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g., Login button not working on mobile" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea asp-for="Description" class="form-control" rows="6" placeholder="Describe the issue, observations, or test details..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Project" class="form-label">Project</label>
+                            <select asp-for="Project" class="form-select">
+                                <option value="">Select</option>
+                                <option>UMS</option>
+                                <option>Student Portal</option>
+                                <option>Teacher Portal</option>
+                                <option>Scheduler</option>
+                                <option>OM</option>
+                                <option>API</option>
+                                <option>App</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Server" class="form-label">Server</label>
+                            <input asp-for="Server" class="form-control" placeholder="e.g., server.example.com" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label">Status</label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="">Select</option>
+                            <option>Posted</option>
+                            <option>Not Posted</option>
+                            <option>Fixed</option>
+                            <option>Not Fixed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Remarks" class="form-label">Remarks</label>
+                        <textarea asp-for="Remarks" class="form-control" rows="3" placeholder="Additional notes or comments..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ImageVideoUrl" class="form-label">Image/Video URL</label>
+                        <input asp-for="ImageVideoUrl" class="form-control" placeholder="e.g., https://example.com/image.png or video link" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Save Note</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

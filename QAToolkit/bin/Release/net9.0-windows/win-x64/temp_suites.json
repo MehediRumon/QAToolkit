@@ -1,0 +1,5002 @@
+﻿[
+    {
+        "name":  "All",
+        "description":  "Run all available tests",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ActiveTeacherList",
+        "description":  "ActiveTeacherList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddConversationType",
+        "description":  "AddConversationType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddCourse",
+        "description":  "AddCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddCourseSubject",
+        "description":  "AddCourseSubject",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddFeedback",
+        "description":  "AddFeedback",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddMotherCourse",
+        "description":  "AddMotherCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddNewMember",
+        "description":  "AddNewMember",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddSurveyQuestion",
+        "description":  "AddSurveyQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddUser",
+        "description":  "AddUser",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AddWrittenScriptPermission",
+        "description":  "AddWrittenScriptPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminDashboard",
+        "description":  "AdminDashboard",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminManagePermission",
+        "description":  "AdminManagePermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminNewQuestionAnswer",
+        "description":  "AdminNewQuestionAnswer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminPermissionBulkPermission",
+        "description":  "AdminPermissionBulkPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminReview",
+        "description":  "AdminReview",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminReviewQuestionAnswer",
+        "description":  "AdminReviewQuestionAnswer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminReviewRequest",
+        "description":  "AdminReviewRequest",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdminwiseReport",
+        "description":  "AdminwiseReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AdmissionSummaryReport",
+        "description":  "AdmissionSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AnalysisReport",
+        "description":  "AnalysisReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignCampusToZone",
+        "description":  "AssignCampusToZone",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignConversationTypeComments",
+        "description":  "AssignConversationTypeComments",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignDynamicOptionToSmsType",
+        "description":  "AssignDynamicOptionToSmsType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignItemLog",
+        "description":  "AssignItemLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignProgram",
+        "description":  "AssignProgram",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignSpecification",
+        "description":  "AssignSpecification",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignSupplierToBranch",
+        "description":  "AssignSupplierToBranch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignSupplierToItem",
+        "description":  "AssignSupplierToItem",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignSurveyQuestion",
+        "description":  "AssignSurveyQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignTeacherToUser",
+        "description":  "AssignTeacherToUser",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AssignTeamMemberToUser",
+        "description":  "AssignTeamMemberToUser",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AttachedPhysicalBranchSettings",
+        "description":  "AttachedPhysicalBranchSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AttendanceAdjustment",
+        "description":  "AttendanceAdjustment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AttendanceAdjustmentByHr",
+        "description":  "AttendanceAdjustmentByHr",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AttendanceAdjustmentByMentor",
+        "description":  "AttendanceAdjustmentByMentor",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AttendanceSummaryReport",
+        "description":  "AttendanceSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BankDeposit",
+        "description":  "BankDeposit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchAssign",
+        "description":  "BatchAssign",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchAssignShift",
+        "description":  "BatchAssignShift",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchEntry",
+        "description":  "BatchEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchEntryPrint",
+        "description":  "BatchEntryPrint",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchVerification",
+        "description":  "BatchVerification",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchWiseAdmissionReport",
+        "description":  "BatchWiseAdmissionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BatchWiseMentoring",
+        "description":  "BatchWiseMentoring",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BlankSaqQuestion",
+        "description":  "BlankSaqQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BlockAllowanceByHr",
+        "description":  "BlockAllowanceByHr",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BlockAllowanceByMentor",
+        "description":  "BlockAllowanceByMentor",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BoardInfoSynchronizer",
+        "description":  "BoardInfoSynchronizer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BranchwiseAchievementReport",
+        "description":  "BranchwiseAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BranchwiseMentorAchievementReport",
+        "description":  "BranchwiseMentorAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BranchWiseTransactionReport",
+        "description":  "BranchWiseTransactionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BranchWiseTransactionsSettlement",
+        "description":  "BranchWiseTransactionsSettlement",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BranchWiseTransactionsSettlementSecondStep",
+        "description":  "BranchWiseTransactionsSettlementSecondStep",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BreakdownWiseReport",
+        "description":  "BreakdownWiseReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BulkNewAdmission",
+        "description":  "BulkNewAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BulkPermission",
+        "description":  "BulkPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BulkSettings",
+        "description":  "BulkSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BulkStudentReset",
+        "description":  "BulkStudentReset",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CancelCourse",
+        "description":  "CancelCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CancelSubject",
+        "description":  "CancelSubject",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CancelSubjectCourse",
+        "description":  "CancelSubjectCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationBoardInfoSync",
+        "description":  "CelebrationBoardInfoSync",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationDataSyncWithUms",
+        "description":  "CelebrationDataSyncWithUms",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationGiftIssue",
+        "description":  "CelebrationGiftIssue",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationRegistration",
+        "description":  "CelebrationRegistration",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationReport",
+        "description":  "CelebrationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationStudentList",
+        "description":  "CelebrationStudentList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationSummaryReport",
+        "description":  "CelebrationSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ChatReport",
+        "description":  "ChatReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ChildrenAllowance",
+        "description":  "ChildrenAllowance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassAttendanceEntry",
+        "description":  "ClassAttendanceEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassAttendanceReport",
+        "description":  "ClassAttendanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassAttendanceSummary",
+        "description":  "ClassAttendanceSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassCashPayment",
+        "description":  "ClassCashPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassEntryMultipleTeachers",
+        "description":  "ClassEntryMultipleTeachers",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassEntrySingleTeacher",
+        "description":  "ClassEntrySingleTeacher",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassMFSAgentPayment",
+        "description":  "ClassMFSAgentPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassMFSAgentPaymentFinalize",
+        "description":  "ClassMFSAgentPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassMFSAgentPaymentReport",
+        "description":  "ClassMFSAgentPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassMFSAgentRevert",
+        "description":  "ClassMFSAgentRevert",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassMFSAgentRevertFinalize",
+        "description":  "ClassMFSAgentRevertFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassOTCPayment",
+        "description":  "ClassOTCPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassOTCPaymentFinalize",
+        "description":  "ClassOTCPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassOTCRevert",
+        "description":  "ClassOTCRevert",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassOTCRevertFinalize",
+        "description":  "ClassOTCRevertFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassOtherThanCashPaymentReport",
+        "description":  "ClassOtherThanCashPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassPaymentReportCash",
+        "description":  "ClassPaymentReportCash",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassPaymentSettings",
+        "description":  "ClassPaymentSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassProgress",
+        "description":  "ClassProgress",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassSummaryReport",
+        "description":  "ClassSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearClassAttendance",
+        "description":  "ClearClassAttendance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearExamAttendance",
+        "description":  "ClearExamAttendance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearMarksEntry",
+        "description":  "ClearMarksEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearSaqQuestion",
+        "description":  "ClearSaqQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearSetGenerate",
+        "description":  "ClearSetGenerate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearSetUniqueMcq",
+        "description":  "ClearSetUniqueMcq",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClearUserPermission",
+        "description":  "ClearUserPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CollectionSummaryReport",
+        "description":  "CollectionSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CollectionVDueReport",
+        "description":  "CollectionVDueReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CommunityDefaultGroupSettings",
+        "description":  "CommunityDefaultGroupSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CommunityGroupManage",
+        "description":  "CommunityGroupManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CommunityMessage",
+        "description":  "CommunityMessage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ComplementaryNewAdmission",
+        "description":  "ComplementaryNewAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ComplementaryOldAdmission",
+        "description":  "ComplementaryOldAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentAlignmentPermission",
+        "description":  "ContentAlignmentPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentAlignmentReport",
+        "description":  "ContentAlignmentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentAlignmentSMS",
+        "description":  "ContentAlignmentSMS",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentAlignmentSmsTemplate",
+        "description":  "ContentAlignmentSmsTemplate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentAlignmentUploadSummary",
+        "description":  "ContentAlignmentUploadSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentCheckIndex",
+        "description":  "ContentCheckIndex",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentModeration",
+        "description":  "ContentModeration",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentReview",
+        "description":  "ContentReview",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContentViewSummary",
+        "description":  "ContentViewSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ContinueAdminReview",
+        "description":  "ContinueAdminReview",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CopyImage",
+        "description":  "CopyImage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CopyQuestion",
+        "description":  "CopyQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CourseMapping",
+        "description":  "CourseMapping",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CourseProgressReportClass",
+        "description":  "CourseProgressReportClass",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateClassRoutine",
+        "description":  "CreateClassRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateConversation",
+        "description":  "CreateConversation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateExamRoutine",
+        "description":  "CreateExamRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateInBranchExam",
+        "description":  "CreateInBranchExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateLiveExam",
+        "description":  "CreateLiveExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateMaterials",
+        "description":  "CreateMaterials",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateMultipleBatch",
+        "description":  "CreateMultipleBatch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateOnlineTemplate",
+        "description":  "CreateOnlineTemplate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreatePracticeExam",
+        "description":  "CreatePracticeExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateQnA2Course",
+        "description":  "CreateQnA2Course",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CreateSingleBatch",
+        "description":  "CreateSingleBatch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CrmDashboard",
+        "description":  "CrmDashboard",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CrmDefaultSettings",
+        "description":  "CrmDefaultSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CrmReport",
+        "description":  "CrmReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CurrentStockReport",
+        "description":  "CurrentStockReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DailySupportAllowance",
+        "description":  "DailySupportAllowance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DailyTransactionReceive",
+        "description":  "DailyTransactionReceive",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DataSet",
+        "description":  "DataSet",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DataSource",
+        "description":  "DataSource",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DayOffAdjustment",
+        "description":  "DayOffAdjustment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DbOperationProcessIndex",
+        "description":  "DbOperationProcessIndex",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DeleteConversation",
+        "description":  "DeleteConversation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DeleteConversationType",
+        "description":  "DeleteConversationType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DeleteMaterials",
+        "description":  "DeleteMaterials",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DepartmentSettings",
+        "description":  "DepartmentSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DesignationSettings",
+        "description":  "DesignationSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DirectGoodsIssue",
+        "description":  "DirectGoodsIssue",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DirectGoodsReceive",
+        "description":  "DirectGoodsReceive",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DirectWorkOrder",
+        "description":  "DirectWorkOrder",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DistributionList",
+        "description":  "DistributionList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DistributionLog",
+        "description":  "DistributionLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DistributionReport",
+        "description":  "DistributionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DownloadSampleMcqUniqueSetImport",
+        "description":  "DownloadSampleMcqUniqueSetImport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DownloadWordWithPrintCode",
+        "description":  "DownloadWordWithPrintCode",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DueList",
+        "description":  "DueList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuePayment",
+        "description":  "DuePayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DueSummaryReport",
+        "description":  "DueSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicatePrintReport",
+        "description":  "DuplicatePrintReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicateQuestion",
+        "description":  "DuplicateQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicateQuestionAnalysisWithQuestionAndURL",
+        "description":  "DuplicateQuestionAnalysisWithQuestionAndURL",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicateQuestionAnalysisWithThreadExternalId",
+        "description":  "DuplicateQuestionAnalysisWithThreadExternalId",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicateQuestionGroupAnalysis",
+        "description":  "DuplicateQuestionGroupAnalysis",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicateQuestionReport",
+        "description":  "DuplicateQuestionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EditConversation",
+        "description":  "EditConversation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EditConversationType",
+        "description":  "EditConversationType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EditIndividualExam",
+        "description":  "EditIndividualExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EditMemberInformation",
+        "description":  "EditMemberInformation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EmployeeBenefitsManage",
+        "description":  "EmployeeBenefitsManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EvaluationEntry_CreateEditEntry",
+        "description":  "EvaluationEntry_CreateEditEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamAttendanceEntry",
+        "description":  "ExamAttendanceEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamAttendanceReport",
+        "description":  "ExamAttendanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamEvaluationReport",
+        "description":  "ExamEvaluationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamInBranchWithRoutine",
+        "description":  "ExamInBranchWithRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExaminerWiseReport",
+        "description":  "ExaminerWiseReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamList",
+        "description":  "ExamList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamLiveMcqWithRoutine",
+        "description":  "ExamLiveMcqWithRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExamProgress",
+        "description":  "ExamProgress",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ExtraDayAllowanceSetting",
+        "description":  "ExtraDayAllowanceSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "FacebookGroupJoiningReport",
+        "description":  "FacebookGroupJoiningReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "FestivalBonus",
+        "description":  "FestivalBonus",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ForwardedQuestionForExpertTeacher",
+        "description":  "ForwardedQuestionForExpertTeacher",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "FullDiscountNewAdmission",
+        "description":  "FullDiscountNewAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "FullPaymentNewAdmission",
+        "description":  "FullPaymentNewAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GeneralBlockReport",
+        "description":  "GeneralBlockReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GeneralBlockReportLog",
+        "description":  "GeneralBlockReportLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GeneralSettings",
+        "description":  "GeneralSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GenerateIdCard",
+        "description":  "GenerateIdCard",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GenerateMeritList",
+        "description":  "GenerateMeritList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GeneratePrintCode",
+        "description":  "GeneratePrintCode",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GoodsIssueReport",
+        "description":  "GoodsIssueReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GoodsReport",
+        "description":  "GoodsReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GoodsReturn",
+        "description":  "GoodsReturn",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GoodsReturnReport",
+        "description":  "GoodsReturnReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GoodsTransfer",
+        "description":  "GoodsTransfer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "GoodsTransferReport",
+        "description":  "GoodsTransferReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "HolidaySetting",
+        "description":  "HolidaySetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "HrDailyAttendanceReport",
+        "description":  "HrDailyAttendanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "HrDayOffAdjustment",
+        "description":  "HrDayOffAdjustment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "HrHolidayWorkApplication",
+        "description":  "HrHolidayWorkApplication",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "HrHolidayWorkApprovalNew",
+        "description":  "HrHolidayWorkApprovalNew",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "HrLeaveReport",
+        "description":  "HrLeaveReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IdCardDistribution",
+        "description":  "IdCardDistribution",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ImageDownload",
+        "description":  "ImageDownload",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ImageStatus",
+        "description":  "ImageStatus",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ImportTransaction",
+        "description":  "ImportTransaction",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ImportWrittenQuestion",
+        "description":  "ImportWrittenQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqCombined",
+        "description":  "InBranchMcqCombined",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqCombinedSaqMultiple",
+        "description":  "InBranchMcqCombinedSaqMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqCombinedSaqSingle",
+        "description":  "InBranchMcqCombinedSaqSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqMultiple",
+        "description":  "InBranchMcqMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqSaqMultiple",
+        "description":  "InBranchMcqSaqMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqSaqSingle",
+        "description":  "InBranchMcqSaqSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqSingle",
+        "description":  "InBranchMcqSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchMcqUniqueSetImport",
+        "description":  "InBranchMcqUniqueSetImport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchSaqMultiple",
+        "description":  "InBranchSaqMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchSaqSingle",
+        "description":  "InBranchSaqSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InBranchTemplatedWrittenUniqueSetImport",
+        "description":  "InBranchTemplatedWrittenUniqueSetImport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IncentiveCashPayment",
+        "description":  "IncentiveCashPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IncentiveCashPaymentReport",
+        "description":  "IncentiveCashPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IncentiveOTCPaymentFinalizeReady",
+        "description":  "IncentiveOTCPaymentFinalizeReady",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IncentiveOTCPaymentPreparation",
+        "description":  "IncentiveOTCPaymentPreparation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IncentiveOTCPaymentReport",
+        "description":  "IncentiveOTCPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualAttendanceDelete",
+        "description":  "IndividualAttendanceDelete",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualAttendanceReport",
+        "description":  "IndividualAttendanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualBlockLogReport",
+        "description":  "IndividualBlockLogReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualBlockReport",
+        "description":  "IndividualBlockReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualChecking",
+        "description":  "IndividualChecking",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualClassReport",
+        "description":  "IndividualClassReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualIdCard",
+        "description":  "IndividualIdCard",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualLeaveSetting",
+        "description":  "IndividualLeaveSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualPerformanceReport",
+        "description":  "IndividualPerformanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualPerformanceWithoutServiceBlock",
+        "description":  "IndividualPerformanceWithoutServiceBlock",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualReport",
+        "description":  "IndividualReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualReturn",
+        "description":  "IndividualReturn",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualSettings",
+        "description":  "IndividualSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualStudentwiseReport",
+        "description":  "IndividualStudentwiseReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualSummaryReport",
+        "description":  "IndividualSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualSurveyReport",
+        "description":  "IndividualSurveyReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "IndividualVerification",
+        "description":  "IndividualVerification",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InformationEditLog",
+        "description":  "InformationEditLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InformationSearch",
+        "description":  "InformationSearch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InsideQuestionStudentUploadedScriptAnalysis",
+        "description":  "InsideQuestionStudentUploadedScriptAnalysis",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "InteractiveClass",
+        "description":  "InteractiveClass",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ItemAssisgnLog",
+        "description":  "ItemAssisgnLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ItemOpeningBalance",
+        "description":  "ItemOpeningBalance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LeaveApplication",
+        "description":  "LeaveApplication",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LeaveApplicationHR",
+        "description":  "LeaveApplicationHR",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LeaveApplicationMentor",
+        "description":  "LeaveApplicationMentor",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqAndOnlineWrMultiple",
+        "description":  "LiveMcqAndOnlineWrMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqAndOnlineWrSingle",
+        "description":  "LiveMcqAndOnlineWrSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqCombined",
+        "description":  "LiveMcqCombined",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqCombinedAndOnlineWrMultiPart",
+        "description":  "LiveMcqCombinedAndOnlineWrMultiPart",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqCombinedAndOnlineWrMultiple",
+        "description":  "LiveMcqCombinedAndOnlineWrMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqCombinedAndOnlineWrSingle",
+        "description":  "LiveMcqCombinedAndOnlineWrSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqMultiple",
+        "description":  "LiveMcqMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqSingleAndOnlineWrMultiPart",
+        "description":  "LiveMcqSingleAndOnlineWrMultiPart",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LiveMcqSingleSubject",
+        "description":  "LiveMcqSingleSubject",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LoginAcitivityLog",
+        "description":  "LoginAcitivityLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LoginTest",
+        "description":  "LoginTest",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "LogoutTest",
+        "description":  "LogoutTest",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MakeSurvey",
+        "description":  "MakeSurvey",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageAdmissionTarget",
+        "description":  "ManageAdmissionTarget",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageAnswer",
+        "description":  "ManageAnswer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageAssignItem",
+        "description":  "ManageAssignItem",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageBank",
+        "description":  "ManageBank",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageBankBranch",
+        "description":  "ManageBankBranch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageCampusIndex",
+        "description":  "ManageCampusIndex",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageCelebrationProgram",
+        "description":  "ManageCelebrationProgram",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageChapter",
+        "description":  "ManageChapter",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageClassAttendance",
+        "description":  "ManageClassAttendance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageClassEntry",
+        "description":  "ManageClassEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageClassProgress",
+        "description":  "ManageClassProgress",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageClassRoutine",
+        "description":  "ManageClassRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageCommunityBlock",
+        "description":  "ManageCommunityBlock",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageContentAlignmentUpload",
+        "description":  "ManageContentAlignmentUpload",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageCourse",
+        "description":  "ManageCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageDiscountPreviousStudent",
+        "description":  "ManageDiscountPreviousStudent",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageExam",
+        "description":  "ManageExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageExamAttendance",
+        "description":  "ManageExamAttendance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageExamProgress",
+        "description":  "ManageExamProgress",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageExamRoutine",
+        "description":  "ManageExamRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageExternalApplication",
+        "description":  "ManageExternalApplication",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageFacebookGroup",
+        "description":  "ManageFacebookGroup",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageFbGroupStatus",
+        "description":  "ManageFbGroupStatus",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageFileType",
+        "description":  "ManageFileType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageIndividualExam",
+        "description":  "ManageIndividualExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageIndividualLecture",
+        "description":  "ManageIndividualLecture",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageInstitute",
+        "description":  "ManageInstitute",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageInstituteCategory",
+        "description":  "ManageInstituteCategory",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageItem",
+        "description":  "ManageItem",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageLeaveSetting",
+        "description":  "ManageLeaveSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageLecture",
+        "description":  "ManageLecture",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMarksEntry",
+        "description":  "ManageMarksEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMasterContent",
+        "description":  "ManageMasterContent",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMasterCourse",
+        "description":  "ManageMasterCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMasterCourseType",
+        "description":  "ManageMasterCourseType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMaterialType",
+        "description":  "ManageMaterialType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMcqQuestionImportWord",
+        "description":  "ManageMcqQuestionImportWord",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMentorBranchAssign",
+        "description":  "ManageMentorBranchAssign",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMentoringSessionBatch",
+        "description":  "ManageMentoringSessionBatch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMentoringSessionSingle",
+        "description":  "ManageMentoringSessionSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMigrationGroup",
+        "description":  "ManageMigrationGroup",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageMultipleBatch",
+        "description":  "ManageMultipleBatch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManagePermission",
+        "description":  "ManagePermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageProgram",
+        "description":  "ManageProgram",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageProgramSetting",
+        "description":  "ManageProgramSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageQnAChapter",
+        "description":  "ManageQnAChapter",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageQnACourse",
+        "description":  "ManageQnACourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageReferrer",
+        "description":  "ManageReferrer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageReferrerType",
+        "description":  "ManageReferrerType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageRequisition",
+        "description":  "ManageRequisition",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSchoolCollege",
+        "description":  "ManageSchoolCollege",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageScriptEvaluationEntry",
+        "description":  "ManageScriptEvaluationEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageScriptReceive",
+        "description":  "ManageScriptReceive",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSingleBatch",
+        "description":  "ManageSingleBatch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSmsDynamicOption",
+        "description":  "ManageSmsDynamicOption",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSmsRegistrationSetting",
+        "description":  "ManageSmsRegistrationSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSmsSettings",
+        "description":  "ManageSmsSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSmsType",
+        "description":  "ManageSmsType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSpecialDiscountApproval",
+        "description":  "ManageSpecialDiscountApproval",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageStorageProvider",
+        "description":  "ManageStorageProvider",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageStudentClass",
+        "description":  "ManageStudentClass",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageStudentMenu",
+        "description":  "ManageStudentMenu",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSubject",
+        "description":  "ManageSubject",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSupplier",
+        "description":  "ManageSupplier",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageSurveyQuestion",
+        "description":  "ManageSurveyQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageTarget",
+        "description":  "ManageTarget",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageTeacherGrade",
+        "description":  "ManageTeacherGrade",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageTemplateQuestionBlank",
+        "description":  "ManageTemplateQuestionBlank",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageUniversity",
+        "description":  "ManageUniversity",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageUniversitySubject",
+        "description":  "ManageUniversitySubject",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageUniversityUnit",
+        "description":  "ManageUniversityUnit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageUser",
+        "description":  "ManageUser",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageVisitedInstituteCategory",
+        "description":  "ManageVisitedInstituteCategory",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageWrittenQuestion",
+        "description":  "ManageWrittenQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManageWrittenScriptUpload",
+        "description":  "ManageWrittenScriptUpload",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManualAnalysisQuestionBlankDetection",
+        "description":  "ManualAnalysisQuestionBlankDetection",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ManualMarksEntry",
+        "description":  "ManualMarksEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MarkChecker",
+        "description":  "MarkChecker",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterContentFileType",
+        "description":  "MasterContentFileType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterContentType",
+        "description":  "MasterContentType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterCourseMapping",
+        "description":  "MasterCourseMapping",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterQuizMarksClear",
+        "description":  "MasterQuizMarksClear",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterQuizMarksRecalculation",
+        "description":  "MasterQuizMarksRecalculation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterVideoSettings",
+        "description":  "MasterVideoSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialDistributionChecking",
+        "description":  "MaterialDistributionChecking",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialDistributionEntry",
+        "description":  "MaterialDistributionEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialPaymentReport",
+        "description":  "MaterialPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsCashPayment",
+        "description":  "MaterialsCashPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsMFSAgentPayment",
+        "description":  "MaterialsMFSAgentPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsMFSAgentPaymentFinalize",
+        "description":  "MaterialsMFSAgentPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsMFSAgentRevert",
+        "description":  "MaterialsMFSAgentRevert",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsMFSAgentRevertFinalize",
+        "description":  "MaterialsMFSAgentRevertFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsOTCPayment",
+        "description":  "MaterialsOTCPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsOTCPaymentFinalize",
+        "description":  "MaterialsOTCPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsOTCRevert",
+        "description":  "MaterialsOTCRevert",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsOTCRevertFinalize",
+        "description":  "MaterialsOTCRevertFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsPaymentApprove",
+        "description":  "MaterialsPaymentApprove",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsPaymentCancel",
+        "description":  "MaterialsPaymentCancel",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialSummaryReport",
+        "description":  "MaterialSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "McqOnlineQuestionEdit",
+        "description":  "McqOnlineQuestionEdit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "McqSingleQuestionUpdate",
+        "description":  "McqSingleQuestionUpdate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "McqUddipokQuestionUpdate",
+        "description":  "McqUddipokQuestionUpdate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MCQUniqueSetManage",
+        "description":  "MCQUniqueSetManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MemberAttendance",
+        "description":  "MemberAttendance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MemberDirectory",
+        "description":  "MemberDirectory",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentorAchievementReport",
+        "description":  "MentorAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentorAttenSummaryReport",
+        "description":  "MentorAttenSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentorBranchAssign",
+        "description":  "MentorBranchAssign",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentorDailyAttenReport",
+        "description":  "MentorDailyAttenReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentorDayOffAdjustment",
+        "description":  "MentorDayOffAdjustment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentorHolidayWorkApprovalNew",
+        "description":  "MentorHolidayWorkApprovalNew",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringAssignSessionTypeComments",
+        "description":  "MentoringAssignSessionTypeComments",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringComments",
+        "description":  "MentoringComments",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringDetailsReport",
+        "description":  "MentoringDetailsReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringSessionCreate",
+        "description":  "MentoringSessionCreate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringSessionManage",
+        "description":  "MentoringSessionManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringSessionType",
+        "description":  "MentoringSessionType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MentoringSummaryReport",
+        "description":  "MentoringSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MeritListSendSms",
+        "description":  "MeritListSendSms",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MigrationPaymentSettings",
+        "description":  "MigrationPaymentSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MigrationReport",
+        "description":  "MigrationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MigrationTransactionReport",
+        "description":  "MigrationTransactionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MissingAdmissionTarget",
+        "description":  "MissingAdmissionTarget",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MissingBoardRoll",
+        "description":  "MissingBoardRoll",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MyAttendance",
+        "description":  "MyAttendance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MyNotice",
+        "description":  "MyNotice",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MyTransactionReport",
+        "description":  "MyTransactionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NetCollectionSummaryReport",
+        "description":  "NetCollectionSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NewStudentAdmission",
+        "description":  "NewStudentAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NextPaymentDateSettings",
+        "description":  "NextPaymentDateSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NightWorkAllowance",
+        "description":  "NightWorkAllowance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NightWorkByHr",
+        "description":  "NightWorkByHr",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NightWorkByHrWithEmployee",
+        "description":  "NightWorkByHrWithEmployee",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NightWorkByMentor",
+        "description":  "NightWorkByMentor",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NightWorkByMentorWithEmployee",
+        "description":  "NightWorkByMentorWithEmployee",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "NotLoggedInStudents",
+        "description":  "NotLoggedInStudents",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ObserveUserPermission",
+        "description":  "ObserveUserPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OfferedDiscount",
+        "description":  "OfferedDiscount",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OfferedDiscountLogReport",
+        "description":  "OfferedDiscountLogReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OldAdmissionInSameProgram",
+        "description":  "OldAdmissionInSameProgram",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OldStudentAdmission",
+        "description":  "OldStudentAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OmAccountSettings",
+        "description":  "OmAccountSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OmHost",
+        "description":  "OmHost",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineExamPermission",
+        "description":  "OnlineExamPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineWrittenEvaluationReport",
+        "description":  "OnlineWrittenEvaluationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineWrMultiple",
+        "description":  "OnlineWrMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineWrSingle",
+        "description":  "OnlineWrSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineWrSingleMultiPart",
+        "description":  "OnlineWrSingleMultiPart",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "onnorokom",
+        "description":  "onnorokom",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OpeningBalance",
+        "description":  "OpeningBalance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OrderedGoodsReceive",
+        "description":  "OrderedGoodsReceive",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OtherBranchCollectionReport",
+        "description":  "OtherBranchCollectionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OverTimeAllowanceSetting",
+        "description":  "OverTimeAllowanceSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OverTimeByHr",
+        "description":  "OverTimeByHr",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OverTimeByHrWithEmployee",
+        "description":  "OverTimeByHrWithEmployee",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OverTimeByMentor",
+        "description":  "OverTimeByMentor",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OverTimeByMentorWithEmployee",
+        "description":  "OverTimeByMentorWithEmployee",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OwMultipleWithRoutine",
+        "description":  "OwMultipleWithRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ParticipantsReport",
+        "description":  "ParticipantsReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentApprove",
+        "description":  "PaymentApprove",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentCancel",
+        "description":  "PaymentCancel",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentReceived",
+        "description":  "PaymentReceived",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentReport",
+        "description":  "PaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentReportSheetWise",
+        "description":  "PaymentReportSheetWise",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentReportVoucherWise",
+        "description":  "PaymentReportVoucherWise",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymnetHistory",
+        "description":  "PaymnetHistory",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PerformanceReport",
+        "description":  "PerformanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PermissionExternalApplication",
+        "description":  "PermissionExternalApplication",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PermissionObserve",
+        "description":  "PermissionObserve",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PinWiseAchievementReport",
+        "description":  "PinWiseAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PracticeExamCombined",
+        "description":  "PracticeExamCombined",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PracticeExamMultiple",
+        "description":  "PracticeExamMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PracticeExamSingle",
+        "description":  "PracticeExamSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PreviousStudentAdmissionReport",
+        "description":  "PreviousStudentAdmissionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PrintLogReport",
+        "description":  "PrintLogReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PrintReport",
+        "description":  "PrintReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PrintSummaryLogReport",
+        "description":  "PrintSummaryLogReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PrintSummaryReport",
+        "description":  "PrintSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ProgramCourseWiseSummary",
+        "description":  "ProgramCourseWiseSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ProgramMigration",
+        "description":  "ProgramMigration",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ProgramwiseAchievementReport",
+        "description":  "ProgramwiseAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ProgramwiseMentorAchievementReport",
+        "description":  "ProgramwiseMentorAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ProgramwiseReport",
+        "description":  "ProgramwiseReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PsaSummaryReport",
+        "description":  "PsaSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PublishClassRoutine",
+        "description":  "PublishClassRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PublishExamRoutine",
+        "description":  "PublishExamRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2CashPayment",
+        "description":  "QnA2CashPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2DetailsReport",
+        "description":  "QnA2DetailsReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2DuplicateQuestion",
+        "description":  "QnA2DuplicateQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2ModerationViewByDetails",
+        "description":  "QnA2ModerationViewByDetails",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2ModerationViewBySummary",
+        "description":  "QnA2ModerationViewBySummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2OTCPaymentFinalize",
+        "description":  "QnA2OTCPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2PaidviaMFSAgentFinalize",
+        "description":  "QnA2PaidviaMFSAgentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2PaidViaMFSAgentPreparation",
+        "description":  "QnA2PaidViaMFSAgentPreparation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2PaymentApproval",
+        "description":  "QnA2PaymentApproval",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2QuestionPreCheck",
+        "description":  "QnA2QuestionPreCheck",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnA2QuestionSearch",
+        "description":  "QnA2QuestionSearch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnAOTCPaymentPreparation",
+        "description":  "QnAOTCPaymentPreparation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnAPrecheckReport",
+        "description":  "QnAPrecheckReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionCheck",
+        "description":  "QuestionCheck",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionSetGenerate",
+        "description":  "QuestionSetGenerate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionSetManage",
+        "description":  "QuestionSetManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionViewPermission",
+        "description":  "QuestionViewPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionWiseParticipantSummary",
+        "description":  "QuestionWiseParticipantSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionWiseSurveyReport",
+        "description":  "QuestionWiseSurveyReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuizReport",
+        "description":  "QuizReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuotationAndWorkOrder",
+        "description":  "QuotationAndWorkOrder",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuotationReport",
+        "description":  "QuotationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RealTimeLoggedInUser",
+        "description":  "RealTimeLoggedInUser",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ReceivablePayableScheduleReport",
+        "description":  "ReceivablePayableScheduleReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ReceivedReport",
+        "description":  "ReceivedReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RejectMessageTemplate",
+        "description":  "RejectMessageTemplate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ReportDateSettings",
+        "description":  "ReportDateSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RequirementForQuotation",
+        "description":  "RequirementForQuotation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RequisitionGoodsIssue",
+        "description":  "RequisitionGoodsIssue",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ResetSupplierPassword",
+        "description":  "ResetSupplierPassword",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RoomReport",
+        "description":  "RoomReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SaqBlankReport",
+        "description":  "SaqBlankReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SaqSingleQuestionUpdate",
+        "description":  "SaqSingleQuestionUpdate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SaqWrittenQuestion",
+        "description":  "SaqWrittenQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SaveAdmissionTarget",
+        "description":  "SaveAdmissionTarget",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptComparisonReport",
+        "description":  "ScriptComparisonReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationCashPayment",
+        "description":  "ScriptEvaluationCashPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationExamPermission",
+        "description":  "ScriptEvaluationExamPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationMfsAgentFinalize",
+        "description":  "ScriptEvaluationMfsAgentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationMFSPayment",
+        "description":  "ScriptEvaluationMFSPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationMFSRevert",
+        "description":  "ScriptEvaluationMFSRevert",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationOTCPayment",
+        "description":  "ScriptEvaluationOTCPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationOTCPaymentFinalize",
+        "description":  "ScriptEvaluationOTCPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationOTCRevert",
+        "description":  "ScriptEvaluationOTCRevert",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationPaymentApproval",
+        "description":  "ScriptEvaluationPaymentApproval",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationPaymentTemplatAssignFromManagePage",
+        "description":  "ScriptEvaluationPaymentTemplatAssignFromManagePage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationPaymentTemplateAdd",
+        "description":  "ScriptEvaluationPaymentTemplateAdd",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationPaymentTemplateAssign",
+        "description":  "ScriptEvaluationPaymentTemplateAssign",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationPaymentTemplateManagePage",
+        "description":  "ScriptEvaluationPaymentTemplateManagePage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptEvaluationTemplateDelete",
+        "description":  "ScriptEvaluationTemplateDelete",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ScriptReceiveReport",
+        "description":  "ScriptReceiveReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SearchMemberList",
+        "description":  "SearchMemberList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SearchOfficialDetails",
+        "description":  "SearchOfficialDetails",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SendMessage",
+        "description":  "SendMessage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SeniorshipCashPayment",
+        "description":  "SeniorshipCashPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SeniorshipOTCPayment",
+        "description":  "SeniorshipOTCPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SeniorshipOTCPaymentFinalize",
+        "description":  "SeniorshipOTCPaymentFinalize",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SeniorshipPaymentReport",
+        "description":  "SeniorshipPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SeniorshipSummaryReport",
+        "description":  "SeniorshipSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ServeyEntry",
+        "description":  "ServeyEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "Session",
+        "description":  "Session",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SetCoursePriority",
+        "description":  "SetCoursePriority",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SetPrintPermission",
+        "description":  "SetPrintPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SettledComparisonReport",
+        "description":  "SettledComparisonReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ShiftSetting",
+        "description":  "ShiftSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SingleEntry",
+        "description":  "SingleEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SingleEntryAllStudent",
+        "description":  "SingleEntryAllStudent",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SingleEntryEnrolledProgramList",
+        "description":  "SingleEntryEnrolledProgramList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SingleMentoring",
+        "description":  "SingleMentoring",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SmsHistory",
+        "description":  "SmsHistory",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SmsMaskManage",
+        "description":  "SmsMaskManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SmsSetting",
+        "description":  "SmsSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SMWCreateOrEdit",
+        "description":  "SMWCreateOrEdit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SortConversationType",
+        "description":  "SortConversationType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SpecialAllowance",
+        "description":  "SpecialAllowance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SpecialDiscountNewAdmission",
+        "description":  "SpecialDiscountNewAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SpecificationTemplate",
+        "description":  "SpecificationTemplate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "Splitting",
+        "description":  "Splitting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SpStudentAdmissionSummaryReport",
+        "description":  "SpStudentAdmissionSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SpStudentReport",
+        "description":  "SpStudentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SslCommerzTransactionsReport",
+        "description":  "SslCommerzTransactionsReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StdWiseSurveyReport",
+        "description":  "StdWiseSurveyReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StockReport",
+        "description":  "StockReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentAccountManage",
+        "description":  "StudentAccountManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentAdmission",
+        "description":  "StudentAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentCompareWithBoardInfo",
+        "description":  "StudentCompareWithBoardInfo",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentExcelImport",
+        "description":  "StudentExcelImport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentInfoSearch",
+        "description":  "StudentInfoSearch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentList",
+        "description":  "StudentList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentPhotoPrint",
+        "description":  "StudentPhotoPrint",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentReport",
+        "description":  "StudentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentTargetAdminDetails",
+        "description":  "StudentTargetAdminDetails",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentTargetBulkPermission",
+        "description":  "StudentTargetBulkPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentTargetDashboard",
+        "description":  "StudentTargetDashboard",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentTransfer",
+        "description":  "StudentTransfer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentwiseSummaryReport",
+        "description":  "StudentwiseSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentWiseTransactionsSettlement",
+        "description":  "StudentWiseTransactionsSettlement",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentZoneManage",
+        "description":  "StudentZoneManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SuccessReport",
+        "description":  "SuccessReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SummaryDetails",
+        "description":  "SummaryDetails",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SummaryReport",
+        "description":  "SummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SupplierEditLogReport",
+        "description":  "SupplierEditLogReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SupplierGoodsSummary",
+        "description":  "SupplierGoodsSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TargetBreakdownLog",
+        "description":  "TargetBreakdownLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TargetEntry",
+        "description":  "TargetEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherAcademicMaterialType",
+        "description":  "TeacherAcademicMaterialType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherAccountManage",
+        "description":  "TeacherAccountManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherClassEvaluationReport",
+        "description":  "TeacherClassEvaluationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherCreate",
+        "description":  "TeacherCreate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherEdit",
+        "description":  "TeacherEdit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherIncentiveSetting",
+        "description":  "TeacherIncentiveSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherList",
+        "description":  "TeacherList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherManage",
+        "description":  "TeacherManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherManagePermission",
+        "description":  "TeacherManagePermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherManagePermissionDetails",
+        "description":  "TeacherManagePermissionDetails",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherNewQnA",
+        "description":  "TeacherNewQnA",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherPaymentChargeSettings",
+        "description":  "TeacherPaymentChargeSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherPaymentVideoType",
+        "description":  "TeacherPaymentVideoType",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherPermissionBulkPermission",
+        "description":  "TeacherPermissionBulkPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherReview",
+        "description":  "TeacherReview",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherSearch",
+        "description":  "TeacherSearch",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherUpdateLog",
+        "description":  "TeacherUpdateLog",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherVideoGroomSettings",
+        "description":  "TeacherVideoGroomSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherwiseReport",
+        "description":  "TeacherwiseReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeamMemberProfile",
+        "description":  "TeamMemberProfile",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeamMemberTransfer",
+        "description":  "TeamMemberTransfer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TestPrintSummary",
+        "description":  "TestPrintSummary",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TitlewiseMentorAchievementReport",
+        "description":  "TitlewiseMentorAchievementReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TopStudentManageDelete",
+        "description":  "TopStudentManageDelete",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TopStudentManageEdit",
+        "description":  "TopStudentManageEdit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TopStudentWithoutTeacher",
+        "description":  "TopStudentWithoutTeacher",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TopStudentWithTeacher",
+        "description":  "TopStudentWithTeacher",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionCreate",
+        "description":  "TransactionCreate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionReceiveReport",
+        "description":  "TransactionReceiveReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionReport",
+        "description":  "TransactionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionsReport",
+        "description":  "TransactionsReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionsReportEdit",
+        "description":  "TransactionsReportEdit",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionsReportForBulkDelete",
+        "description":  "TransactionsReportForBulkDelete",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionsReportNew",
+        "description":  "TransactionsReportNew",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionsTransferV2",
+        "description":  "TransactionsTransferV2",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransactionSummaryReport",
+        "description":  "TransactionSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransferList",
+        "description":  "TransferList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransferReport",
+        "description":  "TransferReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TransferSettlement",
+        "description":  "TransferSettlement",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UpdateMaterials",
+        "description":  "UpdateMaterials",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UploadImage",
+        "description":  "UploadImage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UploadSummaryReport",
+        "description":  "UploadSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UserList",
+        "description":  "UserList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UserPermission",
+        "description":  "UserPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UserWiseSpecialDiscountReport",
+        "description":  "UserWiseSpecialDiscountReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "UserWiseTransactionReport",
+        "description":  "UserWiseTransactionReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VatCalculationReport",
+        "description":  "VatCalculationReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VatCalculationReportsp",
+        "description":  "VatCalculationReportsp",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VatCalculationSummaryReport",
+        "description":  "VatCalculationSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VatRateSettings",
+        "description":  "VatRateSettings",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ViewBoardResult",
+        "description":  "ViewBoardResult",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ViewBoardRoll",
+        "description":  "ViewBoardRoll",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ViewClassRoutine",
+        "description":  "ViewClassRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ViewExamRoutine",
+        "description":  "ViewExamRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ViewTeacher",
+        "description":  "ViewTeacher",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedAdmission",
+        "description":  "VisitedAdmission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedEntry",
+        "description":  "VisitedEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedStudentList",
+        "description":  "VisitedStudentList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedStudentManage",
+        "description":  "VisitedStudentManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedSubject",
+        "description":  "VisitedSubject",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedTeacherEntry",
+        "description":  "VisitedTeacherEntry",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedTeacherInfo",
+        "description":  "VisitedTeacherInfo",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "VisitedTeacherList",
+        "description":  "VisitedTeacherList",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WorkOrderReport",
+        "description":  "WorkOrderReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WorkOrderReportForStore",
+        "description":  "WorkOrderReportForStore",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WrittenMultiple",
+        "description":  "WrittenMultiple",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WrittenPrintPermission",
+        "description":  "WrittenPrintPermission",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WrittenQuestionPrintReport",
+        "description":  "WrittenQuestionPrintReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WrittenScriptUpload",
+        "description":  "WrittenScriptUpload",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WrittenSingle",
+        "description":  "WrittenSingle",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "WrittenSingleWithRoutine",
+        "description":  "WrittenSingleWithRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ZoneSetting",
+        "description":  "ZoneSetting",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ZoomAccountManage",
+        "description":  "ZoomAccountManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ZoomHostManage",
+        "description":  "ZoomHostManage",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    }
+]

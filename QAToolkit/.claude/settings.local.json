@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(powershell -Command:*)",
+      "mcp__playwright__browser_click"
+    ]
+  }
+}

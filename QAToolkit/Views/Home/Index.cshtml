@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+</div>
+
+<div class="row g-4">
+    <!-- URL Manager Card -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="bi bi-link-45deg text-primary fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">URL Manager</h5>
+                        <small class="text-muted">Test environment URLs</small>
+                    </div>
+                </div>
+                <p class="card-text">Save and organize testing URLs for staging, production, APIs, and more.</p>
+                <a href="/UrlResources" class="btn btn-primary">
+                    <i class="bi bi-arrow-right"></i> Open
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Notes Card -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="bi bi-journal-text text-success fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Test Notes</h5>
+                        <small class="text-muted">Bug steps & observations</small>
+                    </div>
+                </div>
+                <p class="card-text">Quick notes for bug reproduction steps, observations, and screenshots.</p>
+                <a href="/TestNotes" class="btn btn-success">
+                    <i class="bi bi-arrow-right"></i> Open
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credentials Card -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="bi bi-key text-warning fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Credentials</h5>
+                        <small class="text-muted">Test account storage</small>
+                    </div>
+                </div>
+                <p class="card-text">Store test account credentials organized by project and environment.</p>
+                <a href="/Credentials" class="btn btn-warning">
+                    <i class="bi bi-arrow-right"></i> Open
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Release Notes Card -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="bi bi-rocket-takeoff text-info fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Release Notes</h5>
+                        <small class="text-muted">Track releases & testing</small>
+                    </div>
+                </div>
+                <p class="card-text">Track release versions, new features, and testing status.</p>
+                <a href="/ReleaseNotes" class="btn btn-info">
+                    <i class="bi bi-arrow-right"></i> Open
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meeting Notes Card -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="bi bi-people text-danger fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Meeting Notes</h5>
+                        <small class="text-muted">Sprint & bug triage notes</small>
+                    </div>
+                </div>
+                <p class="card-text">Save meeting notes, action items, and attendee information.</p>
+                <a href="/MeetingNotes" class="btn btn-danger">
+                    <i class="bi bi-arrow-right"></i> Open
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

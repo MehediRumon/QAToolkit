@@ -1,0 +1,80 @@
+@model QAToolkit.Models.MeetingNote
+@{
+    ViewData["Title"] = "Edit Meeting Note";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-pencil"></i> Edit Meeting Note</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedAt" />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Topics" class="form-label">Meeting Topics <span class="text-danger">*</span></label>
+                            <input asp-for="Topics" class="form-control" />
+                            <span asp-validation-for="Topics" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="MeetingDate" class="form-label">Meeting Date</label>
+                            <input asp-for="MeetingDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="MeetingWith" class="form-label">Meeting With</label>
+                            <select asp-for="MeetingWith" class="form-select">
+                                <option value="">Select</option>
+                                <option>Dev Team</option>
+                                <option>Rnd Team</option>
+                                <option>UX Team</option>
+                                <option>Frontend Team</option>
+                                <option>Accounts Team</option>
+                                <option>Udvash</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Attendees" class="form-label">Attendees</label>
+                            <input asp-for="Attendees" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DecisionBy" class="form-label">Decision By</label>
+                            <input asp-for="DecisionBy" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label">Status</label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="">Select</option>
+                            <option>Need to Implement</option>
+                            <option>Implement Later</option>
+                            <option>Invalid</option>
+                            <option>Closed</option>
+                            <option>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Decisions" class="form-label">Meeting Decisions <span class="text-danger">*</span></label>
+                        <textarea asp-for="Decisions" class="form-control" rows="8"></textarea>
+                        <span asp-validation-for="Decisions" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger"><i class="bi bi-check-lg"></i> Update</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,458 @@
+﻿[
+    {
+        "name":  "All",
+        "description":  "Run all available tests",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "AskNewQuestion",
+        "description":  "AskNewQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "BulkAmountQuestion",
+        "description":  "BulkAmountQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CelebrationRegistration",
+        "description":  "CelebrationRegistration",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ClassPaymentReport",
+        "description":  "ClassPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "CourseAndContent",
+        "description":  "CourseAndContent",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DataSet",
+        "description":  "DataSet",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DataSource",
+        "description":  "DataSource",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DeleteQuestion",
+        "description":  "DeleteQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "DuplicateQuestion",
+        "description":  "DuplicateQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EditQuestion",
+        "description":  "EditQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "EvaluationPayment",
+        "description":  "EvaluationPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "FilterQuestion",
+        "description":  "FilterQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ForgotPassword",
+        "description":  "ForgotPassword",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ForgotRegistrationNumber",
+        "description":  "ForgotRegistrationNumber",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MasterClass",
+        "description":  "MasterClass",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "MaterialsPayment",
+        "description":  "MaterialsPayment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "Notification",
+        "description":  "Notification",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineWrittenScriptEvaluation",
+        "description":  "OnlineWrittenScriptEvaluation",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "OnlineWrittenScriptEvaluationReview",
+        "description":  "OnlineWrittenScriptEvaluationReview",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PaymentSummaryReport",
+        "description":  "PaymentSummaryReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "PracticeExam",
+        "description":  "PracticeExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ProgramEnrolment",
+        "description":  "ProgramEnrolment",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QnAPaymentReport",
+        "description":  "QnAPaymentReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "QuestionAndSolveSheet",
+        "description":  "QuestionAndSolveSheet",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RegistrationResendOTP",
+        "description":  "RegistrationResendOTP",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "RetakePracticeExam",
+        "description":  "RetakePracticeExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SaveStudentInfo",
+        "description":  "SaveStudentInfo",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentAddCourse",
+        "description":  "StudentAddCourse",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentChangePassword",
+        "description":  "StudentChangePassword",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentDashboard",
+        "description":  "StudentDashboard",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentDiscussionGroup",
+        "description":  "StudentDiscussionGroup",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentLiveClass",
+        "description":  "StudentLiveClass",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentLogin",
+        "description":  "StudentLogin",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentLogout",
+        "description":  "StudentLogout",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentMyDue",
+        "description":  "StudentMyDue",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentPastClasses",
+        "description":  "StudentPastClasses",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentPastExam",
+        "description":  "StudentPastExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentPastExamDaysBefore",
+        "description":  "StudentPastExamDaysBefore",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentPerformanceReport",
+        "description":  "StudentPerformanceReport",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentPortalQnA",
+        "description":  "StudentPortalQnA",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentProfileUpdate",
+        "description":  "StudentProfileUpdate",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "StudentRegistration",
+        "description":  "StudentRegistration",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "SuggestionQuestion",
+        "description":  "SuggestionQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TakeMcqLiveExam",
+        "description":  "TakeMcqLiveExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TakeOnlineWrittenExam",
+        "description":  "TakeOnlineWrittenExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TakePracticeExam",
+        "description":  "TakePracticeExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherClassPerformance",
+        "description":  "TeacherClassPerformance",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherLogin",
+        "description":  "TeacherLogin",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherLogout",
+        "description":  "TeacherLogout",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherPastRoutine",
+        "description":  "TeacherPastRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherQnAEditAnswer",
+        "description":  "TeacherQnAEditAnswer",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherQnAExpertQuestion",
+        "description":  "TeacherQnAExpertQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherQnANewQuestion",
+        "description":  "TeacherQnANewQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherQnAReviewQuestion",
+        "description":  "TeacherQnAReviewQuestion",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "TeacherUpcomingRoutine",
+        "description":  "TeacherUpcomingRoutine",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    },
+    {
+        "name":  "ViewResultPracticeExam",
+        "description":  "ViewResultPracticeExam",
+        "testCount":  0,
+        "categories":  [
+
+                       ]
+    }
+]

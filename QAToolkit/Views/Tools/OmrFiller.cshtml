@@ -1,0 +1,220 @@
+@model QAToolkit.Models.Omr.OmrFillRequest
+@{
+    ViewData["Title"] = "OMR Filler";
+    var configs = ViewBag.AvailableConfigs as List<string> ?? new List<string>();
+    var result = ViewBag.ProcessingResult as QAToolkit.Models.Omr.OmrProcessingResult;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-grid-3x3-gap"></i> OMR Sheet Filler</h2>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" asp-action="OmrFiller">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">XML Configuration <span class="text-danger">*</span></label>
+                            <select name="XmlConfigName" class="form-select" required>
+                                <option value="">-- Select Configuration --</option>
+                                @foreach (var config in configs)
+                                {
+                                    <option value="@config" selected="@(Model?.XmlConfigName == config)">@config</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">OMR Images <span class="text-danger">*</span></label>
+                            <input type="file" name="images" class="form-control" multiple accept=".jpg,.jpeg,.png,.bmp" required />
+                            <small class="text-muted">JPG, PNG, BMP files</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Excel File (Roll & Registration)</label>
+                        <input type="file" name="excelFile" class="form-control" accept=".xlsx,.xls" />
+                        <small class="text-muted">Column A: Roll Numbers, Column B: Registration Numbers (Row 1 = headers)</small>
+                    </div>
+
+                    <div class="text-center text-muted my-3">
+                        <span class="bg-white px-3">OR enter manually</span>
+                        <hr class="mt-0" />
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Roll Numbers</label>
+                            <input type="text" name="RollNumbers" class="form-control" value="@Model?.RollNumbers"
+                                   placeholder="10205026680, 10205026681, 10205026682" />
+                            <small class="text-muted">Comma-separated</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Registration Numbers</label>
+                            <input type="text" name="RegistrationNumbers" class="form-control" value="@Model?.RegistrationNumbers"
+                                   placeholder="1607495, 1607496, 1607497" />
+                            <small class="text-muted">Comma-separated</small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">SAQ Extra Text (Optional)</label>
+                            <input type="text" name="SaqExtraText" class="form-control" value="@Model?.SaqExtraText"
+                                   placeholder="Additional text for SAQ labels" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Dot Size (Optional)</label>
+                            <input type="number" name="DotSize" class="form-control" value="@Model?.DotSize"
+                                   placeholder="22" min="5" max="50" />
+                            <small class="text-muted">Default: 22</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-gear"></i> Process OMR Sheets
+                        </button>
+                        <a asp-action="OmrFiller" class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i> Quick Guide
+            </div>
+            <div class="card-body">
+                <ol class="mb-0 ps-3">
+                    <li class="mb-2">Select XML configuration matching your OMR sheet</li>
+                    <li class="mb-2">Upload OMR sheet image(s)</li>
+                    <li class="mb-2">Upload Excel file OR enter roll/registration numbers manually</li>
+                    <li class="mb-2">Click "Process OMR Sheets"</li>
+                    <li>Download results individually or as ZIP</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (result != null && result.ProcessedImages.Any())
+{
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-check-circle"></i> Processing Results</span>
+            @if (!string.IsNullOrEmpty(result.MasterZipFileName))
+            {
+                <a href="~/outputs/@result.OutputSessionId/@result.MasterZipFileName" class="btn btn-success btn-sm" download>
+                    <i class="bi bi-download"></i> Download All (ZIP)
+                </a>
+            }
+        </div>
+        <div class="card-body">
+            @if (result.RegistrationZipFiles.Any())
+            {
+                <h6 class="mb-3">Download by Registration</h6>
+                <div class="row mb-4">
+                    @foreach (var regZip in result.RegistrationZipFiles)
+                    {
+                        <div class="col-auto mb-2">
+                            <a href="~/outputs/@result.OutputSessionId/@regZip.Value" class="btn btn-outline-primary btn-sm" download>
+                                <i class="bi bi-file-zip"></i> @regZip.Key
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+
+            <h6 class="mb-3">Individual Files</h6>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Original File</th>
+                            <th>Roll</th>
+                            <th>Registration</th>
+                            <th>Page ID</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var img in result.ProcessedImages)
+                        {
+                            var hasError = img.Logs.Any(l => l.Contains("FAILED") || l.Contains("Error"));
+                            <tr>
+                                <td>@img.OriginalFileName</td>
+                                <td>@(img.AssignedRoll ?? "N/A")</td>
+                                <td>@(img.AssignedRegistration ?? "N/A")</td>
+                                <td>@(img.DetectedPageId ?? "N/A")</td>
+                                <td>
+                                    @if (hasError)
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Success</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(img.OutputFileName) && !string.IsNullOrEmpty(img.OutputSubFolder))
+                                    {
+                                        <a href="~/outputs/@result.OutputSessionId/@img.OutputSubFolder/@img.OutputFileName"
+                                           class="btn btn-sm btn-outline-primary" download title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <a href="~/outputs/@result.OutputSessionId/@img.OutputSubFolder/@img.OutputFileName"
+                                           class="btn btn-sm btn-outline-secondary" target="_blank" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    }
+                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
+                                            data-bs-target="#logsModal@(result.ProcessedImages.IndexOf(img))">
+                                        <i class="bi bi-list-ul"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @foreach (var img in result.ProcessedImages)
+    {
+        var idx = result.ProcessedImages.IndexOf(img);
+        <div class="modal fade" id="logsModal@idx" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Processing Logs - @img.OriginalFileName</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var log in img.Logs)
+                            {
+                                <li class="mb-1">
+                                    @if (log.Contains("FAILED") || log.Contains("Error"))
+                                    {
+                                        <span class="text-danger"><i class="bi bi-x-circle"></i> @log</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success"><i class="bi bi-check"></i> @log</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

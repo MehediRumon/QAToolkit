@@ -1,0 +1,147 @@
+@model IEnumerable<QAToolkit.Models.MeetingNote>
+@{
+    ViewData["Title"] = "Meeting Notes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people"></i> Meeting Notes</h2>
+    <a asp-action="Create" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Add Meeting Note</a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Meeting With</label>
+                <select name="meetingWith" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var mw in ViewBag.MeetingWiths as List<string?>)
+                    {
+                        <option value="@mw" selected="@(ViewBag.SelectedMeetingWith == mw)">@mw</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-funnel"></i> Filter</button>
+                <a href="/MeetingNotes" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Meeting Notes Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center align-middle" style="width: 2%">#</th>
+                        <th class="text-center align-middle" style="width: 7%">Date</th>
+                        <th class="text-center align-middle" style="width: 15%">Topics</th>
+                        <th class="text-center align-middle" style="width: 8%">Meeting With</th>
+                        <th class="text-center align-middle" style="width: 18%">Decisions</th>
+                        <th class="text-center align-middle" style="width: 8%">Decision By</th>
+                        <th class="text-center align-middle" style="width: 8%">Status</th>
+                        <th class="text-center align-middle" style="width: 9%">Created By</th>
+                        <th class="text-center align-middle" style="width: 9%">Modified By</th>
+                        <th class="text-center align-middle" style="width: 8%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        var index = 1;
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center align-middle">@index</td>
+                                <td class="text-center align-middle">
+                                    <small>@item.MeetingDate.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td class="align-middle"><small>@item.Topics</small></td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(item.MeetingWith))
+                                    {
+                                        <span class="badge bg-primary">@item.MeetingWith</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    <small>@(item.Decisions.Length > 80 ? item.Decisions.Substring(0, 80) + "..." : item.Decisions)</small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@(item.DecisionBy ?? "-")</small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(item.Status))
+                                    {
+                                        var statusClass = item.Status switch
+                                        {
+                                            "Need to Implement" => "bg-warning",
+                                            "Implement Later" => "bg-info",
+                                            "Invalid" => "bg-secondary",
+                                            "Closed" => "bg-success",
+                                            "Cancelled" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        <span class="badge @statusClass">@item.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@(item.CreatedBy ?? "N/A")</small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@(item.ModifiedBy ?? "-")</small>
+                                </td>
+                                <td class="text-center align-middle text-nowrap">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (item.CreatedBy == User.Identity?.Name)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this note?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-people fs-1"></i>
+                                <p class="mt-2">No meeting notes found. <a asp-action="Create">Add your first meeting note</a></p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted d-none">
+        <i class="bi bi-people fs-1"></i>
+        <p class="mt-2">No meeting notes found. <a asp-action="Create">Add your first meeting note</a></p>
+    </div>
+}

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - QA Toolkit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --dark-color: #1a252f;
+            --light-color: #34495e;
+            --hover-color: #2c3e50;
+            --header-height: 60px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: 250px;
+            height: calc(100vh - var(--header-height));
+            background-color: #e8e8e8;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            padding: 15px 10px;
+            overflow-y: auto;
+        }
+        
+        .sidebar .nav {
+            padding-top: 0;
+        }
+        
+        .sidebar .nav-link {
+            color: #333;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin: 3px 0;
+            border: none;
+            transition: all 0.2s ease;
+            font-size: 15px;
+            font-weight: 500;
+            display: block;
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+        
+        .sidebar .nav-link:hover {
+            color: #333;
+            background-color: #f8f8f8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+        }
+        
+        .sidebar .nav-link.active {
+            color: #fff;
+            background-color: #6d2c2c;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 12px;
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Collapsible submenu styles */
+        .sidebar .nav-link[data-bs-toggle="collapse"] {
+            position: relative;
+        }
+
+        .sidebar .nav-link[data-bs-toggle="collapse"]::after {
+            content: '\F282';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            right: 15px;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar .nav-link[data-bs-toggle="collapse"][aria-expanded="true"]::after {
+            transform: rotate(180deg);
+        }
+
+        .sidebar .submenu {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+
+        .sidebar .submenu .nav-link {
+            padding-left: 40px;
+            font-size: 14px;
+            background-color: #f5f5f5;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar .submenu .nav-link:hover {
+            background-color: #eee;
+            border-left-color: #6d2c2c;
+        }
+
+        .sidebar .submenu .nav-link.active {
+            background-color: #6d2c2c;
+            border-left-color: #6d2c2c;
+            color: #fff;
+        }
+
+        .main-content {
+            margin-top: var(--header-height);
+            margin-left: 250px;
+            background-color: #f5f5f5;
+            min-height: calc(100vh - var(--header-height));
+            padding: 30px;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            border-radius: 8px;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 600;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        
+        .btn-info:hover {
+            background-color: #138496;
+            border-color: #138496;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        
+        .badge.bg-info {
+            background-color: #17a2b8 !important;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        
+        h2, h3, h4 {
+            color: #2c3e50;
+        }
+        
+        /* Environment Badge Colors */
+        .badge-env-dev {
+            background-color: #198754 !important;
+            color: #fff !important;
+        }
+        
+        .badge-env-qa, .badge-env-alpha {
+            background-color: #0dcaf0 !important;
+            color: #000 !important;
+        }
+        
+        .badge-env-staging, .badge-env-rc {
+            background-color: #fd7e14 !important;
+            color: #fff !important;
+        }
+        
+        .badge-env-prod, .badge-env-live {
+            background-color: #dc3545 !important;
+            color: #fff !important;
+        }
+        
+        @@media (max-width: 768px) {
+            .sidebar {
+                left: -250px;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--primary-color);">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-clipboard-check"></i> QA Toolkit
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link text-light">
+                            <i class="bi bi-clock"></i> @DateTime.Now.ToString("dddd, MMM dd yyyy")
+                        </span>
+                    </li>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li class="nav-item">
+                            <span class="nav-link text-light">
+                                <i class="bi bi-person-circle"></i> @User.Identity.Name
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-controller="Account" asp-action="Logout">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                   asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-house-door"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UrlResources" ? "active" : "")"
+                   asp-controller="UrlResources" asp-action="Index">
+                    <i class="bi bi-link-45deg"></i> URL Manager
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TestNotes" ? "active" : "")"
+                   asp-controller="TestNotes" asp-action="Index">
+                    <i class="bi bi-journal-text"></i> Test Notes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Credentials" ? "active" : "")"
+                   asp-controller="Credentials" asp-action="Index">
+                    <i class="bi bi-key"></i> Credentials
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ReleaseNotes" ? "active" : "")"
+                   asp-controller="ReleaseNotes" asp-action="Index">
+                    <i class="bi bi-rocket-takeoff"></i> Release Notes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MeetingNotes" ? "active" : "")"
+                   asp-controller="MeetingNotes" asp-action="Index">
+                    <i class="bi bi-people"></i> Meeting Notes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Automation" ? "active" : "")"
+                   asp-controller="Automation" asp-action="Index">
+                    <i class="bi bi-play-circle"></i> Automation Runner
+                </a>
+            </li>
+
+            <!-- Tools Section Header -->
+            <li class="nav-item mt-3">
+                <div class="nav-section-header px-3 py-2 text-muted small fw-bold text-uppercase">
+                    <i class="bi bi-tools"></i> Tools
+                </div>
+            </li>
+
+            <!-- OMR Auto Filler with Collapsible Submenu -->
+            @{
+                var isOmrFiller = ViewContext.RouteData.Values["action"]?.ToString() == "OmrFiller";
+                var isConfigManager = ViewContext.RouteData.Values["action"]?.ToString() == "ConfigManager";
+                var omrExpanded = (isOmrFiller || isConfigManager) ? "true" : "false";
+                var omrShow = (isOmrFiller || isConfigManager) ? "show" : "";
+            }
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#omrSubmenu" role="button"
+                   aria-expanded="@omrExpanded" aria-controls="omrSubmenu">
+                    <i class="bi bi-grid-3x3-gap"></i> OMR Auto Filler
+                </a>
+                <div class="collapse @omrShow" id="omrSubmenu">
+                    <ul class="submenu">
+                        <li class="nav-item">
+                            <a class="nav-link @(isOmrFiller ? "active" : "")"
+                               asp-controller="Tools" asp-action="OmrFiller">
+                                <i class="bi bi-play-circle"></i> Process
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(isConfigManager ? "active" : "")"
+                               asp-controller="Tools" asp-action="ConfigManager">
+                                <i class="bi bi-file-earmark-code"></i> Config Manager
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            @if (User.Claims.FirstOrDefault(c => c.Type == "IsSuperAdmin")?.Value == "True")
+            {
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")"
+                       asp-controller="Users" asp-action="Index">
+                        <i class="bi bi-people-fill"></i> User Management
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+
+    <!-- Main content -->
+    <main class="main-content">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Copy to clipboard function
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(function() {
+                var originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check"></i>';
+                setTimeout(function() {
+                    btn.innerHTML = originalHtml;
+                }, 1500);
+            });
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

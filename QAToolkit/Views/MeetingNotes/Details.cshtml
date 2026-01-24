@@ -1,0 +1,120 @@
+@model QAToolkit.Models.MeetingNote
+@{
+    ViewData["Title"] = "Meeting Details";
+}
+
+<style>
+    @@media print {
+        /* Hide layout elements */
+        .navbar, .sidebar, .no-print, .card-footer, .meta-info {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        /* Reset main content positioning */
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+        }
+        /* Full width print area */
+        .print-area {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 15px !important;
+            background: white !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+        .row, .col-md-10 {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* Fix pre element scrolling */
+        pre {
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            overflow: visible !important;
+            max-width: 100% !important;
+        }
+        /* Ensure content is visible */
+        body {
+            background: white !important;
+        }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h2><i class="bi bi-people"></i> Meeting Details</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card print-area">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">@Model.Topics</h4>
+                @if (!string.IsNullOrEmpty(Model.MeetingWith))
+                {
+                    <span class="badge bg-primary fs-6">@Model.MeetingWith</span>
+                }
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th style="width:120px">Date:</th><td>@Model.MeetingDate.ToString("MMMM dd, yyyy")</td></tr>
+                    <tr><th>Attendees:</th><td>@(Model.Attendees ?? "-")</td></tr>
+                    <tr><th>Decision By:</th><td>@(Model.DecisionBy ?? "-")</td></tr>
+                    <tr><th>Status:</th><td>
+                        @if (!string.IsNullOrEmpty(Model.Status))
+                        {
+                            var statusClass = Model.Status switch
+                            {
+                                "Need to Implement" => "bg-warning",
+                                "Implement Later" => "bg-info",
+                                "Invalid" => "bg-secondary",
+                                "Closed" => "bg-success",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                            <span class="badge @statusClass">@Model.Status</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td></tr>
+                </table>
+
+                <hr />
+                <h5><i class="bi bi-journal-text"></i> Meeting Decisions</h5>
+                <pre class="bg-light p-3 rounded">@Model.Decisions</pre>
+
+                <hr class="meta-info" />
+                <div class="row mt-4 meta-info">
+                    <div class="col-md-6">
+                        <h6 class="text-muted"><i class="bi bi-person-plus"></i> Created By</h6>
+                        <p>@(Model.CreatedBy ?? "N/A")</p>
+                        <h6 class="text-muted"><i class="bi bi-calendar-plus"></i> Creation Date</h6>
+                        <p>@Model.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted"><i class="bi bi-person-check"></i> Modified By</h6>
+                        <p>@(Model.ModifiedBy ?? "-")</p>
+                        <h6 class="text-muted"><i class="bi bi-calendar-check"></i> Modification Date</h6>
+                        <p>@(Model.UpdatedAt?.ToString("MMM dd, yyyy hh:mm tt") ?? "-")</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button onclick="window.print()" class="btn btn-secondary"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</div>

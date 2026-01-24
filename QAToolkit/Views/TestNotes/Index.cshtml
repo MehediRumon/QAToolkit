@@ -1,0 +1,154 @@
+@model IEnumerable<QAToolkit.Models.TestNote>
+@{
+    ViewData["Title"] = "Test Notes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-journal-text"></i> Test Notes</h2>
+    <a asp-action="Create" class="btn btn-success">
+        <i class="bi bi-plus-lg"></i> Add Note
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Project</label>
+                <select name="project" class="form-select">
+                    <option value="">All Projects</option>
+                    @foreach (var proj in ViewBag.Projects as List<string?>)
+                    {
+                        <option value="@proj" selected="@(ViewBag.SelectedProject == proj)">@proj</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="Posted" selected="@(ViewBag.SelectedStatus == "Posted")">Posted</option>
+                    <option value="Not Posted" selected="@(ViewBag.SelectedStatus == "Not Posted")">Not Posted</option>
+                    <option value="Fixed" selected="@(ViewBag.SelectedStatus == "Fixed")">Fixed</option>
+                    <option value="Not Fixed" selected="@(ViewBag.SelectedStatus == "Not Fixed")">Not Fixed</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-funnel"></i> Filter</button>
+                <a href="/TestNotes" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notes Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center align-middle" style="width: 3%">#</th>
+                        <th class="text-center align-middle" style="width: 12%">Title</th>
+                        <th class="text-center align-middle" style="width: 8%">Project</th>
+                        <th class="text-center align-middle" style="width: 8%">Server</th>
+                        <th class="text-center align-middle" style="width: 35%">Description</th>
+                        <th class="text-center align-middle" style="width: 8%">Status</th>
+                        <th class="text-center align-middle" style="width: 5%">Media</th>
+                        <th class="text-center align-middle" style="width: 9%">Date</th>
+                        <th class="text-center align-middle" style="width: 12%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        var index = 1;
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center align-middle">@index</td>
+                                <td class="align-middle">@item.Title</td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(item.Project))
+                                    {
+                                        <span class="badge bg-info">@item.Project</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@(item.Server ?? "-")</small>
+                                </td>
+                                <td class="align-middle">
+                                    <small>@(item.Description.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)</small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(item.Status))
+                                    {
+                                        var statusClass = item.Status switch
+                                        {
+                                            "Fixed" => "bg-success",
+                                            "Posted" => "bg-primary",
+                                            "Not Posted" => "bg-warning",
+                                            "Not Fixed" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        <span class="badge @statusClass">@item.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(item.ImageVideoUrl))
+                                    {
+                                        <a href="@item.ImageVideoUrl" target="_blank" class="btn btn-sm btn-outline-primary" title="View Media">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@item.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this note?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-journal-text fs-1"></i>
+                                <p class="mt-2">No test notes found. <a asp-action="Create">Add your first note</a></p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
