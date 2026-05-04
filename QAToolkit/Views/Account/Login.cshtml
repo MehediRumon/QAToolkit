@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Sign in";
     Layout = null;
 }
 
@@ -8,87 +8,103 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QA Toolkit</title>
+    <title>@ViewData["Title"] &middot; QA Toolkit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="~/css/site.css" rel="stylesheet" />
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-page);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: var(--space-5);
+        }
+        .login-shell {
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-brand {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+        .login-brand-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            background: var(--brand-600);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: var(--space-3);
+        }
+        .login-brand h1 {
+            font-size: var(--text-xl);
+            font-weight: var(--weight-semibold);
+            margin-bottom: 4px;
+        }
+        .login-brand p {
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
         }
         .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
-            width: 100%;
-            max-width: 420px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            box-shadow: var(--shadow-sm);
         }
-        .login-header {
+        .login-footer {
             text-align: center;
-            margin-bottom: 30px;
-        }
-        .login-header i {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        .login-header h2 {
-            color: #2c3e50;
-            font-weight: 600;
-            margin: 0;
-        }
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 12px;
-            font-weight: 500;
-        }
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            margin-top: var(--space-5);
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
         }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="login-header">
-            <i class="bi bi-clipboard-check"></i>
-            <h2>QA Toolkit</h2>
-            <p class="text-muted mb-0">Sign in to your account</p>
+    <div class="login-shell">
+        <div class="login-brand">
+            <div class="login-brand-icon"><i class="bi bi-clipboard-check"></i></div>
+            <h1>Welcome back</h1>
+            <p>Sign in to your QA Toolkit account</p>
         </div>
 
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-circle"></i> @TempData["Error"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
+        <div class="login-card">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <div>@TempData["Error"]</div>
+                </div>
+            }
 
-        <form method="post" asp-action="Login">
-            @Html.AntiForgeryToken()
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required autofocus>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" value="true">
-                <label class="form-check-label" for="rememberMe">Remember me for 30 days</label>
-            </div>
-            <button type="submit" class="btn btn-primary btn-login w-100">
-                <i class="bi bi-box-arrow-in-right"></i> Sign In
-            </button>
-        </form>
+            <form method="post" asp-action="Login">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="you@company.com" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="mb-4 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" value="true">
+                    <label class="form-check-label" for="rememberMe">Remember me for 30 days</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 justify-content-center">
+                    Sign in
+                </button>
+            </form>
+        </div>
 
+        <div class="login-footer">
+            QA Toolkit &middot; v1.0.0
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

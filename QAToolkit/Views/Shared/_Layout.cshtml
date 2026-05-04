@@ -1,144 +1,170 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var pageTitle = ViewData["Title"]?.ToString() ?? "";
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - QA Toolkit</title>
-    
+    <title>@pageTitle &middot; QA Toolkit</title>
+
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    
+
     <!-- Custom CSS -->
     <link href="~/css/site.css" rel="stylesheet" />
+
+    <!-- Theme init (must run before render to avoid flash) -->
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('theme');
+                var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { }
+        })();
+    </script>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-clipboard-check-fill text-primary"></i> 
-                <span class="ms-2">QA Toolkit</span>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+    <!-- Topbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="d-flex align-items-center w-100">
+            <!-- Brand + sidebar toggle -->
+            <button class="btn btn-ghost btn-sm d-lg-none me-2" type="button" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="bi bi-list" style="font-size: 1.25rem;"></i>
             </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-3">
-                        <span class="nav-link py-0">
-                            <i class="bi bi-clock me-1 opacity-75"></i> 
-                            <small class="fw-medium">@DateTime.Now.ToString("dddd, MMM dd")</small>
-                        </span>
-                    </li>
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <li class="nav-item border-start ps-3 ms-1 d-flex align-items-center">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 13px;">
-                                    @(User.Identity.Name?.Substring(0,1).ToUpper() ?? "U")
-                                </div>
-                                <span class="fw-medium text-dark small">@User.Identity.Name</span>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-clipboard-check-fill"></i>
+                <span>QA Toolkit</span>
+            </a>
+
+            <!-- Breadcrumb / page title slot -->
+            <div class="d-none d-lg-flex align-items-center ms-4 ps-4 border-start text-muted">
+                <small class="fw-medium">@pageTitle</small>
+            </div>
+
+            <!-- Right cluster -->
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="d-none d-md-inline-flex align-items-center text-muted small me-2">
+                    <i class="bi bi-clock me-1"></i>
+                    @DateTime.Now.ToString("ddd, MMM dd")
+                </span>
+
+                <button class="btn btn-ghost btn-sm" type="button" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+                    <i class="bi bi-moon-stars" id="themeIcon"></i>
+                </button>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-ghost btn-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="avatar rounded-circle d-flex align-items-center justify-content-center">
+                                @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
                             </div>
-                        </li>
-                        <li class="nav-item ms-3">
-                            <a class="btn btn-sm btn-outline-danger border-0" asp-controller="Account" asp-action="Logout" title="Logout">
-                                <i class="bi bi-box-arrow-right"></i>
-                            </a>
-                        </li>
-                    }
-                </ul>
+                            <span class="d-none d-md-inline fw-medium">@User.Identity.Name</span>
+                            <i class="bi bi-chevron-down small text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end mt-1" style="min-width: 200px;">
+                            <li class="px-3 py-2">
+                                <div class="fw-medium">@User.Identity.Name</div>
+                                <small class="text-muted">Signed in</small>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Account" asp-action="Logout">
+                                    <i class="bi bi-box-arrow-right"></i> Sign out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                }
             </div>
         </div>
     </nav>
 
     <!-- Sidebar -->
-    <nav class="sidebar">
+    <nav class="sidebar" id="sidebar">
         <div class="d-flex flex-column h-100">
             <ul class="nav flex-column flex-grow-1">
                 <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                    <a class="nav-link @(currentController == "Home" ? "active" : "")"
                        asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-grid-fill"></i> Dashboard
+                        <i class="bi bi-grid"></i><span>Dashboard</span>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UrlResources" ? "active" : "")"
-                       asp-controller="UrlResources" asp-action="Index">
-                        <i class="bi bi-link-45deg"></i> URL Manager
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TestNotes" ? "active" : "")"
-                       asp-controller="TestNotes" asp-action="Index">
-                        <i class="bi bi-journal-text"></i> Test Notes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Credentials" ? "active" : "")"
-                       asp-controller="Credentials" asp-action="Index">
-                        <i class="bi bi-shield-lock"></i> Credentials
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ReleaseNotes" ? "active" : "")"
-                       asp-controller="ReleaseNotes" asp-action="Index">
-                        <i class="bi bi-rocket-takeoff"></i> Release Notes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MeetingNotes" ? "active" : "")"
-                       asp-controller="MeetingNotes" asp-action="Index">
-                        <i class="bi bi-people"></i> Meeting Notes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Workflows" ? "active" : "")"
-                       asp-controller="Workflows" asp-action="Index">
-                        <i class="bi bi-diagram-3"></i> Workflows
-                    </a>
-                </li>
-                <!-- Tools Section -->
-                <li class="nav-item mt-4 mb-2">
-                    <div class="nav-section-header text-uppercase text-muted fw-bold small px-3">
-                        Tools
-                    </div>
                 </li>
 
+                <li class="nav-section-header">Workspace</li>
+
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "UrlResources" ? "active" : "")"
+                       asp-controller="UrlResources" asp-action="Index">
+                        <i class="bi bi-link-45deg"></i><span>URL Manager</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "TestNotes" ? "active" : "")"
+                       asp-controller="TestNotes" asp-action="Index">
+                        <i class="bi bi-journal-text"></i><span>Test Notes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Credentials" ? "active" : "")"
+                       asp-controller="Credentials" asp-action="Index">
+                        <i class="bi bi-shield-lock"></i><span>Credentials</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "ReleaseNotes" ? "active" : "")"
+                       asp-controller="ReleaseNotes" asp-action="Index">
+                        <i class="bi bi-rocket-takeoff"></i><span>Release Notes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "MeetingNotes" ? "active" : "")"
+                       asp-controller="MeetingNotes" asp-action="Index">
+                        <i class="bi bi-people"></i><span>Meeting Notes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(currentController == "Workflows" ? "active" : "")"
+                       asp-controller="Workflows" asp-action="Index">
+                        <i class="bi bi-diagram-3"></i><span>Workflows</span>
+                    </a>
+                </li>
+
+                <li class="nav-section-header">Tools</li>
+
                 @{
-                    var isOmrFiller = ViewContext.RouteData.Values["action"]?.ToString() == "OmrFiller";
-                    var isConfigManager = ViewContext.RouteData.Values["action"]?.ToString() == "ConfigManager";
-                    var isCsvGenerator = ViewContext.RouteData.Values["action"]?.ToString() == "CsvGenerator";
-                    var isQuestionGenerator = ViewContext.RouteData.Values["action"]?.ToString() == "QuestionGenerator";
-                    var isPaymentApproval = ViewContext.RouteData.Values["action"]?.ToString() == "PaymentApproval";
+                    var isOmrFiller = currentAction == "OmrFiller";
+                    var isConfigManager = currentAction == "ConfigManager";
+                    var isCsvGenerator = currentAction == "CsvGenerator";
+                    var isQuestionGenerator = currentAction == "QuestionGenerator";
+                    var isPaymentApproval = currentAction == "PaymentApproval";
                     var omrExpanded = (isOmrFiller || isConfigManager) ? "true" : "false";
                     var omrShow = (isOmrFiller || isConfigManager) ? "show" : "";
                 }
                 <li class="nav-item">
-                    <a class="nav-link @(isOmrFiller || isConfigManager ? "" : "collapsed")"
+                    <a class="nav-link @((isOmrFiller || isConfigManager) ? "" : "collapsed")"
                        data-bs-toggle="collapse" href="#omrSubmenu" role="button"
                        aria-expanded="@omrExpanded" aria-controls="omrSubmenu">
                         <i class="bi bi-tools"></i>
                         <span class="flex-grow-1">OMR Auto Filler</span>
-                        <i class="bi bi-chevron-down ms-auto small opacity-50"></i>
+                        <i class="bi bi-chevron-down"></i>
                     </a>
                     <div class="collapse @omrShow" id="omrSubmenu">
                         <ul class="submenu nav flex-column mt-1">
                             <li class="nav-item">
                                 <a class="nav-link @(isOmrFiller ? "active" : "")"
-                                   asp-controller="Tools" asp-action="OmrFiller">
-                                    Process
-                                </a>
+                                   asp-controller="Tools" asp-action="OmrFiller"><span>Process</span></a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link @(isConfigManager ? "active" : "")"
-                                   asp-controller="Tools" asp-action="ConfigManager">
-                                    Config Manager
-                                </a>
+                                   asp-controller="Tools" asp-action="ConfigManager"><span>Config Manager</span></a>
                             </li>
                         </ul>
                     </div>
@@ -146,96 +172,207 @@
                 <li class="nav-item">
                     <a class="nav-link @(isCsvGenerator ? "active" : "")"
                        asp-controller="Tools" asp-action="CsvGenerator">
-                        <i class="bi bi-file-earmark-spreadsheet"></i> CSV Generator
+                        <i class="bi bi-file-earmark-spreadsheet"></i><span>CSV Generator</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(isQuestionGenerator ? "active" : "")"
                        asp-controller="Tools" asp-action="QuestionGenerator">
-                        <i class="bi bi-file-earmark-richtext"></i> Question Generator
+                        <i class="bi bi-file-earmark-richtext"></i><span>Question Generator</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(isPaymentApproval ? "active" : "")"
                        asp-controller="Tools" asp-action="PaymentApproval">
-                        <i class="bi bi-cash-coin"></i> Payment Approval
+                        <i class="bi bi-cash-coin"></i><span>Payment Approval</span>
                     </a>
                 </li>
 
-                <!-- Admin Section -->
                 @if (User.Claims.FirstOrDefault(c => c.Type == "IsSuperAdmin")?.Value == "True")
                 {
-                    <li class="nav-item mt-4 mb-2">
-                        <div class="nav-section-header text-uppercase text-muted fw-bold small px-3">
-                            Administration
-                        </div>
-                    </li>
+                    <li class="nav-section-header">Administration</li>
                     <li class="nav-item">
-                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")"
+                        <a class="nav-link @(currentController == "Users" ? "active" : "")"
                            asp-controller="Users" asp-action="Index">
-                            <i class="bi bi-people-fill"></i> User Management
+                            <i class="bi bi-people"></i><span>User Management</span>
                         </a>
                     </li>
                 }
             </ul>
-            
-            <div class="p-3 text-center text-muted small opacity-50">
-                v1.0.0
+
+            <div class="sidebar-footer">
+                <small class="text-muted">v1.0.0</small>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Confirm dialog -->
+    <div class="modal fade" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="globalConfirmTitle">Confirm action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0" id="globalConfirmMessage">Are you sure?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="globalConfirmOk">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer">
         @if (TempData["Success"] != null)
         {
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
-                <i class="bi bi-check-circle-fill fs-5"></i>
-                <div>@TempData["Success"]</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="toast-item toast-success" data-auto-dismiss="4000">
+                <i class="bi bi-check-circle-fill toast-icon"></i>
+                <div class="toast-content">@TempData["Success"]</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
         }
         @if (TempData["Error"] != null)
         {
-            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-3 mb-4" role="alert">
-                <i class="bi bi-exclamation-circle-fill fs-5"></i>
-                <div>@TempData["Error"]</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="toast-item toast-danger" data-auto-dismiss="6000">
+                <i class="bi bi-exclamation-circle-fill toast-icon"></i>
+                <div class="toast-content">@TempData["Error"]</div>
+                <button type="button" class="toast-close" onclick="this.parentElement.remove()" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
         }
-        
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
         @RenderBody()
     </main>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-dismiss alerts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.alert-dismissible').forEach(function(alert) {
-                setTimeout(function() {
-                    var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
-                }, 5000);
+        // Auto-dismiss toasts
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.toast-item[data-auto-dismiss]').forEach(function (toast) {
+                var delay = parseInt(toast.dataset.autoDismiss, 10) || 4000;
+                setTimeout(function () {
+                    toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(20px)';
+                    setTimeout(function () { toast.remove(); }, 200);
+                }, delay);
+            });
+
+            // Mobile sidebar toggle
+            var toggle = document.getElementById('sidebarToggle');
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            if (toggle && sidebar && overlay) {
+                toggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('show');
+                    overlay.classList.toggle('show');
+                });
+                overlay.addEventListener('click', function () {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                });
+            }
+
+            // Theme toggle
+            var themeToggle = document.getElementById('themeToggle');
+            var themeIcon = document.getElementById('themeIcon');
+            function updateThemeIcon() {
+                var current = document.documentElement.getAttribute('data-theme') || 'light';
+                if (themeIcon) themeIcon.className = current === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+            }
+            updateThemeIcon();
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function () {
+                    var current = document.documentElement.getAttribute('data-theme') || 'light';
+                    var next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    try { localStorage.setItem('theme', next); } catch (e) { }
+                    updateThemeIcon();
+                });
+            }
+
+            // Global confirm dialog — intercept forms with data-confirm
+            var confirmModalEl = document.getElementById('globalConfirmModal');
+            var confirmModal = confirmModalEl ? new bootstrap.Modal(confirmModalEl) : null;
+            var confirmMessage = document.getElementById('globalConfirmMessage');
+            var confirmTitle = document.getElementById('globalConfirmTitle');
+            var confirmOk = document.getElementById('globalConfirmOk');
+            var pendingForm = null;
+
+            document.body.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                var msg = form.getAttribute('data-confirm');
+                if (!msg || form.dataset.confirmed === 'true') return;
+                e.preventDefault();
+                pendingForm = form;
+                if (confirmMessage) confirmMessage.textContent = msg;
+                if (confirmTitle) confirmTitle.textContent = form.getAttribute('data-confirm-title') || 'Confirm action';
+                if (confirmOk) {
+                    confirmOk.className = 'btn ' + (form.getAttribute('data-confirm-variant') === 'primary' ? 'btn-primary' : 'btn-danger');
+                    confirmOk.textContent = form.getAttribute('data-confirm-button') || 'Delete';
+                }
+                if (confirmModal) confirmModal.show();
+            }, true);
+
+            if (confirmOk) {
+                confirmOk.addEventListener('click', function () {
+                    if (pendingForm) {
+                        pendingForm.dataset.confirmed = 'true';
+                        if (confirmModal) confirmModal.hide();
+                        pendingForm.submit();
+                        pendingForm = null;
+                    }
+                });
+            }
+
+            // Loading state on form submit — show spinner + disable submit button
+            document.body.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                if (form.hasAttribute('data-no-loading')) return;
+                if (e.defaultPrevented) return;
+                var btn = form.querySelector('button[type="submit"]');
+                if (!btn) return;
+                if (btn.dataset.loading === 'true') return;
+                btn.dataset.loading = 'true';
+                btn.dataset.originalHtml = btn.innerHTML;
+                var label = btn.textContent.trim() || 'Working...';
+                btn.innerHTML = '<span class="btn-spinner"></span>' + label;
+                btn.disabled = true;
+                // safety: re-enable after 10s in case nav fails
+                setTimeout(function () {
+                    if (btn.dataset.loading === 'true') {
+                        btn.innerHTML = btn.dataset.originalHtml;
+                        btn.disabled = false;
+                        delete btn.dataset.loading;
+                    }
+                }, 10000);
             });
         });
 
-        // Copy to clipboard function with improved feedback
+        // Copy to clipboard
         function copyToClipboard(text, btn) {
-            navigator.clipboard.writeText(text).then(function() {
-                var originalHtml = btn.innerHTML;
+            navigator.clipboard.writeText(text).then(function () {
                 var icon = btn.querySelector('i');
-                if(icon) {
+                if (icon) {
                     var originalClass = icon.className;
                     icon.className = 'bi bi-check-lg text-success';
-                    setTimeout(function() {
-                        icon.className = originalClass;
-                    }, 1500);
-                } else {
-                    btn.innerHTML = '<i class="bi bi-check-lg"></i>';
-                    setTimeout(function() {
-                        btn.innerHTML = originalHtml;
-                    }, 1500);
+                    setTimeout(function () { icon.className = originalClass; }, 1500);
                 }
             });
         }
