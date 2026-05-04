@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using QAToolkit.Models;
-using QAToolkit.Models.Automation;
 
 namespace QAToolkit.Data
 {
@@ -17,7 +16,7 @@ namespace QAToolkit.Data
         public DbSet<ReleaseNote> ReleaseNotes { get; set; }
         public DbSet<MeetingNote> MeetingNotes { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<TestRunEntity> TestRuns { get; set; }
+        public DbSet<Workflow> Workflows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,16 +47,8 @@ namespace QAToolkit.Data
             modelBuilder.Entity<MeetingNote>()
                 .HasIndex(m => m.MeetingDate);
 
-            // Test run indexes
-            modelBuilder.Entity<TestRunEntity>()
-                .HasIndex(t => t.RunId)
-                .IsUnique();
-
-            modelBuilder.Entity<TestRunEntity>()
-                .HasIndex(t => t.Status);
-
-            modelBuilder.Entity<TestRunEntity>()
-                .HasIndex(t => t.CreatedAt);
+            modelBuilder.Entity<Workflow>()
+                .HasIndex(w => w.Category);
         }
     }
 }

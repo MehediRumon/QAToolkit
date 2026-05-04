@@ -1,0 +1,125 @@
+@model IEnumerable<QAToolkit.Models.Workflow>
+@{
+    ViewData["Title"] = "Workflows";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-diagram-3"></i> Workflows</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Workflow</a>
+</div>
+
+<!-- Filters -->
+@if ((ViewBag.Categories as List<string?>)?.Any() == true)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in ViewBag.Categories as List<string?>)
+                        {
+                            <option value="@cat" selected="@(ViewBag.SelectedCategory == cat)">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-funnel"></i> Filter</button>
+                    <a href="/Workflows" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<!-- Workflows Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center align-middle" style="width: 3%">#</th>
+                        <th class="align-middle" style="width: 30%">Name</th>
+                        <th class="text-center align-middle" style="width: 15%">Category</th>
+                        <th class="text-center align-middle" style="width: 8%">Public</th>
+                        <th class="text-center align-middle" style="width: 12%">Created By</th>
+                        <th class="text-center align-middle" style="width: 12%">Date</th>
+                        <th class="text-center align-middle" style="width: 10%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        var index = 1;
+                        @foreach (var workflow in Model)
+                        {
+                            <tr>
+                                <td class="text-center align-middle">@index</td>
+                                <td class="align-middle">
+                                    <a asp-action="Details" asp-route-id="@workflow.Id" class="text-decoration-none fw-medium">
+                                        @workflow.Name
+                                    </a>
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(workflow.Category))
+                                    {
+                                        <span class="badge bg-secondary">@workflow.Category</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (workflow.IsPublic)
+                                    {
+                                        <span class="badge bg-success">Yes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@(workflow.CreatedBy ?? "N/A")</small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <small>@workflow.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </td>
+                                <td class="text-center align-middle text-nowrap">
+                                    <a asp-action="Details" asp-route-id="@workflow.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (workflow.CreatedBy == User.Identity?.Name)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@workflow.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@workflow.Id" method="post" class="d-inline"
+                                              onsubmit="return confirm('Delete this workflow?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-diagram-3 fs-1"></i>
+                                <p class="mt-2">No workflows yet. <a asp-action="Create">Upload your first workflow</a></p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

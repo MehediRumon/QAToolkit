@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO.Compression;
@@ -372,9 +372,7 @@ public class OmrFillerService : IOmrFillerService
     {
         if (region == null) return "1";
 
-        string[] pageIds = string.IsNullOrEmpty(region.CharSet)
-            ? new[] { "1" }
-            : region.CharSet.Split(',');
+        string[] pageIds = string.IsNullOrEmpty(region.CharSet) ? new string[] { "1" } : region.CharSet.Select(c => c.ToString()).ToArray();
 
         if (pageIds.Length == 1) return pageIds[0];
 
@@ -559,7 +557,7 @@ public class OmrFillerService : IOmrFillerService
         return string.Join(", ", resultLog);
     }
 
-    private void DrawSaqMappingLabel(Graphics g, GridSystemData grid, OmrRegion region, string? extraText)
+    private void DrawSaqMappingLabel(Graphics g, GridSystemData grid, OmrRegion region, string extraText = null)
     {
         if (region.StartX > grid.XLines.Count || region.StartY > grid.YLines.Count) return;
 
@@ -568,47 +566,64 @@ public class OmrFillerService : IOmrFillerService
         float startPixelX = originX + (region.PaddingX * grid.StepX);
         float startPixelY = originY + (region.PaddingY * grid.StepY);
 
-        using var font = new Font("Arial", 7, FontStyle.Bold);
-        using var brush = new SolidBrush(Color.Black);
-        using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-
-        if (region.ResultCountCellX > 0 && region.ResultCountCellY > 0)
+        using (Font font = new Font("Arial", 7, FontStyle.Bold))
+        using (Brush brush = new SolidBrush(Color.Black))
+        using (StringFormat format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
         {
-            float totalWidth = region.ResultCountCellX * grid.StepX;
-            float totalHeight = region.ResultCountCellY * grid.StepY;
-            float centerX = startPixelX + (totalWidth / 2.0f);
-            float centerY = startPixelY + (totalHeight / 2.0f);
-
-            if (!string.IsNullOrEmpty(extraText))
+            // লজিক চেক: resultCountCell ডাটা আছে কিনা (বড় এরিয়া)
+            if (region.ResultCountCellX > 0 && region.ResultCountCellY > 0)
             {
-                g.DrawString(extraText, font, brush, centerX, centerY - 15, format);
-                g.DrawString(region.MemberName, font, brush, centerX, centerY + 15, format);
-            }
-            else
-            {
-                g.DrawString(region.MemberName, font, brush, centerX, centerY, format);
-            }
-        }
-        else
-        {
-            int count = region.Lines > 0 ? region.Lines : 1;
-            for (int i = 0; i < count; i++)
-            {
-                float spacingFactorY = 1.0f + region.SpacingY;
-                float cellTopY = startPixelY + (i * grid.StepY * spacingFactorY);
-                float centerX = startPixelX + (grid.StepX / 2.0f);
-                float centerY = cellTopY + (grid.StepY / 2.0f);
+                float totalWidth = region.ResultCountCellX * grid.StepX;
+                float totalHeight = region.ResultCountCellY * grid.StepY;
 
-                string label = count > 1 ? $"{region.MemberName} {i + 1}" : region.MemberName;
-
+                // --- EXTRA TEXT LOGIC (BOUNDED RECT — text wrap হবে) ---
                 if (!string.IsNullOrEmpty(extraText))
                 {
-                    g.DrawString(extraText, font, brush, centerX, centerY - 15, format);
-                    g.DrawString(label, font, brush, centerX, centerY + 15, format);
+                    // Extra Text উপরের অর্ধেকে (RectangleF দিয়ে bound করা, লম্বা text wrap হবে)
+                    float halfHeight = totalHeight / 2.0f;
+                    RectangleF extraRect = new RectangleF(startPixelX, startPixelY, totalWidth, halfHeight);
+                    g.DrawString(extraText, font, brush, extraRect, format);
+
+                    // Main Label নিচের অর্ধেকে
+                    RectangleF labelRect = new RectangleF(startPixelX, startPixelY + halfHeight, totalWidth, halfHeight);
+                    g.DrawString(region.MemberName, font, brush, labelRect, format);
                 }
                 else
                 {
-                    g.DrawString(label, font, brush, centerX, centerY, format);
+                    RectangleF fullRect = new RectangleF(startPixelX, startPixelY, totalWidth, totalHeight);
+                    g.DrawString(region.MemberName, font, brush, fullRect, format);
+                }
+            }
+            else
+            {
+                // Fallback Logic (Line by Line) — RectangleF bound সহ
+                int count = region.Lines > 0 ? region.Lines : 1;
+                // Available width: left marker থেকে right marker পর্যন্ত
+                float availableWidth = grid.XLines.Last() - grid.XLines[region.StartX - 1];
+
+                for (int i = 0; i < count; i++)
+                {
+                    float spacingFactorY = 1.0f + region.SpacingY;
+                    float cellTopY = startPixelY + (i * grid.StepY * spacingFactorY);
+                    float cellHeight = grid.StepY;
+
+                    string label = count > 1 ? $"{region.MemberName} {i + 1}" : region.MemberName;
+
+                    // --- EXTRA TEXT LOGIC (BOUNDED RECT) ---
+                    if (!string.IsNullOrEmpty(extraText))
+                    {
+                        float halfH = cellHeight / 2.0f;
+                        RectangleF extraRect = new RectangleF(startPixelX, cellTopY, availableWidth, halfH);
+                        g.DrawString(extraText, font, brush, extraRect, format);
+
+                        RectangleF labelRect = new RectangleF(startPixelX, cellTopY + halfH, availableWidth, halfH);
+                        g.DrawString(label, font, brush, labelRect, format);
+                    }
+                    else
+                    {
+                        RectangleF cellRect = new RectangleF(startPixelX, cellTopY, availableWidth, cellHeight);
+                        g.DrawString(label, font, brush, cellRect, format);
+                    }
                 }
             }
         }

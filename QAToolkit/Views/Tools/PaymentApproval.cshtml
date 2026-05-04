@@ -1,0 +1,639 @@
+@{
+    ViewData["Title"] = "Payment Approval";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1 fw-bold">Payment Approval Script</h4>
+        <p class="text-muted mb-0 small">Configure and generate Nagad auto-approve script for browser console</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Configuration Panel -->
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-gear me-1"></i> Configuration
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Rows to Approve</label>
+                    <input type="number" class="form-control" id="cfgCount" value="20" min="1">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Rates <small class="text-muted">(comma-separated)</small></label>
+                    <input type="text" class="form-control" id="cfgRates" value="150,160,170" placeholder="e.g., 150,160,170">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Rate Mode</label>
+                    <select class="form-select" id="cfgRateMode">
+                        <option value="random_from_list" selected>Random from list</option>
+                        <option value="fixed_first">Fixed: first value</option>
+                        <option value="fixed_last">Fixed: last value</option>
+                        <option value="fixed_index">Fixed: pick by index</option>
+                    </select>
+                </div>
+
+                <div class="mb-3" id="indexDiv" style="display:none;">
+                    <label class="form-label">Rate Index <small class="text-muted">(0-based)</small></label>
+                    <input type="number" class="form-control" id="cfgRateIndex" value="0" min="0">
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="cfgRandomPick">
+                    <label class="form-check-label" for="cfgRandomPick">Randomly pick rows (not just first N)</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Slow Mode Delay <small class="text-muted">(ms per row, 0 = off)</small></label>
+                    <input type="number" class="form-control" id="cfgSlowMs" value="700" min="0">
+                </div>
+
+                <hr>
+                <p class="fw-semibold mb-2"><i class="bi bi-sliders me-1"></i> Verification (Advanced)</p>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label small">Max Attempts</label>
+                        <input type="number" class="form-control" id="cfgAttempts" value="3" min="1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label small">Poll Count</label>
+                        <input type="number" class="form-control" id="cfgPollCount" value="6" min="1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label small">Poll Delay (ms)</label>
+                        <input type="number" class="form-control" id="cfgPollDelay" value="120" min="50">
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" id="btnGenerate">
+                        <i class="bi bi-clipboard-check me-1"></i> Generate & Copy Script
+                    </button>
+                </div>
+                <div id="copyResult" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Usage Instructions -->
+        <div class="card">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-info-circle me-1"></i> How to Use
+            </div>
+            <div class="card-body">
+                <ol class="mb-0 small">
+                    <li class="mb-2">Configure the parameters above</li>
+                    <li class="mb-2">Click <strong>"Generate & Copy Script"</strong></li>
+                    <li class="mb-2">Open the <strong>Payment Approval page</strong> in your browser</li>
+                    <li class="mb-2">Press <kbd>F12</kbd> to open DevTools, go to <strong>Console</strong> tab</li>
+                    <li class="mb-2">Paste the script (<kbd>Ctrl+V</kbd>) and press <kbd>Enter</kbd></li>
+                    <li class="mb-0">The floating panel will appear - click <strong>Run</strong> to start</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Preview -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-code-slash me-1"></i> Generated Script</span>
+                <button class="btn btn-sm btn-outline-secondary" id="btnCopyPreview">
+                    <i class="bi bi-clipboard me-1"></i> Copy
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <pre id="scriptPreview" class="mb-0 p-3" style="max-height: 75vh; overflow: auto; background: #1e1e1e; color: #d4d4d4; font-size: 12px; border-radius: 0 0 0.375rem 0.375rem; white-space: pre-wrap; word-break: break-all;"><code>Click "Generate & Copy Script" to generate the script...</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Toggle index field visibility
+    document.getElementById('cfgRateMode').addEventListener('change', function() {
+        document.getElementById('indexDiv').style.display = this.value === 'fixed_index' ? 'block' : 'none';
+    });
+
+    // The full script template
+    function buildScript() {
+        const count = parseInt(document.getElementById('cfgCount').value) || 20;
+        const rates = document.getElementById('cfgRates').value || '150,160,170';
+        const mode = document.getElementById('cfgRateMode').value;
+        const pickIndex = parseInt(document.getElementById('cfgRateIndex').value) || 0;
+        const randomPick = document.getElementById('cfgRandomPick').checked;
+        const slowMs = parseInt(document.getElementById('cfgSlowMs').value) || 0;
+        const attempts = parseInt(document.getElementById('cfgAttempts').value) || 3;
+        const pollCount = parseInt(document.getElementById('cfgPollCount').value) || 6;
+        const pollDelay = parseInt(document.getElementById('cfgPollDelay').value) || 120;
+
+        return `(() => {
+  // remove old panel if exists
+  const old = document.getElementById("nagadAutoApprovePanel");
+  if (old) old.remove();
+
+  const tableSel = "#approvalListTable";
+  const cellText = (row, idx) => (row.querySelectorAll("td")[idx]?.innerText || "").trim();
+
+  const getAllRows = () => Array.from(document.querySelectorAll(\`\${tableSel} tbody tr\`));
+
+  const getEligible = (rows) =>
+    rows.filter((r) => {
+      const mobileBankNo = cellText(r, 6);
+      const mobileBankType = cellText(r, 7).toLowerCase();
+      return mobileBankNo !== "-" && mobileBankNo !== "" && mobileBankType === "nagad";
+    });
+
+  const parseRates = (txt) => {
+    const rates = String(txt || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(n => Number.isFinite(n) && n > 0);
+    return [...new Set(rates)];
+  };
+
+  const buildRatePicker = ({ rates, mode, pickIndex }) => {
+    if (!rates.length) return null;
+    if (mode === "fixed_first") return () => rates[0];
+    if (mode === "fixed_last") return () => rates[rates.length - 1];
+    if (mode === "fixed_index") {
+      const idx = Math.max(0, Math.min(rates.length - 1, Number(pickIndex) || 0));
+      return () => rates[idx];
+    }
+    return () => rates[Math.floor(Math.random() * rates.length)];
+  };
+
+  const setNativeValue = (el, value) => {
+    const proto = Object.getPrototypeOf(el);
+    const desc = Object.getOwnPropertyDescriptor(proto, "value");
+    if (desc && typeof desc.set === "function") desc.set.call(el, value);
+    else el.value = value;
+  };
+
+  const triggerAll = (el) => {
+    el.dispatchEvent(new Event("focus", { bubbles: true }));
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "1" }));
+    el.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "1" }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    el.dispatchEvent(new Event("blur", { bubbles: true }));
+  };
+
+  const readAmountNumber = (row) => {
+    const v = row.querySelector("input.paidAmount")?.value ?? "";
+    const n = Number(String(v).replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+  const clearHighlights = () => {
+    document.querySelectorAll("tr.__nagad_processing, tr.__nagad_fail, tr.__nagad_ok")
+      .forEach(r => {
+        r.classList.remove("__nagad_processing", "__nagad_fail", "__nagad_ok");
+        r.style.outline = "";
+      });
+  };
+
+  const highlight = (row, type) => {
+    row.classList.remove("__nagad_processing", "__nagad_fail", "__nagad_ok");
+    row.classList.add(type);
+    if (type === "__nagad_processing") row.style.outline = "2px solid #ffd000";
+    if (type === "__nagad_ok") row.style.outline = "2px solid #2bff88";
+    if (type === "__nagad_fail") row.style.outline = "2px solid #ff4d4d";
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+  };
+
+  const setRateAndEnsureAmount = async (row, rate, verify) => {
+    const { maxAttempts = 3, pollCount = 6, pollDelayMs = 120 } = verify || {};
+    const rateInput = row.querySelector("input.hourlyRate");
+    if (!rateInput) return { ok: false, reason: "rate_input_not_found" };
+    const beforeAmount = readAmountNumber(row);
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      setNativeValue(rateInput, String(rate));
+      triggerAll(rateInput);
+      try { rateInput.focus(); } catch {}
+      try { rateInput.blur(); } catch {}
+
+      for (let i = 1; i <= pollCount; i++) {
+        await wait(pollDelayMs);
+        const now = readAmountNumber(row);
+        if (now > 0 || now !== beforeAmount) return { ok: true, amount: now, attempt, poll: i };
+      }
+
+      setNativeValue(rateInput, "");
+      triggerAll(rateInput);
+      setNativeValue(rateInput, String(rate));
+      triggerAll(rateInput);
+    }
+
+    const finalAmt = readAmountNumber(row);
+    return { ok: finalAmt > 0 || finalAmt !== beforeAmount, amount: finalAmt, reason: "amount_not_updating" };
+  };
+
+  const tickApprove = (row) => {
+    const approveChk = row.querySelector("input.check_approve");
+    if (!approveChk) return false;
+    approveChk.checked = true;
+    approveChk.dispatchEvent(new Event("change", { bubbles: true }));
+    approveChk.dispatchEvent(new Event("click", { bubbles: true }));
+    return true;
+  };
+
+  const runAuto = async ({ count, randomPickRows, rates, mode, pickIndex, verify, slowMs }) => {
+    clearHighlights();
+    const rows = getAllRows();
+    const eligible = getEligible(rows);
+    const pickRate = buildRatePicker({ rates, mode, pickIndex });
+    if (!pickRate) return alert("Rates invalid. Example: 150,160,170");
+
+    let selected = [];
+    if (randomPickRows) {
+      const pool = [...eligible];
+      while (selected.length < count && pool.length > 0) {
+        const idx = Math.floor(Math.random() * pool.length);
+        selected.push(pool.splice(idx, 1)[0]);
+      }
+    } else {
+      selected = eligible.slice(0, count);
+    }
+
+    const approvedData = [];
+    const failedData = [];
+
+    for (let i = 0; i < selected.length; i++) {
+      const row = selected[i];
+      const rate = pickRate();
+      highlight(row, "__nagad_processing");
+      const result = await setRateAndEnsureAmount(row, rate, verify);
+
+      if (result.ok) {
+        tickApprove(row);
+        highlight(row, "__nagad_ok");
+      } else {
+        highlight(row, "__nagad_fail");
+      }
+
+      const item = {
+        sl: i + 1,
+        tpin: cellText(row, 1),
+        mobileBankNo: cellText(row, 6),
+        mobileBankType: "Nagad",
+        hourlyRate: rate,
+        totalAmount: row.querySelector("input.paidAmount")?.value || "",
+        calcOk: !!result.ok,
+        calcInfo: result
+      };
+
+      approvedData.push(item);
+      if (!result.ok) failedData.push(item);
+
+      const status = document.getElementById("nagadAutoApproveStatus");
+      if (status) {
+        status.textContent =
+          \`Processing... \${i + 1}/\${selected.length} | OK: \${approvedData.length - failedData.length} | Failed: \${failedData.length} | Eligible: \${eligible.length}\`;
+      }
+
+      if (slowMs && slowMs > 0) await wait(slowMs);
+    }
+
+    window.__approvedNagadRows = approvedData;
+    window.__approvedNagadFailedRows = failedData;
+    window.__approvedNagadTPINAmount = approvedData
+      .filter(x => x.calcOk)
+      .map(x => ({ tpin: x.tpin, totalAmount: x.totalAmount }));
+
+    const status = document.getElementById("nagadAutoApproveStatus");
+    if (status) {
+      status.textContent =
+        \`Done! Selected: \${selected.length} | OK: \${approvedData.length - failedData.length} | Failed: \${failedData.length}\`;
+    }
+
+    console.log(\`Done. Selected: \${selected.length} | OK: \${approvedData.length - failedData.length} | Failed: \${failedData.length}\`);
+    if (failedData.length) {
+      console.warn("Failed rows:", window.__approvedNagadFailedRows);
+      console.table(window.__approvedNagadFailedRows.map(x => ({
+        sl: x.sl, tpin: x.tpin, hourlyRate: x.hourlyRate, totalAmount: x.totalAmount, reason: x.calcInfo?.reason || ""
+      })));
+    } else {
+      console.table(window.__approvedNagadRows.map(x => ({
+        sl: x.sl, tpin: x.tpin, hourlyRate: x.hourlyRate, totalAmount: x.totalAmount
+      })));
+    }
+  };
+
+  // ---------- UI PANEL ----------
+  const panel = document.createElement("div");
+  panel.id = "nagadAutoApprovePanel";
+
+  const savedPos = (() => {
+    try { return JSON.parse(localStorage.getItem("nagadAutoApprovePanelPos") || "null"); }
+    catch { return null; }
+  })();
+
+  const startTop = savedPos?.top ?? 12;
+  const startLeft = savedPos?.left ?? (window.innerWidth - 380);
+
+  panel.style.cssText = \`
+    position: fixed; top: \${startTop}px; left: \${startLeft}px; z-index: 999999;
+    background: #111; color: #fff; padding: 10px; border-radius: 10px;
+    font-family: Arial, sans-serif; width: 380px; box-shadow: 0 8px 22px rgba(0,0,0,.35);
+    user-select: none; transition: opacity .18s ease, transform .18s ease;
+  \`;
+
+  panel.innerHTML = \`
+    <div id="nagadPanelHeader"
+      style="cursor: move; font-weight: 800; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+      <span>Nagad Auto Approve</span>
+      <div style="display:flex; gap:6px; align-items:center; user-select:auto;">
+        <button id="nagadMinBtn" title="Minimize"
+          style="padding: 4px 8px; border:0; border-radius:6px; background:#333; color:#fff; cursor:pointer;">\\u2014</button>
+        <button id="nagadHideBtn" title="Auto-hide on scroll"
+          style="padding: 4px 8px; border:0; border-radius:6px; background:#333; color:#fff; cursor:pointer;">\\ud83d\\udc41</button>
+        <button id="nagadCloseBtn" title="Close"
+          style="padding: 4px 8px; border:0; border-radius:6px; background:#444; color:#fff; cursor:pointer;">\\u2715</button>
+      </div>
+    </div>
+    <div id="nagadPanelBody" style="margin-top:10px;">
+      <label style="font-size: 12px; opacity: .85;">How many rows to approve?</label>
+      <input id="nagadCount" type="number" min="1" value="${count}"
+        style="width: 100%; padding: 8px; margin: 6px 0 10px; border-radius: 6px; border: 1px solid #444; background:#1b1b1b; color:#fff; user-select:auto;" />
+
+      <label style="font-size: 12px; opacity: .85;">Rates (comma separated)</label>
+      <input id="nagadRates" type="text" value="${rates}"
+        style="width: 100%; padding: 8px; margin: 6px 0 10px; border-radius: 6px; border: 1px solid #444; background:#1b1b1b; color:#fff; user-select:auto;" />
+
+      <label style="font-size: 12px; opacity: .85;">Rate mode</label>
+      <select id="nagadRateMode"
+        style="width: 100%; padding: 8px; margin: 6px 0 10px; border-radius: 6px; border: 1px solid #444; background:#1b1b1b; color:#fff; user-select:auto;">
+        <option value="random_from_list" \${${JSON.stringify(mode)} === "random_from_list" ? "selected" : ""}>Random from list</option>
+        <option value="fixed_first" \${${JSON.stringify(mode)} === "fixed_first" ? "selected" : ""}>Fixed: first value</option>
+        <option value="fixed_last" \${${JSON.stringify(mode)} === "fixed_last" ? "selected" : ""}>Fixed: last value</option>
+        <option value="fixed_index" \${${JSON.stringify(mode)} === "fixed_index" ? "selected" : ""}>Fixed: pick one (index)</option>
+      </select>
+
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+        <label style="font-size:12px; opacity:.85; flex:1;">Index (0-based)</label>
+        <input id="nagadRateIndex" type="number" min="0" value="${pickIndex}"
+          style="width: 120px; padding: 8px; border-radius: 6px; border: 1px solid #444; background:#1b1b1b; color:#fff; user-select:auto;" />
+      </div>
+
+      <label style="display:flex; align-items:center; gap:8px; font-size: 12px; opacity: .9; margin-bottom: 10px; user-select:auto;">
+        <input id="nagadRandomPickRows" type="checkbox" ${randomPick ? 'checked' : ''} />
+        Randomly pick rows (not just first N)
+      </label>
+
+      <label style="font-size: 12px; opacity: .85;">Slow mode (ms delay per row)</label>
+      <input id="nagadSlowMs" type="number" min="0" value="${slowMs}"
+        style="width: 100%; padding: 8px; margin: 6px 0 10px; border-radius: 6px; border: 1px solid #444; background:#1b1b1b; color:#fff; user-select:auto;" />
+
+      <details style="margin: 8px 0; background:#151515; border:1px solid #333; border-radius:8px; padding:8px; user-select:auto;">
+        <summary style="cursor:pointer; font-size:12px; opacity:.9;">Calculation verify (advanced)</summary>
+        <div style="margin-top:8px; display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div>
+            <label style="font-size:11px; opacity:.85;">Attempts</label>
+            <input id="verifyAttempts" type="number" min="1" value="${attempts}"
+              style="width:100%; padding:6px; border-radius:6px; border:1px solid #444; background:#1b1b1b; color:#fff;" />
+          </div>
+          <div>
+            <label style="font-size:11px; opacity:.85;">Poll count</label>
+            <input id="verifyPollCount" type="number" min="1" value="${pollCount}"
+              style="width:100%; padding:6px; border-radius:6px; border:1px solid #444; background:#1b1b1b; color:#fff;" />
+          </div>
+          <div style="grid-column: 1 / span 2;">
+            <label style="font-size:11px; opacity:.85;">Poll delay (ms)</label>
+            <input id="verifyPollDelay" type="number" min="50" value="${pollDelay}"
+              style="width:100%; padding:6px; border-radius:6px; border:1px solid #444; background:#1b1b1b; color:#fff;" />
+          </div>
+        </div>
+      </details>
+
+      <div style="display:flex; gap:8px;">
+        <button id="nagadRun"
+          style="flex:1; padding: 9px; border: 0; border-radius: 8px; background:#2d6cdf; color:#fff; cursor:pointer; font-weight:700; user-select:auto;">
+          Run
+        </button>
+        <button id="nagadResetPos"
+          style="padding: 9px 10px; border: 0; border-radius: 8px; background:#555; color:#fff; cursor:pointer; user-select:auto;">
+          Reset
+        </button>
+      </div>
+
+      <div id="nagadAutoApproveStatus" style="margin-top:10px; font-size:12px; opacity:.9;">
+        Ready (Yellow=processing, Green=ok, Red=fail)
+      </div>
+
+      <div style="margin-top:8px; font-size:11px; opacity:.75;">
+        OK saved: <code style="color:#9ff;">window.__approvedNagadTPINAmount</code><br/>
+        Failed: <code style="color:#ff9;">window.__approvedNagadFailedRows</code>
+      </div>
+    </div>
+  \`;
+
+  document.body.appendChild(panel);
+
+  // enable/disable index input based on mode
+  const updateIndexVisibility = () => {
+    const mode = document.getElementById("nagadRateMode").value;
+    const idx = document.getElementById("nagadRateIndex");
+    idx.disabled = (mode !== "fixed_index");
+    idx.style.opacity = (mode !== "fixed_index") ? "0.5" : "1";
+  };
+  updateIndexVisibility();
+  document.getElementById("nagadRateMode").addEventListener("change", updateIndexVisibility);
+
+  // RUN
+  document.getElementById("nagadRun").addEventListener("click", async () => {
+    const count = Number(document.getElementById("nagadCount").value || 0);
+    const rates = parseRates(document.getElementById("nagadRates").value);
+    const mode = document.getElementById("nagadRateMode").value;
+    const pickIndex = Number(document.getElementById("nagadRateIndex").value || 0);
+    const randomPickRows = document.getElementById("nagadRandomPickRows").checked;
+    const slowMs = Number(document.getElementById("nagadSlowMs").value || 0);
+
+    const verify = {
+      maxAttempts: Number(document.getElementById("verifyAttempts").value || 3),
+      pollCount: Number(document.getElementById("verifyPollCount").value || 6),
+      pollDelayMs: Number(document.getElementById("verifyPollDelay").value || 120),
+    };
+
+    if (!count || count < 1) return alert("Enter a valid count (>=1)");
+    if (!rates.length) return alert("Rates invalid. Example: 150,160,170");
+
+    document.getElementById("nagadAutoApproveStatus").textContent = "Starting...";
+    await runAuto({ count, randomPickRows, rates, mode, pickIndex, verify, slowMs });
+  });
+
+  // Reset position
+  document.getElementById("nagadResetPos").addEventListener("click", () => {
+    panel.style.top = "12px";
+    panel.style.left = (window.innerWidth - 380) + "px";
+    localStorage.removeItem("nagadAutoApprovePanelPos");
+  });
+
+  // Close panel
+  document.getElementById("nagadCloseBtn").addEventListener("click", () => {
+    panel.remove();
+    console.log("Panel closed");
+  });
+
+  // Minimize / Restore
+  const body = document.getElementById("nagadPanelBody");
+  const minBtn = document.getElementById("nagadMinBtn");
+
+  const setMinimized = (min) => {
+    if (min) {
+      body.style.display = "none";
+      panel.style.width = "260px";
+      minBtn.textContent = "+";
+      minBtn.title = "Restore";
+      localStorage.setItem("nagadAutoApproveMinimized", "1");
+    } else {
+      body.style.display = "";
+      panel.style.width = "380px";
+      minBtn.textContent = "\\u2014";
+      minBtn.title = "Minimize";
+      localStorage.setItem("nagadAutoApproveMinimized", "0");
+    }
+  };
+  setMinimized(localStorage.getItem("nagadAutoApproveMinimized") === "1");
+  minBtn.addEventListener("click", () => setMinimized(body.style.display !== "none"));
+
+  // Auto-hide on scroll toggle
+  const hideBtn = document.getElementById("nagadHideBtn");
+  let autoHide = localStorage.getItem("nagadAutoApproveAutoHide") !== "0";
+
+  const setAutoHide = (on) => {
+    autoHide = on;
+    hideBtn.style.background = on ? "#2b5" : "#333";
+    hideBtn.title = on ? "Auto-hide ON" : "Auto-hide OFF";
+    localStorage.setItem("nagadAutoApproveAutoHide", on ? "1" : "0");
+  };
+  setAutoHide(autoHide);
+  hideBtn.addEventListener("click", () => setAutoHide(!autoHide));
+
+  let scrollTimer = null;
+  const onScroll = () => {
+    if (!autoHide) return;
+    panel.style.opacity = "0.10";
+    panel.style.pointerEvents = "none";
+    panel.style.transform = "scale(0.985)";
+
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      panel.style.opacity = "1";
+      panel.style.pointerEvents = "auto";
+      panel.style.transform = "scale(1)";
+    }, 250);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  // Enter triggers run
+  ["nagadCount", "nagadRates", "nagadRateIndex", "nagadSlowMs", "verifyAttempts", "verifyPollCount", "verifyPollDelay"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("nagadRun").click();
+    });
+  });
+
+  // ---------- DRAG LOGIC ----------
+  const header = document.getElementById("nagadPanelHeader");
+  let dragging = false;
+  let startX = 0, startY = 0, startLeftPx = 0, startTopPx = 0;
+
+  const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
+  header.addEventListener("mousedown", (e) => {
+    dragging = true;
+    const rect = panel.getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeftPx = rect.left;
+    startTopPx = rect.top;
+    panel.style.opacity = "0.95";
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    const newLeft = startLeftPx + dx;
+    const newTop = startTopPx + dy;
+    const maxLeft = window.innerWidth - panel.offsetWidth - 4;
+    const maxTop = window.innerHeight - panel.offsetHeight - 4;
+    panel.style.left = clamp(newLeft, 4, maxLeft) + "px";
+    panel.style.top = clamp(newTop, 4, maxTop) + "px";
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.style.opacity = "1";
+    const rect = panel.getBoundingClientRect();
+    localStorage.setItem("nagadAutoApprovePanelPos", JSON.stringify({ top: rect.top, left: rect.left }));
+  });
+
+  console.log("Nagad Auto Approve panel loaded.");
+})();`;
+    }
+
+    function copyToClipboard(text) {
+        // Fallback for HTTP (non-secure) contexts where navigator.clipboard is unavailable
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            return true;
+        } catch (e) {
+            return false;
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+
+    function generateAndCopy() {
+        const script = buildScript();
+        document.getElementById('scriptPreview').querySelector('code').textContent = script;
+
+        const copied = copyToClipboard(script);
+        if (copied) {
+            document.getElementById('copyResult').innerHTML =
+                '<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle me-1"></i> Script copied to clipboard!</div>';
+            setTimeout(() => {
+                document.getElementById('copyResult').innerHTML = '';
+            }, 3000);
+        } else {
+            document.getElementById('copyResult').innerHTML =
+                '<div class="alert alert-warning py-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Could not copy automatically. Please select and copy from the preview.</div>';
+        }
+    }
+
+    document.getElementById('btnGenerate').addEventListener('click', generateAndCopy);
+
+    document.getElementById('btnCopyPreview').addEventListener('click', function() {
+        const code = document.getElementById('scriptPreview').querySelector('code').textContent;
+        if (!code || code.startsWith('Click "Generate')) {
+            return;
+        }
+        const copied = copyToClipboard(code);
+        if (copied) {
+            const btn = this;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check me-1"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = original; }, 2000);
+        }
+    });
+</script>
+}

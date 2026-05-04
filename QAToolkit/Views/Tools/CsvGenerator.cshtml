@@ -1,0 +1,309 @@
+@{
+    ViewData["Title"] = "CSV Generator";
+}
+
+<style>
+    .upload-zone {
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+    .upload-zone:hover {
+        border-color: var(--primary);
+        background: #f0f7ff;
+    }
+    .upload-zone.dragover {
+        border-color: var(--primary);
+        background: #e3f2fd;
+    }
+    .file-info {
+        background: #e8f5e9;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    .csv-preview {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .csv-preview .header-row {
+        color: #569cd6;
+        font-weight: bold;
+    }
+    .csv-file-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .csv-file-card .file-name {
+        font-weight: 600;
+        color: var(--primary);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-file-earmark-spreadsheet"></i> CSV Generator</h2>
+</div>
+
+<div class="row">
+    <div class="col-lg-5">
+        <!-- Upload Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-upload"></i> Upload Excel File
+            </div>
+            <div class="card-body">
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('excelFile').click()">
+                    <i class="bi bi-cloud-arrow-up fs-1 text-muted mb-2 d-block"></i>
+                    <p class="mb-1"><strong>Click to upload</strong> or drag and drop</p>
+                    <p class="small text-muted mb-0">Excel files only (.xlsx, .xls)</p>
+                </div>
+                <input type="file" id="excelFile" accept=".xlsx,.xls" class="d-none" onchange="handleFileSelect(this)">
+
+                <div id="fileInfo" class="file-info mt-3 d-none">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-earmark-excel text-success"></i>
+                            <span id="fileName" class="fw-medium ms-1"></span>
+                        </div>
+                        <span id="fileSize" class="badge bg-secondary"></span>
+                    </div>
+                </div>
+
+                <div id="errorAlert" class="alert alert-danger mt-3 d-none"></div>
+            </div>
+        </div>
+
+        <!-- Config Card -->
+        <div class="card" id="configCard" style="display: none;">
+            <div class="card-header">
+                <i class="bi bi-gear"></i> Configuration
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Rows per CSV file</label>
+                    <input type="number" id="rowsPerFile" class="form-control" value="1000" min="100" max="10000">
+                    <div class="form-text">Each CSV file will contain this many data rows (100-10,000)</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Max rows to process (optional)</label>
+                    <input type="number" id="maxRows" class="form-control" placeholder="Leave empty for all rows" min="1">
+                    <div class="form-text">Limit total rows to process. Useful for testing.</div>
+                </div>
+                <button type="button" class="btn btn-primary w-100" id="processBtn" onclick="processFile()">
+                    <i class="bi bi-play-fill"></i> Convert to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <!-- Processing Indicator -->
+        <div id="processingCard" class="card d-none">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h5>Processing Excel file...</h5>
+                <p class="text-muted mb-0">This may take a moment for large files</p>
+            </div>
+        </div>
+
+        <!-- Results Card -->
+        <div id="resultsCard" class="card d-none">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-files"></i> Generated CSV Files</span>
+                <div>
+                    <span id="totalInfo" class="badge bg-info me-2"></span>
+                    <button type="button" class="btn btn-success btn-sm" onclick="downloadAll()">
+                        <i class="bi bi-download"></i> Download All (ZIP)
+                    </button>
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <div id="csvFilesList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let selectedFile = null;
+    let generatedFiles = [];
+    const antiForgeryToken = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)[1];
+
+    // Drag and drop
+    const uploadZone = document.getElementById('uploadZone');
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            document.getElementById('excelFile').files = e.dataTransfer.files;
+            handleFileSelect(document.getElementById('excelFile'));
+        }
+    });
+
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'xlsx' && ext !== 'xls') {
+            showError('Please upload an Excel file (.xlsx or .xls)');
+            return;
+        }
+
+        selectedFile = file;
+        hideError();
+
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+        document.getElementById('fileInfo').classList.remove('d-none');
+        document.getElementById('configCard').style.display = 'block';
+        document.getElementById('resultsCard').classList.add('d-none');
+        generatedFiles = [];
+    }
+
+    async function processFile() {
+        if (!selectedFile) return;
+
+        const rowsPerFile = parseInt(document.getElementById('rowsPerFile').value) || 1000;
+        const maxRows = document.getElementById('maxRows').value ? parseInt(document.getElementById('maxRows').value) : null;
+
+        document.getElementById('processingCard').classList.remove('d-none');
+        document.getElementById('resultsCard').classList.add('d-none');
+        document.getElementById('processBtn').disabled = true;
+
+        const formData = new FormData();
+        formData.append('excelFile', selectedFile);
+        formData.append('rowsPerFile', rowsPerFile);
+        if (maxRows) formData.append('maxRows', maxRows);
+        formData.append('__RequestVerificationToken', antiForgeryToken);
+
+        try {
+            const response = await fetch('/Tools/ProcessExcel', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+                showError(result.error);
+            } else {
+                generatedFiles = result.files;
+                displayResults(result.files, result.totalRows);
+            }
+        } catch (err) {
+            showError('Error processing file: ' + err.message);
+        } finally {
+            document.getElementById('processingCard').classList.add('d-none');
+            document.getElementById('processBtn').disabled = false;
+        }
+    }
+
+    function displayResults(files, totalRows) {
+        document.getElementById('totalInfo').textContent = `${files.length} files, ${totalRows} rows`;
+        document.getElementById('resultsCard').classList.remove('d-none');
+
+        const container = document.getElementById('csvFilesList');
+        container.innerHTML = files.map(file => `
+            <div class="csv-file-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="file-name"><i class="bi bi-file-earmark-text"></i> ${file.name}</span>
+                        <span class="badge bg-secondary ms-2">${file.rowCount} rows</span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="downloadSingle(${file.id - 1})">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                </div>
+                <div class="csv-preview">
+                    ${file.preview.map((line, i) =>
+                        `<div class="${i === 0 ? 'header-row' : ''}">${escapeHtml(line)}</div>`
+                    ).join('')}
+                    ${file.rowCount > 9 ? '<div class="text-muted">...</div>' : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function downloadSingle(index) {
+        const file = generatedFiles[index];
+        const content = file.fullContent.join('\n');
+        downloadFile(content, file.name);
+    }
+
+    async function downloadAll() {
+        const data = generatedFiles.map(f => ({
+            name: f.name,
+            fullContent: f.fullContent
+        }));
+
+        try {
+            const response = await fetch('/Tools/DownloadAllCsv', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': antiForgeryToken
+                },
+                body: JSON.stringify(data)
+            });
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'csv_files.zip';
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            showError('Error downloading: ' + err.message);
+        }
+    }
+
+    function downloadFile(content, filename) {
+        const blob = new Blob([content], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function showError(message) {
+        const alert = document.getElementById('errorAlert');
+        alert.textContent = message;
+        alert.classList.remove('d-none');
+    }
+
+    function hideError() {
+        document.getElementById('errorAlert').classList.add('d-none');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+}

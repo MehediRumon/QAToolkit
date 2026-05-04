@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.0.1" />
     <PackageReference Include="EPPlus" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,6 +22,15 @@
     <Content Include="XmlConfigs\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Question\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Exclude SQLite database files from publish to protect live data -->
+  <ItemGroup>
+    <Content Remove="QAToolkit.db;QAToolkit.db-shm;QAToolkit.db-wal" />
+    <None Remove="QAToolkit.db;QAToolkit.db-shm;QAToolkit.db-wal" />
   </ItemGroup>
 
 </Project>

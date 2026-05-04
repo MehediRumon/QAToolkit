@@ -1,0 +1,363 @@
+@{
+    ViewData["Title"] = "Question Generator";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1 fw-bold">Question Generator</h4>
+        <p class="text-muted mb-0 small">Generate MCQ and SAQ question documents</p>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-4" id="questionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="mcq-tab" data-bs-toggle="tab" data-bs-target="#mcq" type="button" role="tab">
+            <i class="bi bi-list-check me-1"></i> Generate MCQ
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="saq-tab" data-bs-toggle="tab" data-bs-target="#saq" type="button" role="tab">
+            <i class="bi bi-pencil-square me-1"></i> Generate SAQ / OW
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="answer-tab" data-bs-toggle="tab" data-bs-target="#answer" type="button" role="tab">
+            <i class="bi bi-check2-circle me-1"></i> Add Answer Tag
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="subject-tab" data-bs-toggle="tab" data-bs-target="#subject" type="button" role="tab">
+            <i class="bi bi-bookmark-plus me-1"></i> Add Subject Name
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="questionTabsContent">
+    <!-- MCQ Tab -->
+    <div class="tab-pane fade show active" id="mcq" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="mcqForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Number of Questions</label>
+                            <input type="number" class="form-control" id="mcqQuestionNumber" placeholder="e.g., 100" min="1" max="500">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Subject List <small class="text-muted">(comma-separated)</small></label>
+                            <input type="text" class="form-control" id="mcqSubjectList" placeholder="e.g., phy, chem, math, bio">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sequence List <small class="text-muted">(range format: 1-25,26-50,...)</small></label>
+                        <input type="text" class="form-control" id="mcqSequenceList" placeholder="e.g., 1-25,26-50,51-75,76-100">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mcqIncludeAnswerTags">
+                                <label class="form-check-label" for="mcqIncludeAnswerTags">Include Answer Tags</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mcqMultiSet" onchange="toggleSetCount('mcq')">
+                                <label class="form-check-label" for="mcqMultiSet">Generate Multiple Sets</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id="mcqSetCountDiv" style="display: none;">
+                            <label class="form-label">Set Count</label>
+                            <input type="number" class="form-control" id="mcqSetCount" placeholder="e.g., 2" min="2" max="10">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-file-earmark-word me-1"></i> Generate MCQ
+                    </button>
+                </form>
+                <div id="mcqResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SAQ Tab -->
+    <div class="tab-pane fade" id="saq" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="saqForm">
+                    <div class="mb-3">
+                        <label class="form-label">Question Type</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="questionType" id="typeSAQ" value="SAQ" checked onchange="toggleBanglaField()">
+                                <label class="form-check-label" for="typeSAQ">SAQ (Bangla + English)</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="questionType" id="typeOW" value="OW" onchange="toggleBanglaField()">
+                                <label class="form-check-label" for="typeOW">Online Written (English only)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Number of Questions</label>
+                            <input type="number" class="form-control" id="saqQuestionNumber" placeholder="e.g., 100" min="1" max="500">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Question Mark</label>
+                            <input type="number" class="form-control" id="saqQuestionMark" placeholder="e.g., 2" min="1" max="10">
+                        </div>
+                    </div>
+                    <div class="mb-3" id="banglaSubjectDiv">
+                        <label class="form-label">Subject List (Bangla) <small class="text-muted">(comma-separated)</small></label>
+                        <input type="text" class="form-control" id="saqSubjectListBangla" placeholder="e.g., পদার্থবিজ্ঞান, রসায়ন">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject List (English) <small class="text-muted">(comma-separated)</small></label>
+                        <input type="text" class="form-control" id="saqSubjectListEnglish" placeholder="e.g., Physics, Chemistry">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sequence List <small class="text-muted">(range format: 1-50,51-100,...)</small></label>
+                        <input type="text" class="form-control" id="saqSequenceList" placeholder="e.g., 1-50,51-100">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="saqMultiSet" onchange="toggleSetCount('saq')">
+                                <label class="form-check-label" for="saqMultiSet">Generate Multiple Sets</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="saqSetCountDiv" style="display: none;">
+                            <label class="form-label">Set Count</label>
+                            <input type="number" class="form-control" id="saqSetCount" placeholder="e.g., 2" min="2" max="10">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-file-earmark-word me-1"></i> Generate SAQ/OW
+                    </button>
+                </form>
+                <div id="saqResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Answer Tag Tab -->
+    <div class="tab-pane fade" id="answer" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="answerForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Upload Document (.docx)</label>
+                        <input type="file" class="form-control" id="answerFile" accept=".docx" required>
+                        <div class="form-text">Upload a Word document to add answer tags to MCQ questions.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle me-1"></i> Add Answer Tags
+                    </button>
+                </form>
+                <div id="answerResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Subject Name Tab -->
+    <div class="tab-pane fade" id="subject" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="subjectForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Upload Document (.docx)</label>
+                        <input type="file" class="form-control" id="subjectFile" accept=".docx" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject List <small class="text-muted">(comma-separated)</small></label>
+                        <input type="text" class="form-control" id="subjectSubjectList" placeholder="e.g., Physics, Chemistry, Math">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sequence List <small class="text-muted">(range format: 1-25,26-50,...)</small></label>
+                        <input type="text" class="form-control" id="subjectSequenceList" placeholder="e.g., 1-25,26-50,51-75">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-bookmark-plus me-1"></i> Add Subject Names
+                    </button>
+                </form>
+                <div id="subjectResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function toggleSetCount(prefix) {
+        const checkbox = document.getElementById(prefix + 'MultiSet');
+        const div = document.getElementById(prefix + 'SetCountDiv');
+        div.style.display = checkbox.checked ? 'block' : 'none';
+    }
+
+    function toggleBanglaField() {
+        const isOW = document.getElementById('typeOW').checked;
+        document.getElementById('banglaSubjectDiv').style.display = isOW ? 'none' : 'block';
+    }
+
+    function showResult(elementId, success, message, files = []) {
+        const resultDiv = document.getElementById(elementId);
+        if (success) {
+            let html = `<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>${message}</div>`;
+            if (files.length > 0) {
+                html += '<div class="list-group">';
+                files.forEach(file => {
+                    html += `<a href="/Tools/DownloadDoc?fileName=${encodeURIComponent(file)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-file-earmark-word me-2"></i>${file}</span>
+                        <i class="bi bi-download"></i>
+                    </a>`;
+                });
+                html += '</div>';
+            }
+            resultDiv.innerHTML = html;
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>${message}</div>`;
+        }
+    }
+
+    // MCQ Form
+    document.getElementById('mcqForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        document.getElementById('mcqResult').innerHTML = '';
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/Tools/GenerateMcq', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({
+                    questionNumber: parseInt(document.getElementById('mcqQuestionNumber').value) || 0,
+                    subjectList: document.getElementById('mcqSubjectList').value || '',
+                    sequenceList: document.getElementById('mcqSequenceList').value || '',
+                    includeAnswerTags: document.getElementById('mcqIncludeAnswerTags').checked,
+                    multiSet: document.getElementById('mcqMultiSet').checked,
+                    setCount: parseInt(document.getElementById('mcqSetCount').value) || 1
+                })
+            });
+
+            const result = await response.json();
+            showResult('mcqResult', result.success, result.message, result.files || []);
+        } catch (error) {
+            showResult('mcqResult', false, 'An error occurred: ' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // SAQ Form
+    document.getElementById('saqForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        document.getElementById('saqResult').innerHTML = '';
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/Tools/GenerateSaq', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({
+                    questionNumber: parseInt(document.getElementById('saqQuestionNumber').value) || 0,
+                    questionMark: parseInt(document.getElementById('saqQuestionMark').value) || 1,
+                    subjectListBangla: document.getElementById('saqSubjectListBangla').value || '',
+                    subjectListEnglish: document.getElementById('saqSubjectListEnglish').value || '',
+                    sequenceList: document.getElementById('saqSequenceList').value || '',
+                    multiSet: document.getElementById('saqMultiSet').checked,
+                    setCount: parseInt(document.getElementById('saqSetCount').value) || 1,
+                    questionType: document.querySelector('input[name="questionType"]:checked').value
+                })
+            });
+
+            const result = await response.json();
+            showResult('saqResult', result.success, result.message, result.files || []);
+        } catch (error) {
+            showResult('saqResult', false, 'An error occurred: ' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // Answer Tag Form
+    document.getElementById('answerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        document.getElementById('answerResult').innerHTML = '';
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('file', document.getElementById('answerFile').files[0]);
+
+            const response = await fetch('/Tools/AddAnswerTag', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            showResult('answerResult', result.success, result.message, result.fileName ? [result.fileName] : []);
+        } catch (error) {
+            showResult('answerResult', false, 'An error occurred: ' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // Subject Name Form
+    document.getElementById('subjectForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        document.getElementById('subjectResult').innerHTML = '';
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('file', document.getElementById('subjectFile').files[0]);
+            formData.append('subjectList', document.getElementById('subjectSubjectList').value);
+            formData.append('sequenceList', document.getElementById('subjectSequenceList').value);
+
+            const response = await fetch('/Tools/AddSubjectName', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            showResult('subjectResult', result.success, result.message, result.fileName ? [result.fileName] : []);
+        } catch (error) {
+            showResult('subjectResult', false, 'An error occurred: ' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+</script>
+@Html.AntiForgeryToken()
+}
