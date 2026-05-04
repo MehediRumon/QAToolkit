@@ -1,0 +1,70 @@
+## .NET / Visual Studio
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+bld/
+
+## NuGet
+**/packages/*
+!**/packages/build/
+*.nupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+
+## Visual Studio
+.vs/
+*.rsuser
+*.cache
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+launchSettings.json
+
+## Rider
+.idea/
+*.sln.iml
+
+## OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## Logs
+*.log
+nlog-*.log
+
+## Temp files
+*.tmp
+*.bak
+*.swp
+*~
+
+## Publish output
+publish/
+dist/
+
+## SQLite databases
+*.db
+*.sqlite
+
+## Secrets / environment
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+*.env
