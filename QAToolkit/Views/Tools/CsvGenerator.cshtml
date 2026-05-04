@@ -4,34 +4,36 @@
 
 <style>
     .upload-zone {
-        border: 2px dashed #dee2e6;
-        border-radius: 12px;
-        padding: 2rem;
+        border: 2px dashed var(--border-strong);
+        border-radius: var(--radius-lg);
+        padding: var(--space-8);
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s;
-        background: #f8f9fa;
+        transition: all 0.15s ease;
+        background: var(--bg-surface-hover);
+        color: var(--text-tertiary);
     }
     .upload-zone:hover {
-        border-color: var(--primary);
-        background: #f0f7ff;
+        border-color: var(--brand-500);
+        background: var(--brand-50);
     }
     .upload-zone.dragover {
-        border-color: var(--primary);
-        background: #e3f2fd;
+        border-color: var(--brand-600);
+        background: var(--brand-100);
     }
     .file-info {
-        background: #e8f5e9;
-        border-radius: 8px;
-        padding: 1rem;
+        background: var(--success-50);
+        border: 1px solid var(--success-100);
+        border-radius: var(--radius-md);
+        padding: var(--space-3);
     }
     .csv-preview {
         background: #1e1e1e;
         color: #d4d4d4;
-        border-radius: 8px;
-        padding: 1rem;
-        font-family: monospace;
-        font-size: 0.85rem;
+        border-radius: var(--radius-md);
+        padding: var(--space-3);
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
         overflow-x: auto;
         max-height: 200px;
         overflow-y: auto;
@@ -41,19 +43,23 @@
         font-weight: bold;
     }
     .csv-file-card {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius-md);
+        padding: var(--space-3);
+        margin-bottom: var(--space-3);
+        background: var(--bg-surface);
     }
     .csv-file-card .file-name {
-        font-weight: 600;
-        color: var(--primary);
+        font-weight: var(--weight-semibold);
+        color: var(--text-brand);
     }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-file-earmark-spreadsheet"></i> CSV Generator</h2>
+<div class="page-header">
+    <div>
+        <h1>CSV Generator</h1>
+        <p>Convert Excel files into CSV format with custom column mapping.</p>
+    </div>
 </div>
 
 <div class="row">

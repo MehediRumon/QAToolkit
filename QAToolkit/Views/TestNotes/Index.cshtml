@@ -3,44 +3,38 @@
     ViewData["Title"] = "Test Notes";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-journal-text"></i> Test Notes</h2>
-    <a asp-action="Create" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> Add Note
-    </a>
-</div>
-
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Project</label>
-                <select name="project" class="form-select">
-                    <option value="">All Projects</option>
-                    @foreach (var proj in ViewBag.Projects as List<string?>)
-                    {
-                        <option value="@proj" selected="@(ViewBag.SelectedProject == proj)">@proj</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Status</label>
-                <select name="status" class="form-select">
-                    <option value="">All Status</option>
-                    <option value="Posted" selected="@(ViewBag.SelectedStatus == "Posted")">Posted</option>
-                    <option value="Not Posted" selected="@(ViewBag.SelectedStatus == "Not Posted")">Not Posted</option>
-                    <option value="Fixed" selected="@(ViewBag.SelectedStatus == "Fixed")">Fixed</option>
-                    <option value="Not Fixed" selected="@(ViewBag.SelectedStatus == "Not Fixed")">Not Fixed</option>
-                </select>
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-funnel"></i> Filter</button>
-                <a href="/TestNotes" class="btn btn-outline-secondary">Clear</a>
-            </div>
-        </form>
+<div class="page-header">
+    <div>
+        <h1>Test Notes</h1>
+        <p>Quick notes for bug reproduction steps, observations, and screenshots.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Note
+        </a>
     </div>
 </div>
+
+<form method="get" class="toolbar">
+    <span class="toolbar-label">Project</span>
+    <select name="project" class="form-select">
+        <option value="">All</option>
+        @foreach (var proj in ViewBag.Projects as List<string?>)
+        {
+            <option value="@proj" selected="@(ViewBag.SelectedProject == proj)">@proj</option>
+        }
+    </select>
+    <span class="toolbar-label">Status</span>
+    <select name="status" class="form-select">
+        <option value="">All</option>
+        <option value="Posted" selected="@(ViewBag.SelectedStatus == "Posted")">Posted</option>
+        <option value="Not Posted" selected="@(ViewBag.SelectedStatus == "Not Posted")">Not Posted</option>
+        <option value="Fixed" selected="@(ViewBag.SelectedStatus == "Fixed")">Fixed</option>
+        <option value="Not Fixed" selected="@(ViewBag.SelectedStatus == "Not Fixed")">Not Fixed</option>
+    </select>
+    <button type="submit" class="btn btn-sm btn-secondary"><i class="bi bi-funnel"></i> Filter</button>
+    <a href="/TestNotes" class="btn btn-sm btn-ghost">Clear</a>
+</form>
 
 <!-- Notes Table -->
 <div class="card">
@@ -90,17 +84,17 @@
                                     {
                                         var statusClass = item.Status switch
                                         {
-                                            "Fixed" => "bg-success",
-                                            "Posted" => "bg-primary",
-                                            "Not Posted" => "bg-warning",
-                                            "Not Fixed" => "bg-danger",
-                                            _ => "bg-secondary"
+                                            "Fixed" => "success",
+                                            "Posted" => "brand",
+                                            "Not Posted" => "warning",
+                                            "Not Fixed" => "danger",
+                                            _ => "muted"
                                         };
-                                        <span class="badge @statusClass">@item.Status</span>
+                                        <span class="badge-status @statusClass">@item.Status</span>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">-</span>
+                                        <span class="text-muted">—</span>
                                     }
                                 </td>
                                 <td class="text-center align-middle">
@@ -127,7 +121,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
-                                              onsubmit="return confirm('Delete this note?');">
+                                              data-confirm="Delete this test note? This action cannot be undone." data-confirm-title="Delete test note">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -141,9 +135,13 @@
                     else
                     {
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="bi bi-journal-text fs-1"></i>
-                                <p class="mt-2">No test notes found. <a asp-action="Create">Add your first note</a></p>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-journal-text"></i></div>
+                                    <h5>No test notes yet</h5>
+                                    <p>Add your first test note to track bugs and observations.</p>
+                                    <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Note</a>
+                                </div>
                             </td>
                         </tr>
                     }

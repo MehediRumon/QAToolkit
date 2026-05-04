@@ -3,34 +3,30 @@
     ViewData["Title"] = "Workflows";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-diagram-3"></i> Workflows</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Workflow</a>
+<div class="page-header">
+    <div>
+        <h1>Workflows</h1>
+        <p>Document and share team workflows with HTML imports and public links.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Workflow</a>
+    </div>
 </div>
 
-<!-- Filters -->
 @if ((ViewBag.Categories as List<string?>)?.Any() == true)
 {
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Category</label>
-                    <select name="category" class="form-select">
-                        <option value="">All Categories</option>
-                        @foreach (var cat in ViewBag.Categories as List<string?>)
-                        {
-                            <option value="@cat" selected="@(ViewBag.SelectedCategory == cat)">@cat</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-6 d-flex align-items-end">
-                    <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-funnel"></i> Filter</button>
-                    <a href="/Workflows" class="btn btn-outline-secondary">Clear</a>
-                </div>
-            </form>
-        </div>
-    </div>
+    <form method="get" class="toolbar">
+        <span class="toolbar-label">Category</span>
+        <select name="category" class="form-select">
+            <option value="">All</option>
+            @foreach (var cat in ViewBag.Categories as List<string?>)
+            {
+                <option value="@cat" selected="@(ViewBag.SelectedCategory == cat)">@cat</option>
+            }
+        </select>
+        <button type="submit" class="btn btn-sm btn-secondary"><i class="bi bi-funnel"></i> Filter</button>
+        <a href="/Workflows" class="btn btn-sm btn-ghost">Clear</a>
+    </form>
 }
 
 <!-- Workflows Table -->
@@ -75,11 +71,11 @@
                                 <td class="text-center align-middle">
                                     @if (workflow.IsPublic)
                                     {
-                                        <span class="badge bg-success">Yes</span>
+                                        <span class="badge-status success">Public</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">No</span>
+                                        <span class="badge-status muted">Private</span>
                                     }
                                 </td>
                                 <td class="text-center align-middle">
@@ -98,7 +94,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form asp-action="Delete" asp-route-id="@workflow.Id" method="post" class="d-inline"
-                                              onsubmit="return confirm('Delete this workflow?');">
+                                              data-confirm="Delete this workflow? This action cannot be undone." data-confirm-title="Delete workflow">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -112,9 +108,13 @@
                     else
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-diagram-3 fs-1"></i>
-                                <p class="mt-2">No workflows yet. <a asp-action="Create">Upload your first workflow</a></p>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-diagram-3"></i></div>
+                                    <h5>No workflows yet</h5>
+                                    <p>Upload an HTML file to document your first workflow.</p>
+                                    <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Workflow</a>
+                                </div>
                             </td>
                         </tr>
                     }

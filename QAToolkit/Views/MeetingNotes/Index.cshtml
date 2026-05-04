@@ -3,32 +3,28 @@
     ViewData["Title"] = "Meeting Notes";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-people"></i> Meeting Notes</h2>
-    <a asp-action="Create" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Add Meeting Note</a>
-</div>
-
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Meeting With</label>
-                <select name="meetingWith" class="form-select">
-                    <option value="">All</option>
-                    @foreach (var mw in ViewBag.MeetingWiths as List<string?>)
-                    {
-                        <option value="@mw" selected="@(ViewBag.SelectedMeetingWith == mw)">@mw</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-6 d-flex align-items-end">
-                <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-funnel"></i> Filter</button>
-                <a href="/MeetingNotes" class="btn btn-outline-secondary">Clear</a>
-            </div>
-        </form>
+<div class="page-header">
+    <div>
+        <h1>Meeting Notes</h1>
+        <p>Sprint reviews, bug triage notes, and team discussions.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Meeting Note</a>
     </div>
 </div>
+
+<form method="get" class="toolbar">
+    <span class="toolbar-label">Meeting With</span>
+    <select name="meetingWith" class="form-select">
+        <option value="">All</option>
+        @foreach (var mw in ViewBag.MeetingWiths as List<string?>)
+        {
+            <option value="@mw" selected="@(ViewBag.SelectedMeetingWith == mw)">@mw</option>
+        }
+    </select>
+    <button type="submit" class="btn btn-sm btn-secondary"><i class="bi bi-funnel"></i> Filter</button>
+    <a href="/MeetingNotes" class="btn btn-sm btn-ghost">Clear</a>
+</form>
 
 <!-- Meeting Notes Table -->
 <div class="card">
@@ -82,18 +78,18 @@
                                     {
                                         var statusClass = item.Status switch
                                         {
-                                            "Need to Implement" => "bg-warning",
-                                            "Implement Later" => "bg-info",
-                                            "Invalid" => "bg-secondary",
-                                            "Closed" => "bg-success",
-                                            "Cancelled" => "bg-danger",
-                                            _ => "bg-secondary"
+                                            "Need to Implement" => "warning",
+                                            "Implement Later" => "info",
+                                            "Invalid" => "muted",
+                                            "Closed" => "success",
+                                            "Cancelled" => "danger",
+                                            _ => "muted"
                                         };
-                                        <span class="badge @statusClass">@item.Status</span>
+                                        <span class="badge-status @statusClass">@item.Status</span>
                                     }
                                     else
                                     {
-                                        <span class="text-muted">-</span>
+                                        <span class="text-muted">—</span>
                                     }
                                 </td>
                                 <td class="text-center align-middle">
@@ -112,7 +108,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
-                                              onsubmit="return confirm('Delete this note?');">
+                                              data-confirm="Delete this meeting note? This action cannot be undone." data-confirm-title="Delete meeting note">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -126,9 +122,13 @@
                     else
                     {
                         <tr>
-                            <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="bi bi-people fs-1"></i>
-                                <p class="mt-2">No meeting notes found. <a asp-action="Create">Add your first meeting note</a></p>
+                            <td colspan="10">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-people"></i></div>
+                                    <h5>No meeting notes yet</h5>
+                                    <p>Capture your first meeting decisions and action items.</p>
+                                    <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Meeting Note</a>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -137,11 +137,3 @@
         </div>
     </div>
 </div>
-
-@if (!Model.Any())
-{
-    <div class="text-center py-5 text-muted d-none">
-        <i class="bi bi-people fs-1"></i>
-        <p class="mt-2">No meeting notes found. <a asp-action="Create">Add your first meeting note</a></p>
-    </div>
-}

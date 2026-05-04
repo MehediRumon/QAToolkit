@@ -3,132 +3,98 @@
     ViewData["Title"] = "Release Notes";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-rocket-takeoff"></i> Release Notes</h2>
-    <a asp-action="Create" class="btn btn-info"><i class="bi bi-plus-lg"></i> Add Release</a>
-</div>
-
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-5">
-                <label class="form-label">Project</label>
-                <select name="project" class="form-select">
-                    <option value="">All Projects</option>
-                    @foreach (var proj in ViewBag.Projects as List<string>)
-                    {
-                        <option value="@proj" selected="@(ViewBag.SelectedProject == proj)">@proj</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-5">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Search in title, version, or features..." value="@ViewBag.SearchTerm" />
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-secondary me-2 w-100"><i class="bi bi-funnel"></i> Filter</button>
-            </div>
-        </form>
+<div class="page-header">
+    <div>
+        <h1>Release Notes</h1>
+        <p>Track release versions, new features, and testing status.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Release</a>
     </div>
 </div>
 
+<form method="get" class="toolbar">
+    <span class="toolbar-label">Project</span>
+    <select name="project" class="form-select">
+        <option value="">All</option>
+        @foreach (var proj in ViewBag.Projects as List<string>)
+        {
+            <option value="@proj" selected="@(ViewBag.SelectedProject == proj)">@proj</option>
+        }
+    </select>
+    <input type="text" name="search" class="form-control" placeholder="Search title, version, features..." value="@ViewBag.SearchTerm" style="min-width: 240px;" />
+    <button type="submit" class="btn btn-sm btn-secondary"><i class="bi bi-funnel"></i> Filter</button>
+    <a href="/ReleaseNotes" class="btn btn-sm btn-ghost">Clear</a>
+</form>
+
 @if (Model.Any())
 {
-    <!-- Google Sheets Style Table -->
     <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered mb-0" style="border-collapse: collapse;">
-                <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
-                    <tr>
-                        <th style="width: 7%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Version</th>
-                        <th style="width: 20%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Title</th>
-                        <th style="width: 10%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Project</th>
-                        <th style="width: 10%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Release Date</th>
-                        <th style="width: 25%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Features Summary</th>
-                        <th style="width: 10%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Created By</th>
-                        <th style="width: 10%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Modified By</th>
-                        <th style="width: 8%; border: 1px solid #dee2e6; padding: 12px; vertical-align: middle; text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr style="cursor: pointer;" onclick="window.location='@Url.Action("Details", new { id = item.Id })'">
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center;">
-                                <span class="badge bg-info">@item.Version</span>
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center;">
-                                <strong>@item.Title</strong>
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center;">
-                                @item.Project
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center;">
-                                @item.ReleaseDate.ToString("MMM dd, yyyy")
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center; font-size: 0.9em;">
-                                @{
-                                    var features = item.Features.Length > 150 ? item.Features.Substring(0, 150) + "..." : item.Features;
-                                }
-                                @features
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center; font-size: 0.85em;">
-                                @(item.CreatedBy ?? "N/A")
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; text-align: center; font-size: 0.85em;">
-                                @(item.ModifiedBy ?? "-")
-                            </td>
-                            <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; vertical-align: middle;" onclick="event.stopPropagation();">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary" title="View Details">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center align-middle" style="width: 8%">Version</th>
+                            <th class="text-center align-middle" style="width: 20%">Title</th>
+                            <th class="text-center align-middle" style="width: 10%">Project</th>
+                            <th class="text-center align-middle" style="width: 10%">Release Date</th>
+                            <th class="text-center align-middle" style="width: 24%">Features</th>
+                            <th class="text-center align-middle" style="width: 10%">Created By</th>
+                            <th class="text-center align-middle" style="width: 10%">Modified By</th>
+                            <th class="text-center align-middle" style="width: 8%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr style="cursor: pointer;" onclick="window.location='@Url.Action("Details", new { id = item.Id })'">
+                                <td class="text-center align-middle">
+                                    <span class="badge bg-info">@item.Version</span>
+                                </td>
+                                <td class="align-middle"><strong>@item.Title</strong></td>
+                                <td class="text-center align-middle">@item.Project</td>
+                                <td class="text-center align-middle"><small>@item.ReleaseDate.ToString("MMM dd, yyyy")</small></td>
+                                <td class="align-middle">
+                                    <small>@(item.Features.Length > 150 ? item.Features.Substring(0, 150) + "..." : item.Features)</small>
+                                </td>
+                                <td class="text-center align-middle"><small>@(item.CreatedBy ?? "N/A")</small></td>
+                                <td class="text-center align-middle"><small>@(item.ModifiedBy ?? "-")</small></td>
+                                <td class="text-center align-middle text-nowrap" onclick="event.stopPropagation();">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="View">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     @if (item.CreatedBy == User.Identity?.Name)
                                     {
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary" title="Edit">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <button type="button" class="btn btn-outline-danger" title="Delete"
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
                                                 onclick="if(confirm('Delete this release note?')) { document.getElementById('deleteForm-@item.Id').submit(); }">
                                             <i class="bi bi-trash"></i>
                                         </button>
+                                        <form id="deleteForm-@item.Id" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:none;">
+                                            @Html.AntiForgeryToken()
+                                        </form>
                                     }
-                                </div>
-                                @if (item.CreatedBy == User.Identity?.Name)
-                                {
-                                    <form id="deleteForm-@item.Id" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:none;">
-                                        @Html.AntiForgeryToken()
-                                    </form>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 }
 else
 {
-    <div class="text-center py-5 text-muted">
-        <i class="bi bi-rocket-takeoff fs-1"></i>
-        <p class="mt-2">No release notes found. <a asp-action="Create">Add your first release</a></p>
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="bi bi-rocket-takeoff"></i></div>
+            <h5>No release notes yet</h5>
+            <p>Track your first release version and features.</p>
+            <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Release</a>
+        </div>
     </div>
 }
 
-<style>
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .table td, .table th {
-        border-color: #dee2e6 !important;
-    }
-    
-    .table thead th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-        border-bottom: 2px solid #dee2e6 !important;
-    }
-</style>
