@@ -17,6 +17,9 @@ namespace QAToolkit.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
 
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Process> _activeRuns = new();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _stoppedRuns = new();
+
         public PlaywrightScriptsController(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
@@ -510,8 +513,11 @@ namespace QAToolkit.Controllers
                 var browsersPath = _config.GetValue<string>("Playwright:BrowsersPath") ?? @"C:\playwright-browsers";
                 psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = browsersPath;
 
+                var runId = Guid.NewGuid().ToString("N");
                 var sw = Stopwatch.StartNew();
                 using var process = Process.Start(psi)!;
+                _activeRuns[runId] = process;
+                await Send(JsonSerializer.Serialize(new { runId }), "start");
 
                 var lineChannel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions { SingleReader = true });
 
@@ -542,8 +548,10 @@ namespace QAToolkit.Controllers
                 if (!process.HasExited) try { await process.WaitForExitAsync(); } catch { }
 
                 sw.Stop();
+                _activeRuns.TryRemove(runId, out _);
+                var stopped = _stoppedRuns.TryRemove(runId, out _);
                 var exitCode = timedOut ? -1 : (process.HasExited ? process.ExitCode : -1);
-                await Send(JsonSerializer.Serialize(new { exitCode, durationMs = sw.ElapsedMilliseconds, timedOut }), "done");
+                await Send(JsonSerializer.Serialize(new { exitCode, durationMs = sw.ElapsedMilliseconds, timedOut, stopped }), "done");
             }
             catch (Exception ex)
             {
@@ -559,6 +567,20 @@ namespace QAToolkit.Controllers
                 try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                 try { if (pwConfigFile != null && System.IO.File.Exists(pwConfigFile)) System.IO.File.Delete(pwConfigFile); } catch { }
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult StopRun(string runId)
+        {
+            if (string.IsNullOrWhiteSpace(runId)) return Json(new { success = false });
+            _stoppedRuns[runId] = true;
+            if (_activeRuns.TryGetValue(runId, out var process))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
         }
 
         // ── Param injection helpers ───────────────────────────────────────────
