@@ -7,6 +7,7 @@ using QAToolkit.Models;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 namespace QAToolkit.Controllers
 {
@@ -67,9 +68,14 @@ namespace QAToolkit.Controllers
                 "    const result = await __fn(page);\n" +
                 "    if (result && typeof result === 'object' && !Array.isArray(result)) {\n" +
                 "      if (Array.isArray(result.log)) result.log.forEach(l => console.log(l));\n" +
-                "      else console.log(JSON.stringify(result, null, 2));\n" +
+                "      if (Array.isArray(result.results)) result.results.forEach(r => {\n" +
+                "        if (r && Array.isArray(r.log)) r.log.forEach(l => console.log(l));\n" +
+                "        if (r && r.success === false) process.stderr.write('[FAIL] ' + (r.message || '') + '\\n');\n" +
+                "      });\n" +
+                "    } else if (result != null && !Array.isArray(result)) {\n" +
+                "      console.log(JSON.stringify(result, null, 2));\n" +
                 "    }\n" +
-                "    process.exit(0);\n" +
+                "    process.exit(result && result.success === false ? 1 : 0);\n" +
                 "  } catch (err) {\n" +
                 "    process.stderr.write('\\n[ERROR] ' + err.message + '\\n');\n" +
                 "    process.exit(1);\n" +
@@ -388,6 +394,165 @@ namespace QAToolkit.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, exitCode = -1, output = $"Failed to start process: {ex.Message}", durationMs = 0L, timedOut = false });
+            }
+            finally
+            {
+                try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
+                try { if (pwConfigFile != null && System.IO.File.Exists(pwConfigFile)) System.IO.File.Delete(pwConfigFile); } catch { }
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task RunStream(int id, [FromForm] string? paramsJson = null)
+        {
+            Response.ContentType = "text/event-stream; charset=utf-8";
+            Response.Headers["Cache-Control"] = "no-cache";
+            Response.Headers["X-Accel-Buffering"] = "no";
+            HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpResponseBodyFeature>()?.DisableBuffering();
+
+            async Task Send(string jsonData, string? evtName = null)
+            {
+                if (evtName != null) await Response.WriteAsync($"event: {evtName}\n");
+                await Response.WriteAsync($"data: {jsonData}\n\n");
+                await Response.Body.FlushAsync();
+            }
+
+            var script = await _context.PlaywrightScripts.FindAsync(id);
+            if (script == null)
+            {
+                await Send(JsonSerializer.Serialize("[ERROR] Script not found."));
+                await Send("{\"exitCode\":-1,\"durationMs\":0,\"timedOut\":false}", "done");
+                return;
+            }
+
+            var content = script.ScriptContent;
+            if (!string.IsNullOrWhiteSpace(paramsJson))
+            {
+                try { JsonDocument.Parse(paramsJson); }
+                catch (Exception ex)
+                {
+                    await Send(JsonSerializer.Serialize($"[ERROR] Invalid params JSON: {ex.Message}"));
+                    await Send("{\"exitCode\":-1,\"durationMs\":0,\"timedOut\":false}", "done");
+                    return;
+                }
+                content = InjectParams(content, paramsJson);
+            }
+            else if (content.Contains("__PARAMS__"))
+            {
+                await Send(JsonSerializer.Serialize("[ERROR] Template script — fill in the Parameters panel before running."));
+                await Send("{\"exitCode\":-1,\"durationMs\":0,\"timedOut\":false}", "done");
+                return;
+            }
+
+            var workingDir = _config["Playwright:WorkingDirectory"] ?? @"D:\Projects";
+            var timeoutSec = _config.GetValue<int?>("Playwright:TimeoutSeconds") ?? 300;
+            var isPlaywrightRunner = script.RunMode == "playwright";
+
+            if (!isPlaywrightRunner && IsPageFunction(content))
+                content = WrapForPlaywright(content);
+
+            var ext = script.FileExtension ?? ".js";
+            var effectiveWorkingDir = Directory.Exists(workingDir) ? workingDir : Path.GetTempPath();
+            string tempFile = "";
+            string? pwConfigFile = null;
+
+            if (isPlaywrightRunner)
+            {
+                var testTempDir = Path.Combine(effectiveWorkingDir, "__qa_temp");
+                Directory.CreateDirectory(testTempDir);
+                tempFile = Path.Combine(testTempDir, $"qa_{Guid.NewGuid():N}{ext}");
+            }
+            else
+            {
+                tempFile = Path.Combine(Path.GetTempPath(), $"qa_script_{Guid.NewGuid():N}{ext}");
+            }
+
+            try
+            {
+                await System.IO.File.WriteAllTextAsync(tempFile, content, System.Text.Encoding.UTF8);
+
+                string args;
+                if (isPlaywrightRunner)
+                {
+                    var timeoutMs = timeoutSec * 1000;
+                    var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
+                    var testFileName = Path.GetFileName(tempFile);
+                    pwConfigFile = Path.Combine(effectiveWorkingDir, $"qa_config_{Guid.NewGuid():N}.js");
+                    await System.IO.File.WriteAllTextAsync(pwConfigFile,
+                        $"module.exports = {{ testDir: './__qa_temp', testMatch: ['{testFileName}'], " +
+                        $"reporter: [['list']], workers: 1, timeout: {timeoutMs}, " +
+                        $"use: {{ headless: {headless} }} }};");
+                    args = $"/c npx playwright test --config \"{pwConfigFile}\"";
+                }
+                else
+                {
+                    args = $"/c node \"{tempFile}\"";
+                }
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = effectiveWorkingDir
+                };
+                var nodeDir = ResolveNodeDirectory();
+                if (!string.IsNullOrWhiteSpace(nodeDir))
+                {
+                    var currentPath = psi.Environment.ContainsKey("PATH") ? psi.Environment["PATH"] : "";
+                    psi.Environment["PATH"] = nodeDir + ";" + currentPath;
+                }
+                psi.Environment["NODE_PATH"] = Path.Combine(workingDir, "node_modules");
+                var browsersPath = _config.GetValue<string>("Playwright:BrowsersPath") ?? @"C:\playwright-browsers";
+                psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = browsersPath;
+
+                var sw = Stopwatch.StartNew();
+                using var process = Process.Start(psi)!;
+
+                var lineChannel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions { SingleReader = true });
+
+                var stdoutTask = Task.Run(async () =>
+                {
+                    try { string? line; while ((line = await process.StandardOutput.ReadLineAsync()) != null) await lineChannel.Writer.WriteAsync(line); } catch { }
+                });
+                var stderrTask = Task.Run(async () =>
+                {
+                    try { string? line; while ((line = await process.StandardError.ReadLineAsync()) != null) await lineChannel.Writer.WriteAsync(line); } catch { }
+                });
+                _ = Task.WhenAll(stdoutTask, stderrTask).ContinueWith(_ => lineChannel.Writer.TryComplete());
+
+                bool timedOut = false;
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
+                try
+                {
+                    await foreach (var line in lineChannel.Reader.ReadAllAsync(cts.Token))
+                        await Send(JsonSerializer.Serialize(line));
+                }
+                catch (OperationCanceledException)
+                {
+                    timedOut = true;
+                    try { process.Kill(true); } catch { }
+                }
+
+                await Task.WhenAll(stdoutTask, stderrTask);
+                if (!process.HasExited) try { await process.WaitForExitAsync(); } catch { }
+
+                sw.Stop();
+                var exitCode = timedOut ? -1 : (process.HasExited ? process.ExitCode : -1);
+                await Send(JsonSerializer.Serialize(new { exitCode, durationMs = sw.ElapsedMilliseconds, timedOut }), "done");
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    await Send(JsonSerializer.Serialize($"[ERROR] {ex.Message}"));
+                    await Send("{\"exitCode\":-1,\"durationMs\":0,\"timedOut\":false}", "done");
+                }
+                catch { }
             }
             finally
             {
