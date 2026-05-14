@@ -356,6 +356,9 @@ namespace QAToolkit.Controllers
                     psi.Environment["PATH"] = nodeDir + ";" + currentPath;
                 }
                 psi.Environment["NODE_PATH"] = Path.Combine(workingDir, "node_modules");
+                // Use shared browser path so Chromium is found regardless of which Windows user IIS runs as
+                var browsersPath = _config.GetValue<string>("Playwright:BrowsersPath") ?? @"C:\playwright-browsers";
+                psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = browsersPath;
 
                 var sw = Stopwatch.StartNew();
                 using var process = Process.Start(psi)!;
