@@ -252,7 +252,12 @@ const isTemplate = detected !== null;
 // ─────────────────────────────────────────────────────────────────────────────
 function parseParamDefs(content) {
     // 1. Try destructuring: const { a, b } = __PARAMS__
-    const match = content.match(/const\s*\{([^}]+)\}\s*=\s*__PARAMS__/);
+    //    Also handles: const PARAMS = __PARAMS__; const { a, b } = PARAMS;
+    const indirectM = content.match(/const\s+(\w+)\s*=\s*__PARAMS__/);
+    const directPattern = indirectM
+        ? new RegExp('const\\s*\\{([^}]+)\\}\\s*=\\s*' + indirectM[1] + '(?!\\w)')
+        : /const\s*\{([^}]+)\}\s*=\s*__PARAMS__/;
+    const match = content.match(directPattern) || content.match(/const\s*\{([^}]+)\}\s*=\s*__PARAMS__/);
     if (match) {
         const items = [];
         for (const line of match[1].split('\n')) {
@@ -265,8 +270,25 @@ function parseParamDefs(content) {
             const commentMatch = line.match(/\/\/(.+)$/);
             const comment = commentMatch ? commentMatch[1].trim() : null;
             const codePart = line.replace(/\/\/.*$/, '');
-            const fields = codePart.split(',').map(s => s.trim()).filter(s => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(s));
-            fields.forEach((key, i) => items.push({ type: 'field', key, comment: i === fields.length - 1 ? comment : null }));
+            for (const part of codePart.split(',').map(s => s.trim()).filter(Boolean)) {
+                // handle: key = defaultValue  OR  just key
+                const defM = part.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(.+)$/);
+                const plainM = !defM && part.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)$/);
+                if (!defM && !plainM) continue;
+                const key = defM ? defM[1] : plainM[1];
+                let defaultVal = null, wasString = false;
+                if (defM) {
+                    const raw = defM[2].trim();
+                    if (/^['"`]/.test(raw)) {
+                        wasString = true;
+                        const q = raw[0], end = raw.lastIndexOf(q);
+                        defaultVal = raw.slice(1, end < 1 ? raw.length : end);
+                    } else {
+                        defaultVal = raw;
+                    }
+                }
+                items.push({ type: 'field', key, comment, defaultVal, wasString });
+            }
         }
         if (items.length) return items;
     }
