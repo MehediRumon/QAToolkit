@@ -25,7 +25,7 @@ namespace QAToolkit.Controllers
         private string ResolveNodeDirectory()
         {
             var configured = _config.GetValue<string>("Playwright:NodeDirectory");
-            if (!string.IsNullOrWhiteSpace(configured) && File.Exists(Path.Combine(configured, "node.exe")))
+            if (!string.IsNullOrWhiteSpace(configured) && System.IO.File.Exists(Path.Combine(configured, "node.exe")))
                 return configured;
 
             var candidates = new[]
@@ -36,7 +36,7 @@ namespace QAToolkit.Controllers
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "nodejs"),
             };
             foreach (var path in candidates)
-                if (File.Exists(Path.Combine(path, "node.exe")))
+                if (System.IO.File.Exists(Path.Combine(path, "node.exe")))
                     return path;
 
             return "";
