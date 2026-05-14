@@ -696,8 +696,13 @@ function addCursor(container) {
     return div;
 }
 
+function stripAnsi(s) {
+    // eslint-disable-next-line no-control-regex
+    return s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
+}
+
 function appendTermLine(container, rawText) {
-    const t = (rawText || '').trim();
+    const t = stripAnsi(rawText || '').trim();
     if (!t) return;
     const cl = classifyLine(t);
     if (!cl) return;
