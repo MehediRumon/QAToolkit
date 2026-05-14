@@ -328,6 +328,13 @@ namespace QAToolkit.Controllers
                     CreateNoWindow = true,
                     WorkingDirectory = effectiveWorkingDir
                 };
+                // Prepend NodeDirectory to PATH so IIS app pool can find node/npx
+                var nodeDir = _config.GetValue<string>("Playwright:NodeDirectory");
+                if (!string.IsNullOrWhiteSpace(nodeDir))
+                {
+                    var currentPath = psi.Environment.ContainsKey("PATH") ? psi.Environment["PATH"] : "";
+                    psi.Environment["PATH"] = nodeDir + ";" + currentPath;
+                }
                 psi.Environment["NODE_PATH"] = Path.Combine(workingDir, "node_modules");
 
                 var sw = Stopwatch.StartNew();
