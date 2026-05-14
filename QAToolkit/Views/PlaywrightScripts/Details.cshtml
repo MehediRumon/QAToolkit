@@ -168,7 +168,7 @@
                 </div>
             </div>
             <div class="terminal-body-wrapper">
-                <pre class="terminal-body m-0" id="terminalOutput"></pre>
+                <div class="terminal-body m-0" id="terminalOutput"></div>
             </div>
         </div>
     </div>
@@ -195,7 +195,24 @@
 
     /* ── Terminal ── */
     .terminal-body-wrapper { background: #0d1117; border-radius: 0 0 var(--radius-md, 8px) var(--radius-md, 8px); overflow: hidden; }
-    .terminal-body { padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; color: #c9d1d9; white-space: pre-wrap; word-break: break-word; max-height: 480px; overflow-y: auto; background: #0d1117; }
+    .terminal-body { padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.7; max-height: 520px; overflow-y: auto; background: #0d1117; }
+
+    /* Terminal line layout */
+    .tl { display: flex; gap: 8px; min-height: 1.7em; }
+    .tl-icon { flex-shrink: 0; width: 20px; text-align: center; }
+    .tl-text { flex: 1; min-width: 0; word-break: break-word; white-space: pre-wrap; }
+
+    /* Line colours */
+    .tl-dim     { color: #6e7681; }
+    .tl-info    { color: #79c0ff; }
+    .tl-normal  { color: #c9d1d9; }
+    .tl-server  { color: #d2a8ff; }
+    .tl-success { color: #56d364; }
+    .tl-error   { color: #f85149; }
+    .tl-warn    { color: #e3b341; }
+    .tl-bold    { font-weight: 600; }
+    @@keyframes tl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .tl-blink   { animation: tl-blink 1s step-end infinite; }
 
     /* ── Card chrome ── */
     .card-header { background: var(--surface-overlay, #f0f2f4); border-bottom: 1px solid var(--border-subtle); }
@@ -617,7 +634,81 @@ function getParamsJson() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. RUN LOGIC
+// 6. TERMINAL LINE HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function classifyLine(t) {
+    if (!t) return null;
+
+    // State/fs
+    if (t.startsWith('[state]')) {
+        const msg = t.slice(7).trim();
+        return /fail|error/i.test(msg)
+            ? { icon: '⚠', cls: 'tl-warn',   label: msg }
+            : { icon: '💾', cls: 'tl-dim',    label: msg };
+    }
+    // Header info
+    if (t.startsWith('Prefix:'))  return { icon: '🏷', cls: 'tl-info', label: t };
+    if (t.startsWith('Servers:')) return { icon: '🖥', cls: 'tl-info', label: t };
+    // Flow
+    if (t.startsWith('[parallel]'))   return { icon: '⚡', cls: 'tl-dim', label: t.replace(/^\[parallel\]\s*/,'') };
+    if (t.startsWith('[sequential]')) return { icon: '▶', cls: 'tl-dim', label: t.replace(/^\[sequential\]\s*/,'') };
+    // Completion
+    if (/^All servers done/i.test(t)) return { icon: '✅', cls: 'tl-success tl-bold', label: 'All servers done!' };
+    // Errors
+    if (/^\[(ERROR|FAIL)\]/.test(t))  return { icon: '❌', cls: 'tl-error', label: t.replace(/^\[(ERROR|FAIL)\]\s*/,'') };
+
+    // Generate steps [N] or [Na/b/c/d]
+    const genM = t.match(/^\[(\d+[a-z]?)\]\s+([\s\S]*)/);
+    if (genM) {
+        const [, step, content] = genM;
+        const ok  = /saved:|"success"\s*:\s*true/i.test(content);
+        const bad = /"success"\s*:\s*false|failed|Failed:/i.test(content);
+        if (ok && !bad) return { icon: '✅', cls: 'tl-success', label: `[${step}] ${content}` };
+        if (bad)        return { icon: '❌', cls: 'tl-error',   label: `[${step}] ${content}` };
+        if (/generating|DOCX/i.test(content)) return { icon: '📄', cls: 'tl-normal', label: `[${step}] ${content}` };
+        return { icon: '·', cls: 'tl-dim', label: `[${step}] ${content}` };
+    }
+
+    // Server steps [srv:step]
+    const srvM = t.match(/^\[(\w+):(\d+[a-z]?)\]\s+([\s\S]*)/);
+    if (srvM) {
+        const [, srv, stepStr, content] = srvM;
+        const n = parseInt(stepStr, 10);
+        const icons = ['','','🔑','📋','🔍','📥','⚙','🔓','📅'];
+        const icon  = icons[n] || '·';
+        const ok  = /ok=true|IsSuccess.*?true|"success"\s*:\s*true|Logged in|done\.|granted/i.test(content);
+        const bad = /ok=false|IsSuccess.*?false|"success"\s*:\s*false|Crash:|Failed/i.test(content);
+        return { icon, cls: bad ? 'tl-error' : ok ? 'tl-success' : 'tl-server', label: `[S${srv}:${n}] ${content}` };
+    }
+
+    // Playwright reporter
+    if (/^\s*(✓|×|✗|Running \d|\d+ (passed|failed))/i.test(t))
+        return { icon: '🎭', cls: 'tl-dim', label: t.trimStart() };
+
+    return { icon: ' ', cls: 'tl-normal', label: t };
+}
+
+function addCursor(container) {
+    const div = document.createElement('div');
+    div.className = 'tl tl-dim';
+    div.innerHTML = '<span class="tl-icon"> </span><span class="tl-text tl-blink">▌</span>';
+    container.appendChild(div);
+    return div;
+}
+
+function appendTermLine(container, rawText) {
+    const t = (rawText || '').trim();
+    if (!t) return;
+    const cl = classifyLine(t);
+    if (!cl) return;
+    const div = document.createElement('div');
+    div.className = 'tl ' + cl.cls;
+    div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text">${esc(cl.label)}</span>`;
+    container.appendChild(div);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. RUN LOGIC (streaming)
 // ─────────────────────────────────────────────────────────────────────────────
 async function doRun() {
     let paramsJson = null;
@@ -637,8 +728,8 @@ async function doRun() {
     const runBtnBot = document.getElementById('runBtnBottom');
     const setRunning = v => {
         [runBtn, runBtnBot].forEach(b => { if (!b) return; if (v) b.classList.add('running'); else b.classList.remove('running'); });
-        if (runBtn)    runBtn.innerHTML    = v ? '<span class="btn-spinner me-1"></span> Running...' : `<i class="bi bi-play-fill me-1"></i>${isTemplate ? 'Run with Params' : 'Run'}`;
-        if (runBtnBot) runBtnBot.innerHTML = v ? '<span class="btn-spinner me-1"></span> Running...' : '<i class="bi bi-play-fill me-1"></i>Run with Params';
+        if (runBtn)    runBtn.innerHTML    = v ? '<span class="btn-spinner me-1"></span>Running...' : `<i class="bi bi-play-fill me-1"></i>${isTemplate ? 'Run with Params' : 'Run'}`;
+        if (runBtnBot) runBtnBot.innerHTML = v ? '<span class="btn-spinner me-1"></span>Running...' : '<i class="bi bi-play-fill me-1"></i>Run with Params';
     };
 
     setRunning(true);
@@ -649,42 +740,109 @@ async function doRun() {
     const termExit = document.getElementById('terminalExit');
 
     termSec.style.display = 'block';
-    termOut.textContent = 'Running script…';
-    termStat.textContent = ''; termDur.textContent = ''; termExit.textContent = '';
+    termOut.innerHTML = '';
+    termStat.innerHTML = '<span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Running…</span>';
+    termDur.textContent = ''; termExit.textContent = '';
     termExit.className = 'small badge';
     termSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    let cursor = addCursor(termOut);
+    const startMs = Date.now();
+    const timerInterval = setInterval(() => {
+        termDur.textContent = `${((Date.now() - startMs) / 1000).toFixed(1)}s`;
+    }, 300);
+
+    let autoScroll = true;
+    termOut.addEventListener('scroll', () => {
+        autoScroll = (termOut.scrollHeight - termOut.scrollTop - termOut.clientHeight) < 60;
+    }, { passive: true, once: false });
 
     try {
         const fd = new FormData();
         if (paramsJson) fd.append('paramsJson', paramsJson);
-        const res  = await fetch('/PlaywrightScripts/Run/@Model.Id', { method: 'POST', headers: { 'RequestVerificationToken': antiforgeryToken }, body: fd });
-        const data = await res.json();
 
-        termOut.textContent = data.output || '(no output)';
+        const response = await fetch('/PlaywrightScripts/RunStream/@Model.Id', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': antiforgeryToken },
+            body: fd
+        });
 
-        if (data.timedOut) termStat.innerHTML = '<span class="text-warning"><i class="bi bi-clock-history me-1"></i>Timed out</span>';
-        else if (data.success) {
-            termStat.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Passed</span>';
-            if (isTemplate && paramsJson) localStorage.setItem(storageKey, paramsJson);
-        } else {
-            termStat.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Failed</span>';
+        if (!response.ok || !response.body) {
+            cursor.remove(); cursor = null;
+            appendTermLine(termOut, `[ERROR] Server error ${response.status}`);
+            termStat.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Error</span>';
+            return;
         }
 
-        if (data.durationMs != null) termDur.textContent = `${(data.durationMs / 1000).toFixed(2)}s`;
-        if (data.exitCode != null) {
-            termExit.textContent = `exit ${data.exitCode}`;
-            termExit.className = `small badge ${data.exitCode === 0 ? 'badge-success' : 'badge-danger'}`;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '', doneData = null;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+
+            const chunks = buf.split('\n\n');
+            buf = chunks.pop() ?? '';
+
+            for (const chunk of chunks) {
+                if (!chunk.trim()) continue;
+                const lines  = chunk.split('\n');
+                const evtLine  = lines.find(l => l.startsWith('event:'));
+                const dataLine = lines.find(l => l.startsWith('data: '));
+                if (!dataLine) continue;
+
+                let payload;
+                try { payload = JSON.parse(dataLine.slice(6)); } catch { payload = dataLine.slice(6); }
+
+                if (evtLine?.includes('done')) {
+                    doneData = payload;
+                } else {
+                    const text = String(payload || '');
+                    if (text) {
+                        cursor.remove();
+                        appendTermLine(termOut, text);
+                        cursor = addCursor(termOut);
+                        if (autoScroll) termOut.scrollTop = termOut.scrollHeight;
+                    }
+                }
+            }
         }
+
+        cursor.remove(); cursor = null;
+
+        if (doneData) {
+            const { exitCode, durationMs, timedOut } = doneData;
+            clearInterval(timerInterval);
+            termDur.textContent = `${(durationMs / 1000).toFixed(2)}s`;
+            if (timedOut) {
+                termStat.innerHTML = '<span class="text-warning"><i class="bi bi-clock-history me-1"></i>Timed out</span>';
+            } else if (exitCode === 0) {
+                termStat.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Passed</span>';
+                if (isTemplate && paramsJson) localStorage.setItem(storageKey, paramsJson);
+            } else {
+                termStat.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Failed</span>';
+            }
+            if (exitCode != null) {
+                termExit.textContent = `exit ${exitCode}`;
+                termExit.className = `small badge ${exitCode === 0 ? 'badge-success' : 'badge-danger'}`;
+            }
+        }
+        if (autoScroll) termOut.scrollTop = termOut.scrollHeight;
+
     } catch (err) {
-        termOut.textContent = 'Error: ' + err.message;
+        if (cursor) { cursor.remove(); cursor = null; }
+        appendTermLine(termOut, '[ERROR] ' + err.message);
         termStat.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Error</span>';
     } finally {
+        clearInterval(timerInterval);
         setRunning(false);
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. INIT
+// 8. INIT
 // ─────────────────────────────────────────────────────────────────────────────
 document.getElementById('codeToggleBtn').addEventListener('click', () => {
     const wrapper = document.getElementById('codeWrapper');
