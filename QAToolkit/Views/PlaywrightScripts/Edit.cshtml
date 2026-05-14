@@ -1,0 +1,116 @@
+@model QAToolkit.Models.PlaywrightScript
+@{
+    ViewData["Title"] = "Edit Script";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Script</h1>
+        <p>Update script details or replace the file.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="editForm">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-medium">Script Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" value="@Model.Name" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Runner</label>
+                            <select name="runMode" class="form-select">
+                                @if (Model.RunMode == "playwright")
+                                {
+                                    <option value="node">node</option>
+                                    <option value="playwright" selected="selected">npx playwright test</option>
+                                }
+                                else
+                                {
+                                    <option value="node" selected="selected">node</option>
+                                    <option value="playwright">npx playwright test</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description</label>
+                        <input type="text" name="description" class="form-control" value="@Model.Description" placeholder="Brief description of what this script does" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tags</label>
+                        <input type="text" name="tags" class="form-control" value="@Model.Tags" placeholder="e.g., login, smoke, regression" />
+                        <small class="text-muted">Comma-separated tags for filtering</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="isPublic" value="true" class="form-check-input" id="isPublicCheck"
+                                   @(Model.IsPublic ? "checked" : "") />
+                            <label class="form-check-label fw-medium" for="isPublicCheck">
+                                Public <small class="text-muted fw-normal">— anyone with the link can view without logging in</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Replace Script File</label>
+                        <input type="file" name="scriptFile" class="form-control" accept=".js,.ts" id="scriptFileInput" />
+                        <small class="text-muted">Leave empty to keep the current file (@Model.FileExtension)</small>
+                    </div>
+
+                    <!-- Current preview -->
+                    <div class="mb-4" id="currentPreview">
+                        <label class="form-label fw-medium">Current Script</label>
+                        <div class="code-viewer border rounded">
+                            <div class="code-viewer-header d-flex align-items-center justify-content-between px-3 py-2">
+                                <span class="small text-muted">@(Model.Name.Replace(' ', '_') + Model.FileExtension)</span>
+                                <span class="badge badge-muted">@Model.FileExtension.TrimStart('.')</span>
+                            </div>
+                            <pre class="code-viewer-body m-0" id="previewCode">@Model.ScriptContent</pre>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Save Changes
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<style>
+    .code-viewer { background: var(--surface-raised, #f6f8fa); overflow: hidden; }
+    [data-theme="dark"] .code-viewer { background: #0d1117; }
+    .code-viewer-header { background: var(--surface-overlay, #f0f2f4); border-bottom: 1px solid var(--border-subtle); }
+    [data-theme="dark"] .code-viewer-header { background: #161b22; border-bottom-color: #30363d; }
+    .code-viewer-body { padding: 16px; max-height: 360px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; white-space: pre; overflow-x: auto; color: var(--text-primary); }
+    [data-theme="dark"] .code-viewer-body { color: #c9d1d9; }
+</style>
+<script>
+    document.getElementById('scriptFileInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+            document.getElementById('previewCode').textContent = ev.target.result;
+        };
+        reader.readAsText(file);
+    });
+</script>
+}

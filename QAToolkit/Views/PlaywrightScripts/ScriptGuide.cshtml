@@ -1,0 +1,783 @@
+@{
+    ViewData["Title"] = "Script Writing Guide";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-book me-2"></i>Script Writing Guide</h1>
+        <p>QA Toolkit-এ compatible script লেখার সম্পূর্ণ গাইড — Node.js থেকে &#64;playwright/test পর্যন্ত।</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-play-circle me-1"></i> All Scripts
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-upload me-1"></i> Import Script
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Sticky TOC -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card" style="position: sticky; top: 72px;">
+            <div class="card-body py-3">
+                <p class="fw-semibold small text-muted text-uppercase mb-2" style="letter-spacing:.05em;">Contents</p>
+                <nav class="d-flex flex-column gap-1" id="guideToc">
+                    <a href="#overview"    class="toc-link small">Overview</a>
+                    <a href="#runner"      class="toc-link small">Runner কোনটা বেছে নেব?</a>
+                    <a href="#pattern1"   class="toc-link small">1 · Template <code>__PARAMS__</code></a>
+                    <a href="#pattern2"   class="toc-link small">2 · CLI <code>process.argv</code></a>
+                    <a href="#pattern3"   class="toc-link small">3 · Config Object</a>
+                    <a href="#pattern4"   class="toc-link small">4 · Constants</a>
+                    <a href="#pwtest"     class="toc-link small">5 · &#64;playwright/test (TS)</a>
+                    <a href="#pagefn"     class="toc-link small">Page Function Shorthand</a>
+                    <a href="#fieldtypes" class="toc-link small">Field Type Detection</a>
+                    <a href="#aiprompt"   class="toc-link small">AI Prompt Generator</a>
+                    <a href="#tips"       class="toc-link small">Tips &amp; Rules</a>
+                    <a href="#deploy"     class="toc-link small">Deployment Setup</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-lg-9">
+
+        <!-- Overview -->
+        <section id="overview" class="mb-5">
+            <h4 class="fw-semibold mb-1">Overview</h4>
+            <p class="text-muted small mb-3">সিস্টেম কিভাবে script execute করে এবং parameter auto-detect করে</p>
+            <p class="text-muted">
+                System টা <strong>Node.js</strong> দিয়ে script run করে। Script import করার সময় system automatically
+                configurable parameter গুলো detect করে এবং <strong>form auto-generate</strong> করে — প্রতিবার run করার আগে
+                শুধু value fill করলেই হবে, script edit করতে হবে না।
+            </p>
+            <div class="row g-3 mt-1">
+                <div class="col-sm-6">
+                    <div class="card h-100 border-0" style="background: var(--surface-raised);">
+                        <div class="card-body">
+                            <i class="bi bi-magic text-primary mb-2" style="font-size:1.4rem;"></i>
+                            <h6 class="fw-semibold">Auto-detected patterns</h6>
+                            <p class="text-muted small mb-0">৪টি script pattern automatically recognize করা হয় — কোনো extra configuration লাগে না।</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card h-100 border-0" style="background: var(--surface-raised);">
+                        <div class="card-body">
+                            <i class="bi bi-input-cursor-text text-primary mb-2" style="font-size:1.4rem;"></i>
+                            <h6 class="fw-semibold">Smart field types</h6>
+                            <p class="text-muted small mb-0">Password automatically mask হয়, boolean-এ checkbox আসে, array-এ JSON input আসে।</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card h-100 border-0" style="background: var(--surface-raised);">
+                        <div class="card-body">
+                            <i class="bi bi-browser-chrome text-primary mb-2" style="font-size:1.4rem;"></i>
+                            <h6 class="fw-semibold">Page function shorthand</h6>
+                            <p class="text-muted small mb-0">শুধু <code>async (page) =&gt; &#123;…&#125;</code> লিখলেই system টা full browser launcher দিয়ে wrap করে নেয়।</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card h-100 border-0" style="background: var(--surface-raised);">
+                        <div class="card-body">
+                            <i class="bi bi-save text-primary mb-2" style="font-size:1.4rem;"></i>
+                            <h6 class="fw-semibold">Saved form values</h6>
+                            <p class="text-muted small mb-0">Last enter করা values browser-এ save থাকে — একবার fill করলে বারবার করতে হয় না।</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert mt-4 mb-0" style="background:var(--color-info-subtle,#e7f3ff);border-color:var(--color-info,#0969da);color:var(--text-primary);">
+                <strong>Detection priority:</strong>
+                <code>__PARAMS__</code> → <code>process.argv</code> + Options comment → <code>const CONFIG = &#123;&#125;</code> → top-level <code>const UPPER = …</code>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Runner selection -->
+        <section id="runner" class="mb-5">
+            <h4 class="fw-semibold mb-1">Runner কোনটা বেছে নেব?</h4>
+            <p class="text-muted small mb-3">Script import করার সময় <strong>Runner</strong> dropdown থেকে সঠিক runner select করতে হবে</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card h-100" style="border-color: var(--border-subtle);">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge badge-muted">node</span>
+                                <h6 class="fw-semibold mb-0">Node.js Runner</h6>
+                            </div>
+                            <p class="text-muted small mb-2">কখন use করব:</p>
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li><code>require('playwright')</code> দিয়ে লেখা script</li>
+                                <li><code>async (page) =&gt; &#123;&#125;</code> page function shorthand</li>
+                                <li>যেকোনো general purpose Node.js script</li>
+                                <li><code>__PARAMS__</code>, <code>CONFIG</code>, constants pattern</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100" style="border-color: var(--color-success,#1a7f37);">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge badge-success">npx playwright test</span>
+                                <h6 class="fw-semibold mb-0">Playwright Test Runner</h6>
+                            </div>
+                            <p class="text-muted small mb-2">কখন use করব:</p>
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li><code>import &#123; test, expect &#125; from '&#64;playwright/test'</code> দিয়ে লেখা script</li>
+                                <li>TypeScript (<code>.ts</code>) test files</li>
+                                <li>Playwright Codegen দিয়ে record করা scripts</li>
+                                <li><code>expect(locator).toBeVisible()</code> style assertions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert mt-3 mb-0" style="background:var(--color-warning-subtle,#fff8c5);border-color:var(--color-warning,#d4a72c);color:var(--text-primary);">
+                <i class="bi bi-lightbulb me-1"></i>
+                <strong>Quick rule:</strong> Playwright Codegen বা VS Code Extension দিয়ে record করা script হলে <strong>npx playwright test</strong> runner select করো। নিজে লিখলে বা <code>require()</code> দিয়ে শুরু হলে <strong>node</strong> runner।
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Pattern 1 -->
+        <section id="pattern1" class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-primary px-2 py-1">Pattern 1</span>
+                <h4 class="fw-semibold mb-0">Template — <code>__PARAMS__</code></h4>
+            </div>
+            <p class="text-muted small mb-3">সবচেয়ে recommended pattern। Script-এ <code>__PARAMS__</code> token রাখো — runtime-এ system সেটা user-filled JSON দিয়ে replace করে দেবে।</p>
+
+            <div class="mb-3">
+                <h6 class="fw-semibold text-muted text-uppercase small mb-2" style="letter-spacing:.05em;">Options comment format</h6>
+                <div class="code-block">
+                    <div class="code-block-header"><span>comment syntax</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>// Options:
+//   fieldName     Description                    (default: 'value')
+//   count         কতটা process করবে              (default: 10)
+//   mode          Run mode 'fast'|'slow'|'debug' (default: 'fast')</pre>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <h6 class="fw-semibold text-muted text-uppercase small mb-2" style="letter-spacing:.05em;">Full example</h6>
+                <div class="code-block">
+                    <div class="code-block-header"><span>login-test.js</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>// Options:
+//   url        Portal URL                   (default: 'https://school.edu/login')
+//   username   Login username               (default: 'admin')
+//   password   Login password
+//   headless   Browser hide রাখবে কিনা     (default: true)
+
+async (page) => {
+    const { url, username, password } = __PARAMS__;
+
+    await page.goto(url);
+    await page.fill('#username', username);
+    await page.fill('#password', password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('**/dashboard**', { timeout: 10000 });
+    console.log('Login successful');
+}</pre>
+                </div>
+            </div>
+            <div class="alert mt-3 mb-0" style="background:var(--color-warning-subtle,#fff8c5);border-color:var(--color-warning,#d4a72c);color:var(--text-primary);">
+                <i class="bi bi-info-circle me-1"></i>
+                <code>__PARAMS__</code> থাকলে কিন্তু form fill না করলে system run করবে না — "fill in the Parameters panel" message দেবে।
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Pattern 2 -->
+        <section id="pattern2" class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-primary px-2 py-1">Pattern 2</span>
+                <h4 class="fw-semibold mb-0">CLI Style — <code>process.argv</code></h4>
+            </div>
+            <p class="text-muted small mb-3">যে scripts originally terminal থেকে run করার জন্য লেখা। System <code>// Options:</code> comment পড়ে <code>process.argv</code> shim তৈরি করে দেয়।</p>
+
+            <div class="mb-3">
+                <div class="code-block">
+                    <div class="code-block-header"><span>admission-blast.js</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>// Usage:
+//   node script.js &lt;mobile&gt; [options]
+//
+// Options:
+//   -s &lt;servers&gt;         Parallel worker count       (default: 5)
+//   --session &lt;session&gt;  Academic session year       (default: '2024')
+//   --attempts &lt;count&gt;   Max retry attempts          (default: 3)
+
+const mobile  = process.argv[2];
+const servers = parseInt(process.argv[process.argv.indexOf('-s') + 1] || '5');
+const session = process.argv[process.argv.indexOf('--session') + 1] || '2024';
+
+console.log(`Running for ${mobile}: ${servers} workers, session ${session}`);</pre>
+                </div>
+            </div>
+            <div class="alert mt-3 mb-0" style="background:var(--color-warning-subtle,#fff8c5);border-color:var(--color-warning,#d4a72c);color:var(--text-primary);">
+                <i class="bi bi-info-circle me-1"></i>
+                Script-এ <strong>দুটো জিনিস একসাথে থাকতে হবে</strong>: <code>process.argv</code> এবং <code>// Options:</code> comment line।
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Pattern 3 -->
+        <section id="pattern3" class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-primary px-2 py-1">Pattern 3</span>
+                <h4 class="fw-semibold mb-0">Config Object — <code>const CONFIG = &#123;&#125;</code></h4>
+            </div>
+            <p class="text-muted small mb-3">Complex script-এর জন্য সবচেয়ে clean pattern। Script-এর top-এ একটা <code>const CONFIG</code> block রাখো — system পুরো block টা replace করে দেবে।</p>
+
+            <div class="code-block">
+                <div class="code-block-header"><span>evaluation-entry.js</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>const CONFIG = {
+    org:             'ONLINE CARE',
+    examQuery:       'HSC 2024',
+    session:         '2024',
+    subjects:        ['Physics', 'Chemistry', 'Biology'],
+    teacherCount:    5,
+    entriesPerTeacher: 20,
+    passMark:        33,
+    baseUrl:         'https://app.example.com',
+    username:        'admin',
+    password:        'secret',
+};
+
+const { org, subjects, teacherCount } = CONFIG;
+console.log(`Org: ${org}, teachers: ${teacherCount}`);</pre>
+            </div>
+            <div class="alert mt-3 mb-0" style="background:var(--color-info-subtle,#e7f3ff);border-color:var(--color-info,#0969da);color:var(--text-primary);">
+                <i class="bi bi-info-circle me-1"></i>
+                <code>const CONFIG</code> block টা অবশ্যই <code>&#125;;</code> দিয়ে শেষ হতে হবে — নিজের line-এ।
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Pattern 4 -->
+        <section id="pattern4" class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-primary px-2 py-1">Pattern 4</span>
+                <h4 class="fw-semibold mb-0">Top-level Constants — <code>const UPPER = …</code></h4>
+            </div>
+            <p class="text-muted small mb-3">সবচেয়ে simple pattern — কোনো special syntax নেই। Top-level <strong>ALL_CAPS বা PascalCase</strong> constant গুলো automatically detect হয়।</p>
+
+            <div class="code-block">
+                <div class="code-block-header"><span>see-exam.js</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>const BASE_URL  = 'https://ums.school.edu';
+const USERNAME  = 'admin';
+const PASSWORD  = 'secret123';
+const SESSION   = '2024';
+const EXAM_NAME = 'SSC 2024';
+const PASS_MARK = 33;
+const SUBJECTS  = ['Bangla', 'English', 'Math'];
+
+const { chromium } = require('playwright');
+(async () => {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(BASE_URL + '/login');
+    console.log(`Running: ${EXAM_NAME}`);
+    await browser.close();
+})();</pre>
+            </div>
+            <div class="alert mt-3 mb-0" style="background:var(--color-warning-subtle,#fff8c5);border-color:var(--color-warning,#d4a72c);color:var(--text-primary);">
+                <i class="bi bi-info-circle me-1"></i>
+                শুধু <code>BASE_URL</code>, <code>PASSWORD</code> এর মতো ALL_CAPS বা <code>BaseUrl</code> এর মতো PascalCase নাম detect হবে। <code>baseUrl</code> এর মতো camelCase detect হবে না।
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Pattern 5: @@playwright/test -->
+        <section id="pwtest" class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-success px-2 py-1">Pattern 5</span>
+                <h4 class="fw-semibold mb-0">&#64;playwright/test — TypeScript Test Runner</h4>
+            </div>
+            <p class="text-muted small mb-3">Playwright Codegen বা VS Code Extension দিয়ে record করা scripts এই format-এ থাকে। Import করার সময় runner <strong>npx playwright test</strong> select করতে হবে।</p>
+
+            <div class="mb-3">
+                <div class="code-block">
+                    <div class="code-block-header"><span>app-check.ts</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>import { test, expect } from '&#64;playwright/test';
+
+test('login and verify dashboard', async ({ page }) => {
+    await page.goto('https://app.example.com/login');
+
+    await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
+    await page.getByTestId('username-input').fill('admin');
+    await page.getByTestId('password-input').fill('secret');
+    await page.getByTestId('login-button').click();
+
+    await expect(page.getByTestId('dashboard-title')).toBeVisible();
+    await expect(page.getByTestId('dashboard-title')).toContainText('Dashboard');
+    console.log('✓ Login verified');
+});
+
+test('check live exam section', async ({ page }) => {
+    // second test case...
+});</pre>
+                </div>
+            </div>
+
+            <div class="row g-2 mt-1">
+                <div class="col-md-6">
+                    <div class="card border-0" style="background:var(--surface-raised);">
+                        <div class="card-body py-2 px-3">
+                            <p class="fw-semibold small mb-1"><i class="bi bi-check-circle text-success me-1"></i>এই format এ যা কাজ করে</p>
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li><code>expect().toBeVisible()</code></li>
+                                <li><code>expect().toContainText()</code></li>
+                                <li><code>page.getByTestId()</code></li>
+                                <li><code>page.getByRole()</code></li>
+                                <li>Multiple <code>test()</code> blocks</li>
+                                <li>TypeScript types</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0" style="background:var(--surface-raised);">
+                        <div class="card-body py-2 px-3">
+                            <p class="fw-semibold small mb-1"><i class="bi bi-x-circle text-danger me-1"></i>এই format এ যা কাজ করবে না</p>
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li><code>require()</code> syntax (use <code>import</code>)</li>
+                                <li>Top-level <code>await</code> outside test block</li>
+                                <li><code>process.argv</code> param injection</li>
+                                <li>Page function shorthand</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Page Function -->
+        <section id="pagefn" class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background:var(--color-success);color:#fff;padding:.2rem .5rem;">Shorthand</span>
+                <h4 class="fw-semibold mb-0">Page Function — <code>async (page) =&gt; &#123;…&#125;</code></h4>
+            </div>
+            <p class="text-muted small mb-3">Browser boilerplate লিখতে চাও না? শুধু page function লেখো — system নিজেই browser launch করে দেবে।</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <h6 class="fw-semibold text-muted text-uppercase small mb-2" style="letter-spacing:.05em;">তুমি যা লেখো</h6>
+                    <div class="code-block h-100">
+                        <div class="code-block-header"><span>short.js</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>async (page) => {
+    await page.goto('https://example.com');
+    const title = await page.title();
+    console.log('Title:', title);
+}</pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-semibold text-muted text-uppercase small mb-2" style="letter-spacing:.05em;">System যা run করে</h6>
+                    <div class="code-block h-100" style="opacity:.75;">
+                        <div class="code-block-header"><span>auto-wrapped</span></div>
+<pre>const { chromium } = require('playwright');
+const __fn = (async (page) => {
+    await page.goto('https://example.com');
+    const title = await page.title();
+    console.log('Title:', title);
+});
+(async () => {
+  const browser = await chromium.launch(...);
+  const page = await browser.newPage();
+  await __fn(page);
+  await browser.close();
+})();</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Field Types -->
+        <section id="fieldtypes" class="mb-5">
+            <h4 class="fw-semibold mb-1">Field Type Auto-Detection</h4>
+            <p class="text-muted small mb-3">Variable নামের pattern দেখে system automatically সঠিক input type বেছে নেয়</p>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>নামের pattern</th>
+                                <th>Example</th>
+                                <th>UI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-danger">password</span></td>
+                                <td>নামে <code>password</code> আছে</td>
+                                <td><code>password</code>, <code>PASSWORD</code>, <code>dbPassword</code></td>
+                                <td>Masked input + show/hide</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-info">boolean</span></td>
+                                <td><code>is</code> বা <code>has</code> দিয়ে শুরু</td>
+                                <td><code>isActive</code>, <code>hasAccess</code></td>
+                                <td>Checkbox</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-success">number</span></td>
+                                <td>নাম Count, Total, Marks, Amount, Fee, Min, Max দিয়ে শেষ হয়</td>
+                                <td><code>teacherCount</code>, <code>passMark</code></td>
+                                <td>Number input</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge" style="background:var(--color-warning,#d4a72c);">select</span></td>
+                                <td>Comment-এ <code>'opt1'|'opt2'</code> pipe separator আছে</td>
+                                <td><code>mode 'fast'|'slow'|'debug'</code></td>
+                                <td>Dropdown</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-primary">array</span></td>
+                                <td>Default value array literal</td>
+                                <td><code>subjects: ['Math', 'Science']</code></td>
+                                <td>JSON array input</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-muted">text</span></td>
+                                <td>অন্য সব — url, path, email সহ</td>
+                                <td><code>baseUrl</code>, <code>username</code></td>
+                                <td>Text input</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- AI Prompt -->
+        <section id="aiprompt" class="mb-5">
+            <h4 class="fw-semibold mb-1">AI Prompt Generator</h4>
+            <p class="text-muted small mb-3">ChatGPT বা Claude-এ এই prompts দিলে system-compatible script পাবে</p>
+
+            <div class="mb-4">
+                <h6 class="fw-semibold mb-2">Prompt 1 — Page function script লেখার জন্য</h6>
+                <p class="text-muted small mb-2">যখন browser automation script দরকার, parameter সহ:</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span>copy this prompt</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>Write a Playwright browser automation script for the following task:
+[DESCRIBE YOUR TASK HERE]
+
+Requirements:
+- Format: async (page) => { ... } — just the page function, no browser setup
+- Use require() syntax, NOT import
+- Put all configurable values in a __PARAMS__ destructure at the top:
+  const { param1, param2 } = __PARAMS__;
+- Add an Options comment block before the function listing each param with description and default:
+  // Options:
+  //   param1    Description here    (default: 'value')
+- Use console.log() for all output
+- Name password fields with "password" in the name so they get masked
+- Name numeric fields ending in Count/Total/Marks/Amount so they get number inputs</pre>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h6 class="fw-semibold mb-2">Prompt 2 — Existing script কে compatible করতে</h6>
+                <p class="text-muted small mb-2">তোমার কাছে একটা script আছে, সেটাকে system-compatible করতে চাও:</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span>copy this prompt</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>Convert the following script to be compatible with a QA Toolkit runner system.
+
+Rules:
+1. If it uses `import { test, expect } from '&#64;playwright/test'` → keep as-is, it's a Playwright Test script
+2. If it's a plain Node.js/Playwright script:
+   - Wrap in async (page) => { ... } if it uses a browser
+   - Extract all hardcoded configurable values into __PARAMS__:
+     const { url, username, password } = __PARAMS__;
+   - Add // Options: comment above listing each param with description and default value
+   - Replace all import statements with require()
+   - Replace expect() assertions with await locator.waitFor({ state: 'visible' })
+   - Use console.log('✓ stepName') for each completed step
+
+Script to convert:
+[PASTE YOUR SCRIPT HERE]</pre>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <h6 class="fw-semibold mb-2">Prompt 3 — Playwright Codegen script থেকে parameterized script</h6>
+                <p class="text-muted small mb-2">Playwright Codegen দিয়ে record করা script-এ hardcoded values আছে — সেগুলো parameter করতে:</p>
+                <div class="code-block">
+                    <div class="code-block-header"><span>copy this prompt</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>I have a Playwright TypeScript test script recorded with Playwright Codegen.
+Convert it so that hardcoded values (URLs, usernames, passwords, IDs) become
+test parameters using environment variables or a config object.
+
+Keep the &#64;playwright/test format with import { test, expect }.
+Use a const config = { ... } object at the top of the test for all configurable values.
+Add comments explaining what each config value is for.
+
+Script:
+[PASTE YOUR CODEGEN SCRIPT HERE]</pre>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Tips -->
+        <section id="tips" class="mb-5">
+            <h4 class="fw-semibold mb-1">Tips &amp; Rules</h4>
+            <p class="text-muted small mb-3">Script লেখার সময় এগুলো মাথায় রাখো</p>
+
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;background:var(--color-success-subtle,#dafbe1);color:var(--color-success,#1a7f37);">
+                        <i class="bi bi-check-lg small"></i>
+                    </div>
+                    <div>
+                        <p class="fw-medium mb-0">Node runner-এ <code>require()</code> use করো, <code>import</code> না</p>
+                        <p class="text-muted small mb-0">Node.js CommonJS mode-এ run হয়। শুধু <code>npx playwright test</code> runner-এই <code>import</code> চলবে।</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;background:var(--color-success-subtle,#dafbe1);color:var(--color-success,#1a7f37);">
+                        <i class="bi bi-check-lg small"></i>
+                    </div>
+                    <div>
+                        <p class="fw-medium mb-0">Output-এর জন্য <code>console.log()</code> use করো</p>
+                        <p class="text-muted small mb-0">Stdout সব terminal panel-এ দেখা যায়। <code>console.error()</code> লিখলে stderr-এ যাবে।</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;background:var(--color-success-subtle,#dafbe1);color:var(--color-success,#1a7f37);">
+                        <i class="bi bi-check-lg small"></i>
+                    </div>
+                    <div>
+                        <p class="fw-medium mb-0">Array value-এ double quote use করো</p>
+                        <p class="text-muted small mb-0">Form-এ <code>["a","b"]</code> এবং <code>['a','b']</code> দুটোই চলে। কিন্তু standard JSON double quote সবচেয়ে safe।</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;background:var(--color-danger-subtle,#ffebe9);color:var(--color-danger,#cf222e);">
+                        <i class="bi bi-x-lg small"></i>
+                    </div>
+                    <div>
+                        <p class="fw-medium mb-0">Page function-এ <code>process.exit()</code> call করো না</p>
+                        <p class="text-muted small mb-0">Auto-wrapper নিজেই exit handle করে। ভেতরে call করলে browser cleanup skip হয়ে যাবে।</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;background:var(--color-danger-subtle,#ffebe9);color:var(--color-danger,#cf222e);">
+                        <i class="bi bi-x-lg small"></i>
+                    </div>
+                    <div>
+                        <p class="fw-medium mb-0">Public script-এ password/token hardcode করো না</p>
+                        <p class="text-muted small mb-0">Public script যে কেউ source দেখতে পারবে। Sensitive values সবসময় parameter form-এ রাখো।</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 align-items-start">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;background:var(--color-danger-subtle,#ffebe9);color:var(--color-danger,#cf222e);">
+                        <i class="bi bi-x-lg small"></i>
+                    </div>
+                    <div>
+                        <p class="fw-medium mb-0">একটা script-এ একটাই pattern use করো</p>
+                        <p class="text-muted small mb-0">একসাথে <code>__PARAMS__</code> আর <code>const CONFIG</code> রাখলে শুধু <code>__PARAMS__</code> কাজ করবে। Priority order মেনে চলো।</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- Deployment -->
+        <section id="deploy" class="mb-4">
+            <h4 class="fw-semibold mb-1">Deployment Setup</h4>
+            <p class="text-muted small mb-3">DevOps-এর জন্য — নতুন server-এ QA Toolkit deploy করলে playwright support-এর জন্য এই steps follow করতে হবে</p>
+
+            <div class="alert mb-4" style="background:var(--color-info-subtle,#e7f3ff);border-color:var(--color-info,#0969da);color:var(--text-primary);">
+                <i class="bi bi-send me-1"></i>
+                <strong>DevOps-কে পাঠানোর জন্য:</strong> নিচের checklist টা copy করে পাঠাও।
+                <button class="btn btn-sm ms-2" style="background:var(--color-info,#0969da);color:#fff;" onclick="copyDeployChecklist()">
+                    <i class="bi bi-clipboard me-1"></i>Copy Checklist
+                </button>
+            </div>
+
+            <div id="deployChecklist">
+
+            <h6 class="fw-semibold mb-3">1. Prerequisites</h6>
+            <div class="card mb-3">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>Requirement</th><th>Version</th><th>Check করার command</th></tr></thead>
+                        <tbody>
+                            <tr><td>.NET Runtime</td><td>≥ 9.0</td><td><code>dotnet --version</code></td></tr>
+                            <tr><td>Node.js</td><td>≥ 18.x</td><td><code>node --version</code></td></tr>
+                            <tr><td>npm</td><td>≥ 9.x</td><td><code>npm --version</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h6 class="fw-semibold mb-3">2. Working Directory Setup</h6>
+            <p class="text-muted small">Script execution-এর জন্য একটা dedicated working directory দরকার। Default: <code>D:\Projects</code> (Windows) বা <code>/opt/qa-scripts</code> (Linux)।</p>
+            <div class="code-block mb-3">
+                <div class="code-block-header"><span>working directory setup</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre># Working directory তৈরি করো
+mkdir D:\Projects          # Windows
+mkdir -p /opt/qa-scripts   # Linux
+
+# npm init (package.json না থাকলে)
+cd D:\Projects
+npm init -y
+
+# playwright (node runner-এর জন্য)
+npm install playwright
+
+# &#64;playwright/test (TypeScript/playwright test runner-এর জন্য)
+npm install &#64;playwright/test --save-dev
+
+# Browser binaries download করো
+npx playwright install chromium
+
+# Linux-এ system dependencies লাগতে পারে
+npx playwright install-deps chromium   # Linux only</pre>
+            </div>
+
+            <h6 class="fw-semibold mb-3">3. appsettings.json Configuration</h6>
+            <div class="code-block mb-3">
+                <div class="code-block-header"><span>appsettings.json</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>{
+  "Playwright": {
+    "WorkingDirectory": "D:\\Projects",
+    "Headless": true,
+    "TimeoutSeconds": 300
+  }
+}</pre>
+            </div>
+
+            <h6 class="fw-semibold mb-3">4. Linux Extra Steps</h6>
+            <div class="code-block mb-3">
+                <div class="code-block-header"><span>Linux only</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre># Chromium system dependencies
+sudo apt-get install -y libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+  libcups2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
+  libxrandr2 libgbm1 libasound2
+
+# npx must be in PATH for the app user
+which npx    # should return a path
+node --version</pre>
+            </div>
+
+            <h6 class="fw-semibold mb-3">5. Verify Installation</h6>
+            <div class="code-block">
+                <div class="code-block-header"><span>verify.js — run this to test setup</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>// Save as verify.js in the working directory, then: node verify.js
+const { chromium } = require('playwright');
+(async () => {
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto('https://example.com');
+    console.log('✓ playwright (node): ' + await page.title());
+    await browser.close();
+})();
+
+// Then verify &#64;playwright/test:
+// npx playwright test --version</pre>
+            </div>
+
+            </div><!-- /#deployChecklist -->
+        </section>
+
+    </div><!-- /col -->
+</div><!-- /row -->
+
+@section Scripts {
+<style>
+    .toc-link { color:var(--text-secondary); text-decoration:none; padding:.2rem .5rem; border-radius:4px; transition:background .15s,color .15s; }
+    .toc-link:hover, .toc-link.active { background:var(--surface-overlay); color:var(--text-primary); }
+    .toc-link code { font-size:.75rem; }
+
+    .code-block { background:var(--surface-raised,#f6f8fa); border:1px solid var(--border-subtle); border-radius:8px; overflow:hidden; }
+    [data-theme="dark"] .code-block { background:#0d1117; border-color:#30363d; }
+    .code-block-header { display:flex; align-items:center; justify-content:space-between; background:var(--surface-overlay,#f0f2f4); border-bottom:1px solid var(--border-subtle); padding:.4rem .75rem; font-size:.8rem; color:var(--text-secondary); }
+    [data-theme="dark"] .code-block-header { background:#161b22; border-bottom-color:#30363d; }
+    .code-block pre { margin:0; padding:1rem; font-family:'Courier New',Consolas,monospace; font-size:12.5px; line-height:1.65; white-space:pre; overflow-x:auto; color:var(--text-primary); background:transparent; }
+    [data-theme="dark"] .code-block pre { color:#c9d1d9; }
+    .btn-copy { background:none; border:none; cursor:pointer; color:var(--text-secondary); padding:.1rem .3rem; border-radius:4px; font-size:.85rem; transition:color .15s; }
+    .btn-copy:hover { color:var(--text-primary); }
+</style>
+<script>
+    function copyCode(btn) {
+        var pre = btn.closest('.code-block').querySelector('pre');
+        if (!pre) return;
+        navigator.clipboard.writeText(pre.textContent).then(function () {
+            var icon = btn.querySelector('i');
+            if (icon) { icon.className = 'bi bi-check-lg text-success'; setTimeout(function () { icon.className = 'bi bi-clipboard'; }, 1500); }
+        });
+    }
+
+    function copyDeployChecklist() {
+        var text = `QA Toolkit — Playwright Deployment Checklist
+
+PREREQUISITES
+- .NET >= 9.0  (dotnet --version)
+- Node.js >= 18  (node --version)
+- npm >= 9  (npm --version)
+
+WORKING DIRECTORY SETUP (default: D:\\Projects or /opt/qa-scripts)
+  npm init -y
+  npm install playwright
+  npm install &#64;playwright/test --save-dev
+  npx playwright install chromium
+  npx playwright install-deps chromium   # Linux only
+
+appsettings.json:
+  "Playwright": {
+    "WorkingDirectory": "D:\\\\Projects",
+    "Headless": true,
+    "TimeoutSeconds": 300
+  }
+
+LINUX EXTRA:
+  sudo apt-get install -y libnspr4 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2
+
+VERIFY:
+  node verify.js    (see guide for verify.js content)
+  npx playwright test --version`;
+        navigator.clipboard.writeText(text).then(function () {
+            var btn = event.target.closest('button');
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copied!';
+            setTimeout(function () { btn.innerHTML = orig; }, 2000);
+        });
+    }
+
+    // TOC scroll highlight
+    var sections = document.querySelectorAll('section[id]');
+    var tocLinks = document.querySelectorAll('.toc-link');
+    window.addEventListener('scroll', function () {
+        var scrollY = window.scrollY + 100;
+        var current = '';
+        sections.forEach(function (s) { if (s.offsetTop <= scrollY) current = s.id; });
+        tocLinks.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+    }, { passive: true });
+</script>
+}

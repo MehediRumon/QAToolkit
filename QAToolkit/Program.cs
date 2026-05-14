@@ -49,6 +49,22 @@ using (var scope = app.Services.CreateScope())
         )");
     try { db.Database.ExecuteSqlRaw("ALTER TABLE Workflows ADD COLUMN IsPublic INTEGER NOT NULL DEFAULT 0"); } catch { /* column already exists */ }
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_Workflows_Category ON Workflows (Category)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS PlaywrightScripts (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Name TEXT NOT NULL,
+            Description TEXT,
+            Tags TEXT,
+            ScriptContent TEXT NOT NULL DEFAULT '',
+            FileExtension TEXT NOT NULL DEFAULT '.js',
+            RunMode TEXT NOT NULL DEFAULT 'node',
+            CreatedBy TEXT,
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT,
+            IsPublic INTEGER NOT NULL DEFAULT 0
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_PlaywrightScripts_Tags ON PlaywrightScripts (Tags)");
 }
 
 // Configure the HTTP request pipeline.

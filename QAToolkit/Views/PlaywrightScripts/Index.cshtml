@@ -1,0 +1,141 @@
+@model IEnumerable<QAToolkit.Models.PlaywrightScript>
+@{
+    ViewData["Title"] = "Playwright Scripts";
+    var allTags = ViewBag.AllTags as List<string> ?? new List<string>();
+    var selectedTag = ViewBag.SelectedTag as string;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Playwright Scripts</h1>
+        <p>Import and run Playwright automation scripts.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="ScriptGuide" class="btn btn-secondary">
+            <i class="bi bi-book me-1"></i> Script Guide
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-upload me-1"></i> Import Script
+        </a>
+    </div>
+</div>
+
+@if (allTags.Any())
+{
+    <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+        <small class="text-muted fw-medium">Filter by tag:</small>
+        <a asp-action="Index" class="badge @(selectedTag == null ? "badge-primary" : "badge-muted") text-decoration-none">All</a>
+        @foreach (var tag in allTags)
+        {
+            <a asp-action="Index" asp-route-tag="@tag"
+               class="badge @(selectedTag == tag ? "badge-primary" : "badge-muted") text-decoration-none">
+                @tag
+            </a>
+        }
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-file-earmark-code" style="font-size: 2.5rem; color: var(--gray-300);"></i>
+            <p class="mt-3 text-muted">No scripts imported yet.</p>
+            <a asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-upload me-1"></i> Import your first script
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Tags</th>
+                        <th>Runner</th>
+                        <th>Public</th>
+                        <th>Created By</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var script in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@script.Id" class="fw-medium text-decoration-none">
+                                    @script.Name
+                                </a>
+                                @if (!string.IsNullOrEmpty(script.Description))
+                                {
+                                    <div class="text-muted small text-truncate" style="max-width: 300px;">@script.Description</div>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(script.Tags))
+                                {
+                                    foreach (var tag in script.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                    {
+                                        <span class="badge badge-info me-1">@tag</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (script.RunMode == "playwright")
+                                {
+                                    <span class="badge badge-success">playwright</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-muted">node</span>
+                                }
+                            </td>
+                            <td>
+                                @if (script.IsPublic)
+                                {
+                                    <span class="status-badge status-success"><span class="status-dot"></span>Public</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-muted"><span class="status-dot"></span>Private</span>
+                                }
+                            </td>
+                            <td class="text-muted small">@script.CreatedBy</td>
+                            <td class="text-muted small text-nowrap">@script.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Details" asp-route-id="@script.Id" class="btn btn-ghost btn-sm" title="View & Run">
+                                    <i class="bi bi-play-circle"></i>
+                                </a>
+                                @if (script.CreatedBy == User.Identity?.Name)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@script.Id" class="btn btn-ghost btn-sm" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@script.Id" method="post" class="d-inline"
+                                          data-confirm="true"
+                                          data-confirm-title="Delete script"
+                                          data-confirm-message="Are you sure you want to delete &quot;@script.Name&quot;? This cannot be undone."
+                                          data-confirm-btn="Delete"
+                                          data-confirm-btn-variant="btn-danger">
+                                        <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
