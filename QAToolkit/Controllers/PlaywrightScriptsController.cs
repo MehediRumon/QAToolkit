@@ -22,6 +22,26 @@ namespace QAToolkit.Controllers
             _config = config;
         }
 
+        private string ResolveNodeDirectory()
+        {
+            var configured = _config.GetValue<string>("Playwright:NodeDirectory");
+            if (!string.IsNullOrWhiteSpace(configured) && File.Exists(Path.Combine(configured, "node.exe")))
+                return configured;
+
+            var candidates = new[]
+            {
+                @"C:\Program Files\nodejs",
+                @"C:\Program Files (x86)\nodejs",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "nodejs"),
+            };
+            foreach (var path in candidates)
+                if (File.Exists(Path.Combine(path, "node.exe")))
+                    return path;
+
+            return "";
+        }
+
         private static bool IsPageFunction(string content)
         {
             foreach (var line in content.Split('\n'))
@@ -328,8 +348,8 @@ namespace QAToolkit.Controllers
                     CreateNoWindow = true,
                     WorkingDirectory = effectiveWorkingDir
                 };
-                // Prepend NodeDirectory to PATH so IIS app pool can find node/npx
-                var nodeDir = _config.GetValue<string>("Playwright:NodeDirectory");
+                // Prepend node directory to PATH so IIS app pool can find node/npx
+                var nodeDir = ResolveNodeDirectory();
                 if (!string.IsNullOrWhiteSpace(nodeDir))
                 {
                     var currentPath = psi.Environment.ContainsKey("PATH") ? psi.Environment["PATH"] : "";
