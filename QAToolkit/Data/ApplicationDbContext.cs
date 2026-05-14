@@ -17,6 +17,7 @@ namespace QAToolkit.Data
         public DbSet<MeetingNote> MeetingNotes { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Workflow> Workflows { get; set; }
+        public DbSet<PlaywrightScript> PlaywrightScripts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +50,9 @@ namespace QAToolkit.Data
 
             modelBuilder.Entity<Workflow>()
                 .HasIndex(w => w.Category);
+
+            modelBuilder.Entity<PlaywrightScript>()
+                .HasIndex(s => s.Tags);
         }
     }
 }

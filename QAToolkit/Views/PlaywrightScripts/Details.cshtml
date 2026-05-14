@@ -1,0 +1,706 @@
+@model QAToolkit.Models.PlaywrightScript
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = Model.Name;
+    var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+    var isOwner = User.Identity?.Name == Model.CreatedBy;
+    var isTemplate = Model.ScriptContent.Contains("__PARAMS__")
+        || (Model.ScriptContent.Contains("process.argv") &&
+            System.Text.RegularExpressions.Regex.IsMatch(Model.ScriptContent, @"//\s+Options?:", System.Text.RegularExpressions.RegexOptions.Multiline))
+        || System.Text.RegularExpressions.Regex.IsMatch(Model.ScriptContent, @"const\s+CONFIG\s*=\s*\{")
+        || System.Text.RegularExpressions.Regex.IsMatch(Model.ScriptContent, @"(?m)^const\s+[A-Z][A-Z0-9_]+ =");
+}
+
+<div class="page-header">
+    <div style="min-width: 0;">
+        <h1 class="text-truncate">@Model.Name</h1>
+        <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+            @if (isTemplate)
+            {
+                <span class="badge badge-warning"><i class="bi bi-puzzle me-1"></i>Template</span>
+            }
+            @if (Model.RunMode == "playwright")
+            {
+                <span class="badge badge-success"><i class="bi bi-box me-1"></i>playwright</span>
+            }
+            else
+            {
+                <span class="badge badge-muted"><i class="bi bi-node-plus me-1"></i>node</span>
+            }
+            <span class="badge badge-muted">@Model.FileExtension</span>
+            @if (!string.IsNullOrEmpty(Model.Tags))
+            {
+                foreach (var tag in Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    <span class="badge badge-info">@tag</span>
+                }
+            }
+            @if (Model.IsPublic)
+            {
+                <span class="status-badge status-success"><span class="status-dot"></span>Public</span>
+            }
+        </div>
+    </div>
+    <div class="page-header-actions flex-shrink-0">
+        <a href="/PlaywrightScripts/Download/@Model.Id" class="btn btn-secondary" title="Download script">
+            <i class="bi bi-download me-1"></i> Download
+        </a>
+        @if (isOwner)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-secondary">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+                  data-confirm="true" data-confirm-title="Delete script"
+                  data-confirm-message="Are you sure you want to delete &quot;@Model.Name&quot;?"
+                  data-confirm-btn="Delete" data-confirm-btn-variant="btn-danger">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </form>
+        }
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Description))
+{
+    <p class="text-muted mb-4">@Model.Description</p>
+}
+
+<div class="row g-4">
+
+    <!-- ── Script viewer ───────────────────────────────────────────────────── -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <button class="btn btn-ghost btn-sm d-flex align-items-center gap-2 text-muted p-0" id="codeToggleBtn" style="font-size:13px;">
+                    <i class="bi bi-file-earmark-code"></i>
+                    <span>@(Model.Name.Replace(' ', '_') + Model.FileExtension)</span>
+                    <i class="bi bi-chevron-down small" id="codeChevron"></i>
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-ghost btn-sm" id="copyBtn" title="Copy to clipboard">
+                        <i class="bi bi-clipboard" id="copyIcon"></i>
+                    </button>
+                    @if (User.Identity?.IsAuthenticated == true && !isTemplate)
+                    {
+                        <button class="btn btn-primary btn-sm" id="runBtn">
+                            <i class="bi bi-play-fill me-1"></i>Run
+                        </button>
+                    }
+                </div>
+            </div>
+            <div class="code-block-wrapper" id="codeWrapper" style="display:none;">
+                <pre class="code-block m-0" id="scriptCode">@Model.ScriptContent</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Parameters panel (templates only) ──────────────────────────────── -->
+    @if (isTemplate)
+    {
+        <div class="col-12" id="paramsSection">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between py-2 px-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-medium small"><i class="bi bi-sliders me-1"></i>Parameters</span>
+                        <span class="badge badge-warning small">Required before run</span>
+                    </div>
+                    <div class="btn-group btn-group-sm" id="viewToggle">
+                        <button type="button" class="btn btn-outline-secondary active" id="formViewBtn" title="Form view">
+                            <i class="bi bi-ui-checks me-1"></i>Form
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="jsonViewBtn" title="Raw JSON">
+                            <i class="bi bi-braces me-1"></i>JSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form view -->
+                <div id="paramFormView" class="card-body pt-3 pb-2">
+                    <div class="row g-0" id="paramFormFields">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+
+                <!-- JSON view -->
+                <div id="paramJsonView" class="card-body pt-3 pb-2" style="display:none;">
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Edit JSON directly. Switch back to <strong>Form</strong> to sync changes into the fields.
+                    </p>
+                    <textarea id="paramsJsonEditor" class="form-control font-monospace"
+                              rows="12" style="font-size:13px;line-height:1.6;resize:vertical;"
+                              placeholder='{ "key": "value" }'></textarea>
+                    <div id="jsonParseError" class="text-danger small mt-1" style="display:none;"></div>
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer d-flex align-items-center justify-content-between py-2 px-3" style="background:transparent;">
+                    <small class="text-muted">
+                        <i class="bi bi-floppy me-1"></i>Values saved in your browser automatically.
+                    </small>
+                    <button class="btn btn-primary btn-sm" id="runBtnBottom">
+                        <i class="bi bi-play-fill me-1"></i>Run with Params
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ── Terminal output ─────────────────────────────────────────────────── -->
+    <div class="col-12" id="terminalSection" style="display:none;">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="terminal-dots">
+                        <span style="background:#ff5f56;"></span>
+                        <span style="background:#ffbd2e;"></span>
+                        <span style="background:#27c93f;"></span>
+                    </div>
+                    <span class="small text-muted fw-medium">Terminal Output</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="terminalStatus" class="small"></span>
+                    <span id="terminalDuration" class="small text-muted"></span>
+                    <span id="terminalExit" class="small badge"></span>
+                </div>
+            </div>
+            <div class="terminal-body-wrapper">
+                <pre class="terminal-body m-0" id="terminalOutput"></pre>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="mt-4 pt-3 border-top">
+    <small class="text-muted">
+        Created by <strong>@(Model.CreatedBy ?? "Unknown")</strong>
+        on @Model.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")
+        @if (Model.UpdatedAt.HasValue)
+        {
+            <span> · Updated @Model.UpdatedAt.Value.ToString("MMM dd, yyyy")</span>
+        }
+    </small>
+</div>
+
+@section Scripts {
+<style>
+    /* ── Code viewer ── */
+    .code-block-wrapper { overflow: auto; }
+    .code-block { padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; color: var(--text-primary); white-space: pre; overflow-x: auto; max-height: 520px; overflow-y: auto; background: var(--surface-raised, #f6f8fa); }
+    [data-theme="dark"] .code-block { background: #0d1117; color: #c9d1d9; }
+
+    /* ── Terminal ── */
+    .terminal-body-wrapper { background: #0d1117; border-radius: 0 0 var(--radius-md, 8px) var(--radius-md, 8px); overflow: hidden; }
+    .terminal-body { padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; color: #c9d1d9; white-space: pre-wrap; word-break: break-word; max-height: 480px; overflow-y: auto; background: #0d1117; }
+
+    /* ── Card chrome ── */
+    .card-header { background: var(--surface-overlay, #f0f2f4); border-bottom: 1px solid var(--border-subtle); }
+    .card-footer { border-top: 1px solid var(--border-subtle); }
+    [data-theme="dark"] .card-header, [data-theme="dark"] .card-footer { background: #161b22; border-color: #30363d; }
+
+    /* ── Terminal dots ── */
+    .terminal-dots { display: flex; gap: 6px; align-items: center; }
+    .terminal-dots span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+    /* ── Param form ── */
+    .param-field { padding: 0 12px 16px 12px; }
+    .param-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+    .param-hint { font-size: 11px; color: var(--text-muted, #6b7280); margin-top: 3px; line-height: 1.4; }
+    .param-section-header { padding: 12px 12px 6px 12px; }
+    .param-section-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted, #6b7280); }
+    .param-section-line { flex: 1; height: 1px; background: var(--border-subtle); margin-left: 8px; }
+
+    .input-pwd-group { position: relative; }
+    .input-pwd-group input { padding-right: 36px; }
+    .input-pwd-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 2px 4px; color: var(--text-muted); cursor: pointer; }
+
+    #runBtn.running, #runBtnBottom.running { opacity: .7; pointer-events: none; }
+</style>
+
+<script>
+const scriptContent = document.getElementById('scriptCode').textContent;
+const antiforgeryToken = '@token';
+const storageKey = 'pw_params_v2_@Model.Id';
+
+// ── Detect what kind of script this is ────────────────────────────────────────
+// Returns { scriptType: 'params'|'argv'|'constants', items: [...] } or null
+function detectScriptParams(content) {
+    if (content.includes('__PARAMS__')) {
+        const items = parseParamDefs(content);
+        return items.length ? { scriptType: 'params', items } : null;
+    }
+    if (content.includes('process.argv') && /\/\/\s+Options?:/m.test(content)) {
+        const items = parseArgvOptions(content);
+        return items && items.length ? { scriptType: 'argv', items } : null;
+    }
+    const configItems = parseConfigObject(content);
+    if (configItems && configItems.length) return { scriptType: 'config', items: configItems };
+
+    const items = parseConstantDefs(content);
+    return items.length ? { scriptType: 'constants', items } : null;
+}
+
+const detected = detectScriptParams(scriptContent);
+const isTemplate = detected !== null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. PARSE PARAM DEFINITIONS FROM SCRIPT
+// ─────────────────────────────────────────────────────────────────────────────
+function parseParamDefs(content) {
+    // 1. Try destructuring: const { a, b } = __PARAMS__
+    const match = content.match(/const\s*\{([^}]+)\}\s*=\s*__PARAMS__/);
+    if (match) {
+        const items = [];
+        for (const line of match[1].split('\n')) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            if (trimmed.startsWith('//')) {
+                items.push({ type: 'section', label: trimmed.replace(/^\/\/\s*/, '') });
+                continue;
+            }
+            const commentMatch = line.match(/\/\/(.+)$/);
+            const comment = commentMatch ? commentMatch[1].trim() : null;
+            const codePart = line.replace(/\/\/.*$/, '');
+            const fields = codePart.split(',').map(s => s.trim()).filter(s => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(s));
+            fields.forEach((key, i) => items.push({ type: 'field', key, comment: i === fields.length - 1 ? comment : null }));
+        }
+        if (items.length) return items;
+    }
+
+    // 2. Fallback: parse // Options: comment block
+    //    Format: //   fieldName   Description   (default: 'value')
+    const optM = content.match(/\/\/\s+Options?:([\s\S]*?)(?=\n[ \t]*\n(?![ \t]*\/\/)|\nasync\s|\nconst\s|\nfunction\s|$)/);
+    if (optM) {
+        const items = [];
+        for (const line of optM[1].split('\n')) {
+            const m = line.match(/^\/\/\s{2,}(\w+)\s{2,}(.*?)(?:\s+\(default:\s*(.+?)\))?\s*$/);
+            if (!m) continue;
+            const key = m[1];
+            if (key.toLowerCase() === 'options') continue;
+            const description = m[2]?.trim() || null;
+            const defaultRaw = m[3]?.trim() ?? null;
+            let defaultVal = null, wasString = false;
+            if (defaultRaw) {
+                if (/^['"]/.test(defaultRaw)) {
+                    wasString = true;
+                    const q = defaultRaw[0], end = defaultRaw.lastIndexOf(q);
+                    defaultVal = defaultRaw.slice(1, end < 1 ? defaultRaw.length : end);
+                } else {
+                    defaultVal = defaultRaw;
+                }
+            }
+            items.push({ type: 'field', key, comment: description, defaultVal, wasString });
+        }
+        return items;
+    }
+
+    return [];
+}
+
+// Parse process.argv scripts via Usage/Options comment block
+function parseArgvOptions(content) {
+    const items = [];
+
+    // Positional: //   node script.js <mobile> [options]
+    const usageM = content.match(/\/\/\s+node\s+\S+\s+<(\w+)>/);
+    if (usageM) {
+        items.push({ type: 'field', key: usageM[1], flag: null, isPositional: true,
+                     comment: 'required positional argument', defaultVal: null, wasString: true });
+    }
+
+    // Options block, e.g.: //   -s <servers>   comma-sep  (default: 5)
+    const optBlock = content.match(/\/\/\s+Options?:([\s\S]*?)(?:\n[ \t]*\n(?!\/\/)|\n\/\/\s+Examples?:)/);
+    if (optBlock) {
+        for (const line of optBlock[1].split('\n')) {
+            // Use greedy match for description to avoid truncation at embedded parens
+            const m = line.match(/\/\/\s+(--?\w+)\s+<(\w+)>\s+(.+?)(?:\s+\(default:\s*(.+?)\))?\s*$/);
+            if (!m) continue;
+            items.push({
+                type: 'field', key: m[2], flag: m[1], isPositional: false,
+                comment: m[3].trim() + (m[4] ? ` (default: ${m[4]})` : ''),
+                defaultVal: m[4]?.trim() ?? null,
+                wasString: true, // argv defaults come from comment text, not typed literals
+            });
+        }
+    }
+
+    return items.length ? items : null;
+}
+
+// Parse inline CONFIG object: const CONFIG = { key: value, // comment }
+function parseConfigObject(content) {
+    const configMatch = content.match(/const\s+CONFIG\s*=\s*\{([\s\S]*?)\n[ \t]*\};/);
+    if (!configMatch) return null;
+
+    const body = configMatch[1];
+    const items = [];
+
+    for (const line of body.split('\n')) {
+        const t = line.trim();
+        if (!t) continue;
+
+        // Standalone comment → section header
+        if (t.startsWith('//')) {
+            const label = t.replace(/^\/\/\s*/, '').replace(/^[═=─\-\s]+|[═=─\-\s]+$/g, '').trim();
+            if (label) items.push({ type: 'section', label });
+            continue;
+        }
+
+        // Find // comment not inside a string
+        let inStr = false, strChar = '', commentIdx = -1;
+        for (let i = 0; i < t.length; i++) {
+            if (!inStr && (t[i] === "'" || t[i] === '"')) { inStr = true; strChar = t[i]; }
+            else if (inStr && t[i] === strChar && t[i - 1] !== '\\') inStr = false;
+            else if (!inStr && t[i] === '/' && t[i + 1] === '/') { commentIdx = i; break; }
+        }
+        const comment = commentIdx > -1 ? t.slice(commentIdx + 2).trim() : null;
+        const valueStr = (commentIdx > -1 ? t.slice(0, commentIdx) : t).replace(/,\s*$/, '').trim();
+
+        const kv = valueStr.match(/^(\w+)\s*:\s*([\s\S]+)$/);
+        if (!kv) continue;
+
+        const key = kv[1];
+        const raw = kv[2].trim();
+
+        let defaultVal = null;
+        let wasString = false;
+        if (raw === 'null' || raw === 'undefined') defaultVal = null;
+        else if (/^['"]/.test(raw)) {
+            wasString = true; // originally a quoted string — don't infer number/array from value
+            const q = raw[0]; const end = raw.lastIndexOf(q);
+            defaultVal = raw.slice(1, end < 1 ? raw.length : end);
+        }
+        else if (raw.startsWith('[')) {
+            // JS array literal — normalize single quotes to valid JSON
+            try { defaultVal = JSON.stringify(JSON.parse(raw.replace(/'/g, '"'))); }
+            catch { defaultVal = raw; }
+        }
+        else if (raw === 'true') defaultVal = 'true';
+        else if (raw === 'false') defaultVal = 'false';
+        else if (/^-?\d+(\.\d+)?$/.test(raw)) defaultVal = raw;
+
+        items.push({ type: 'field', key, comment, defaultVal, wasString });
+    }
+
+    return items.length ? items : null;
+}
+
+// Parse top-level configurable constants: const DEFAULT_X = 'value'
+function parseConstantDefs(content) {
+    const items = [];
+    const seen = new Set();
+    const re = /^const\s+([A-Z][A-Z0-9_]+)\s*=\s*(?:'([^']*)'|"([^"]*)"|\[([^\]]*)\]|(-?\d+(?:\.\d+)?))/gm;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+        const key = m[1];
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const wasString = m[2] !== undefined || m[3] !== undefined; // was a quoted string
+        let defaultVal;
+        if (wasString) {
+            defaultVal = m[2] ?? m[3];
+        } else if (m[4] !== undefined) {
+            // Array literal — normalize single quotes to valid JSON
+            try { defaultVal = JSON.stringify(JSON.parse(('[' + m[4] + ']').replace(/'/g, '"'))); }
+            catch { defaultVal = '[' + m[4] + ']'; }
+        } else {
+            defaultVal = m[5] ?? null;
+        }
+        items.push({ type: 'field', key, comment: null, defaultVal, wasString });
+    }
+    return items;
+}
+
+function detectFieldType(key, comment, flag, defaultVal, wasString) {
+    const flagName = (flag || '').replace(/^-+/, '');
+    if (comment) {
+        const opts = [...comment.matchAll(/'([^']+)'/g)].map(m => m[1]);
+        if (opts.length >= 2 && comment.includes('|')) return { type: 'select', options: opts };
+        if (/\barray\b/i.test(comment)) return { type: 'array' };
+    }
+    if (/password/i.test(key) || /password/i.test(flagName)) return { type: 'password' };
+    if (/^(is[A-Z]|has[A-Z]|unique$)/.test(key)) return { type: 'boolean' };
+    // Key-name based number detection (reliable regardless of value type)
+    if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Pct|Offset|Duration|Questions?|Amount|Exams?|Discount|Received|Payment|Fee|Price|Qty|Min$|Max$|Start$|End$|Parallel$)$/i.test(key)
+        || /^(passMark|negativeMarkPct|teacherCount|entriesPerTeacher|tpinStart|tpinMax)$/.test(key))
+        return { type: 'number' };
+    if (/(?:Path|Url)$/i.test(key)) return { type: 'path' };
+    if (/email/i.test(key) || /email/i.test(flagName)) return { type: 'text' };
+    // Only use defaultVal for type inference when it wasn't originally a quoted string
+    if (!wasString) {
+        if (defaultVal != null && /^-?\d+(\.\d+)?$/.test(String(defaultVal))) return { type: 'number' };
+        if (Array.isArray(defaultVal) || (typeof defaultVal === 'string' && defaultVal.startsWith('[')))
+            return { type: 'array' };
+    }
+    return { type: 'text' };
+}
+
+function humanize(key) {
+    return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+}
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. BUILD FORM
+// ─────────────────────────────────────────────────────────────────────────────
+function buildForm(items) {
+    const container = document.getElementById('paramFormFields');
+    let html = '';
+
+    for (const item of items) {
+        if (item.type === 'section') {
+            html += `<div class="col-12 param-section-header">
+                        <div class="d-flex align-items-center">
+                            <span class="param-section-label">${esc(item.label)}</span>
+                            <div class="param-section-line"></div>
+                        </div>
+                     </div>`;
+            continue;
+        }
+
+        const { key, comment, flag, defaultVal, wasString } = item;
+        const def = detectFieldType(key, comment, flag, defaultVal, wasString);
+        const label = humanize(key);
+        const hintText = comment ? `<div class="param-hint">${esc(comment)}</div>` : '';
+        const dv = defaultVal != null ? esc(String(defaultVal)) : '';
+        let inputHtml = '';
+
+        if (def.type === 'select') {
+            const opts = def.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            inputHtml = `<select class="form-select form-select-sm param-input" data-key="${esc(key)}" data-type="select">
+                            <option value="">— select —</option>${opts}
+                         </select>`;
+        } else if (def.type === 'password') {
+            inputHtml = `<div class="input-pwd-group">
+                            <input type="password" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="password" autocomplete="off" value="${dv}">
+                            <button type="button" class="input-pwd-toggle" onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password';this.querySelector('i').className=this.previousElementSibling.type==='password'?'bi bi-eye':'bi bi-eye-slash';" title="Show/hide"><i class="bi bi-eye"></i></button>
+                         </div>`;
+        } else if (def.type === 'boolean') {
+            inputHtml = `<div class="form-check mt-1">
+                            <input class="form-check-input param-input" type="checkbox" data-key="${esc(key)}" data-type="boolean" id="param_${esc(key)}">
+                            <label class="form-check-label small" for="param_${esc(key)}">Enable</label>
+                         </div>`;
+        } else if (def.type === 'number') {
+            inputHtml = `<input type="number" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="number" placeholder="0" value="${dv}">`;
+        } else if (def.type === 'array') {
+            const ph = comment ? comment.match(/e\.g\.\s*(\[[^\]]+\])/)?.[1] || '[1]' : '[1]';
+            inputHtml = `<input type="text" class="form-control form-control-sm param-input font-monospace" data-key="${esc(key)}" data-type="array" placeholder="${esc(ph)}" value="${dv}">`;
+        } else if (def.type === 'path') {
+            const ph = /Url$/i.test(key) ? 'https://' : 'C:/path/to/file';
+            inputHtml = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="${ph}" value="${dv}">`;
+        } else {
+            inputHtml = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="" value="${dv}">`;
+        }
+
+        html += `<div class="col-md-6 param-field">
+                    <div class="param-label">${esc(label)}</div>
+                    ${inputHtml}
+                    ${hintText}
+                 </div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. SERIALIZE / DESERIALIZE FORM ↔ JSON
+// ─────────────────────────────────────────────────────────────────────────────
+function formToObj() {
+    const obj = {};
+    document.querySelectorAll('.param-input').forEach(el => {
+        const key = el.dataset.key;
+        const type = el.dataset.type;
+        if (type === 'boolean') { obj[key] = el.checked; return; }
+        if (el.value === '') { obj[key] = null; return; }
+        if (type === 'number') { obj[key] = Number(el.value); return; }
+        if (type === 'array') {
+            const v = el.value.trim();
+            if (!v) { obj[key] = null; return; }
+            // Try JSON first, then JS literal (single quotes → double quotes)
+            try { obj[key] = JSON.parse(v); return; } catch {}
+            try { obj[key] = JSON.parse(v.replace(/'/g, '"')); return; } catch {}
+            obj[key] = v; // last resort
+            return;
+        }
+        obj[key] = el.value;
+    });
+    return obj;
+}
+
+function objToForm(obj) {
+    document.querySelectorAll('.param-input').forEach(el => {
+        const key = el.dataset.key;
+        const val = obj[key];
+        if (val === undefined || val === null) return;
+        if (el.dataset.type === 'boolean') { el.checked = Boolean(val); return; }
+        if (el.dataset.type === 'array') {
+            if (Array.isArray(val)) el.value = JSON.stringify(val);
+            else if (val !== null && typeof val === 'object') el.value = JSON.stringify(val);
+            else el.value = String(val);
+            return;
+        }
+        el.value = String(val);
+    });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. FORM ↔ JSON TAB TOGGLE
+// ─────────────────────────────────────────────────────────────────────────────
+let activeView = 'form';
+
+function switchToJson() {
+    const json = JSON.stringify(formToObj(), null, 2);
+    document.getElementById('paramsJsonEditor').value = json;
+    document.getElementById('paramFormView').style.display = 'none';
+    document.getElementById('paramJsonView').style.display = 'block';
+    document.getElementById('formViewBtn').classList.remove('active');
+    document.getElementById('jsonViewBtn').classList.add('active');
+    document.getElementById('jsonParseError').style.display = 'none';
+    activeView = 'json';
+}
+
+function switchToForm() {
+    const raw = document.getElementById('paramsJsonEditor').value;
+    try {
+        const obj = JSON.parse(raw);
+        objToForm(obj);
+        document.getElementById('paramFormView').style.display = 'block';
+        document.getElementById('paramJsonView').style.display = 'none';
+        document.getElementById('formViewBtn').classList.add('active');
+        document.getElementById('jsonViewBtn').classList.remove('active');
+        activeView = 'form';
+    } catch (e) {
+        document.getElementById('jsonParseError').textContent = 'Invalid JSON: ' + e.message;
+        document.getElementById('jsonParseError').style.display = 'block';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. GET PARAMS JSON FOR SUBMIT
+// ─────────────────────────────────────────────────────────────────────────────
+function getParamsJson() {
+    if (activeView === 'json') {
+        const raw = document.getElementById('paramsJsonEditor').value;
+        JSON.parse(raw); // throws if invalid
+        return raw;
+    }
+    return JSON.stringify(formToObj());
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. RUN LOGIC
+// ─────────────────────────────────────────────────────────────────────────────
+async function doRun() {
+    let paramsJson = null;
+    if (isTemplate) {
+        try {
+            paramsJson = getParamsJson();
+        } catch (e) {
+            if (activeView === 'json') {
+                document.getElementById('jsonParseError').textContent = 'Invalid JSON: ' + e.message;
+                document.getElementById('jsonParseError').style.display = 'block';
+            }
+            return;
+        }
+    }
+
+    const runBtn    = document.getElementById('runBtn');
+    const runBtnBot = document.getElementById('runBtnBottom');
+    const setRunning = v => {
+        [runBtn, runBtnBot].forEach(b => { if (!b) return; if (v) b.classList.add('running'); else b.classList.remove('running'); });
+        if (runBtn)    runBtn.innerHTML    = v ? '<span class="btn-spinner me-1"></span> Running...' : `<i class="bi bi-play-fill me-1"></i>${isTemplate ? 'Run with Params' : 'Run'}`;
+        if (runBtnBot) runBtnBot.innerHTML = v ? '<span class="btn-spinner me-1"></span> Running...' : '<i class="bi bi-play-fill me-1"></i>Run with Params';
+    };
+
+    setRunning(true);
+    const termSec  = document.getElementById('terminalSection');
+    const termOut  = document.getElementById('terminalOutput');
+    const termStat = document.getElementById('terminalStatus');
+    const termDur  = document.getElementById('terminalDuration');
+    const termExit = document.getElementById('terminalExit');
+
+    termSec.style.display = 'block';
+    termOut.textContent = 'Running script…';
+    termStat.textContent = ''; termDur.textContent = ''; termExit.textContent = '';
+    termExit.className = 'small badge';
+    termSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    try {
+        const fd = new FormData();
+        if (paramsJson) fd.append('paramsJson', paramsJson);
+        const res  = await fetch('/PlaywrightScripts/Run/@Model.Id', { method: 'POST', headers: { 'RequestVerificationToken': antiforgeryToken }, body: fd });
+        const data = await res.json();
+
+        termOut.textContent = data.output || '(no output)';
+
+        if (data.timedOut) termStat.innerHTML = '<span class="text-warning"><i class="bi bi-clock-history me-1"></i>Timed out</span>';
+        else if (data.success) {
+            termStat.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Passed</span>';
+            if (isTemplate && paramsJson) localStorage.setItem(storageKey, paramsJson);
+        } else {
+            termStat.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Failed</span>';
+        }
+
+        if (data.durationMs != null) termDur.textContent = `${(data.durationMs / 1000).toFixed(2)}s`;
+        if (data.exitCode != null) {
+            termExit.textContent = `exit ${data.exitCode}`;
+            termExit.className = `small badge ${data.exitCode === 0 ? 'badge-success' : 'badge-danger'}`;
+        }
+    } catch (err) {
+        termOut.textContent = 'Error: ' + err.message;
+        termStat.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Error</span>';
+    } finally {
+        setRunning(false);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. INIT
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('codeToggleBtn').addEventListener('click', () => {
+    const wrapper = document.getElementById('codeWrapper');
+    const chevron = document.getElementById('codeChevron');
+    const hidden = wrapper.style.display === 'none';
+    wrapper.style.display = hidden ? 'block' : 'none';
+    chevron.style.transform = hidden ? 'rotate(180deg)' : '';
+    chevron.style.transition = 'transform 0.2s';
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(scriptContent).then(() => {
+        const ic = document.getElementById('copyIcon');
+        ic.className = 'bi bi-clipboard-check text-success';
+        setTimeout(() => ic.className = 'bi bi-clipboard', 2000);
+    });
+});
+
+document.getElementById('runBtn')?.addEventListener('click', doRun);
+document.getElementById('runBtnBottom')?.addEventListener('click', doRun);
+
+if (detected) {
+    buildForm(detected.items);
+
+    // Pre-fill defaults from item definitions (before saved values override them)
+    const defaults = {};
+    detected.items.filter(d => d.type === 'field' && d.defaultVal != null)
+        .forEach(d => { defaults[d.key] = d.defaultVal; });
+    // defaults already applied via value= in HTML; objToForm is for saved overrides
+
+    // Load saved values (override defaults)
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+        try { objToForm(JSON.parse(saved)); } catch (_) {}
+    }
+
+    document.getElementById('formViewBtn').addEventListener('click', switchToForm);
+    document.getElementById('jsonViewBtn').addEventListener('click', switchToJson);
+}
+</script>
+}

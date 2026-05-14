@@ -1,0 +1,178 @@
+@{
+    ViewData["Title"] = "Import Script";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Import Script</h1>
+        <p>Upload a file or paste your script content directly.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" id="importForm">
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-medium">Script Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g., Login Flow Test" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Runner</label>
+                            <select name="runMode" class="form-select">
+                                <option value="node">node</option>
+                                <option value="playwright">npx playwright test</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description</label>
+                        <input type="text" name="description" class="form-control" placeholder="Brief description of what this script does" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tags</label>
+                        <input type="text" name="tags" class="form-control" placeholder="e.g., login, smoke, regression" />
+                        <small class="text-muted">Comma-separated tags for filtering</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="isPublic" value="true" class="form-check-input" id="isPublicCheck" />
+                            <label class="form-check-label fw-medium" for="isPublicCheck">
+                                Public <small class="text-muted fw-normal">— anyone with the link can view without logging in</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Upload / Paste toggle -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label fw-medium mb-0">Script Content <span class="text-danger">*</span></label>
+                            <div class="btn-group btn-group-sm" id="inputModeToggle">
+                                <button type="button" class="btn btn-outline-secondary active" id="uploadModeBtn">
+                                    <i class="bi bi-upload me-1"></i>Upload File
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="pasteModeBtn">
+                                    <i class="bi bi-code-slash me-1"></i>Paste Code
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Upload mode -->
+                        <div id="uploadMode">
+                            <input type="file" name="scriptFile" class="form-control" accept=".js,.ts" id="scriptFileInput" />
+                            <small class="text-muted">Upload a <code>.js</code> or <code>.ts</code> Playwright / Node.js script</small>
+                        </div>
+
+                        <!-- Paste mode -->
+                        <div id="pasteMode" style="display:none;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <label class="form-label fw-medium mb-0 small">Extension:</label>
+                                <div class="btn-group btn-group-sm" id="extToggle">
+                                    <button type="button" class="btn btn-outline-secondary active" data-ext=".js">.js</button>
+                                    <button type="button" class="btn btn-outline-secondary" data-ext=".ts">.ts</button>
+                                </div>
+                                <input type="hidden" name="scriptExt" id="scriptExtInput" value=".js" />
+                            </div>
+                            <textarea name="scriptContent" id="scriptContentArea"
+                                      class="form-control font-monospace"
+                                      rows="18"
+                                      style="font-size:13px;line-height:1.6;resize:vertical;"
+                                      placeholder="async (page) => {&#10;  // paste your script here&#10;}"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Code preview (upload mode) -->
+                    <div id="previewSection" class="mb-4 d-none">
+                        <label class="form-label fw-medium">Preview</label>
+                        <div class="code-viewer border rounded">
+                            <div class="code-viewer-header d-flex align-items-center justify-content-between px-3 py-2">
+                                <span class="small text-muted" id="previewFileName"></span>
+                                <span class="badge badge-muted" id="previewLang">js</span>
+                            </div>
+                            <pre class="code-viewer-body m-0" id="previewCode"></pre>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload me-1"></i> Import Script
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<style>
+    .code-viewer { background: var(--surface-raised, #f6f8fa); overflow: hidden; }
+    [data-theme="dark"] .code-viewer { background: #0d1117; }
+    .code-viewer-header { background: var(--surface-overlay, #f0f2f4); border-bottom: 1px solid var(--border-subtle); }
+    [data-theme="dark"] .code-viewer-header { background: #161b22; border-bottom-color: #30363d; }
+    .code-viewer-body { padding: 16px; max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; white-space: pre; overflow-x: auto; color: var(--text-primary); }
+    [data-theme="dark"] .code-viewer-body { color: #c9d1d9; }
+    #scriptContentArea { background: var(--surface-raised, #f6f8fa); color: var(--text-primary); border-color: var(--border-subtle); }
+    [data-theme="dark"] #scriptContentArea { background: #0d1117; color: #c9d1d9; border-color: #30363d; }
+</style>
+<script>
+    // Upload / Paste toggle
+    document.getElementById('pasteModeBtn').addEventListener('click', function () {
+        document.getElementById('uploadMode').style.display = 'none';
+        document.getElementById('pasteMode').style.display = 'block';
+        document.getElementById('previewSection').classList.add('d-none');
+        this.classList.add('active');
+        document.getElementById('uploadModeBtn').classList.remove('active');
+        // Disable the file input so it cannot intercept focus or clicks
+        document.getElementById('scriptFileInput').disabled = true;
+        document.getElementById('scriptFileInput').removeAttribute('required');
+        document.getElementById('scriptContentArea').setAttribute('required', '');
+        document.getElementById('scriptContentArea').focus();
+    });
+
+    document.getElementById('uploadModeBtn').addEventListener('click', function () {
+        document.getElementById('uploadMode').style.display = 'block';
+        document.getElementById('pasteMode').style.display = 'none';
+        document.getElementById('previewSection').classList.remove('d-none');
+        this.classList.add('active');
+        document.getElementById('pasteModeBtn').classList.remove('active');
+        document.getElementById('scriptFileInput').disabled = false;
+        document.getElementById('scriptFileInput').setAttribute('required', '');
+        document.getElementById('scriptContentArea').removeAttribute('required');
+    });
+
+    // Extension toggle (.js / .ts)
+    document.querySelectorAll('#extToggle button').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('#extToggle button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('scriptExtInput').value = this.dataset.ext;
+        });
+    });
+
+    // File upload preview
+    document.getElementById('scriptFileInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+            document.getElementById('previewFileName').textContent = file.name;
+            document.getElementById('previewLang').textContent = file.name.endsWith('.ts') ? 'ts' : 'js';
+            document.getElementById('previewCode').textContent = ev.target.result;
+            document.getElementById('previewSection').classList.remove('d-none');
+        };
+        reader.readAsText(file);
+    });
+</script>
+}
