@@ -61,6 +61,8 @@ namespace QAToolkit.Controllers
         {
             var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
             return
+                "if (process.stdout._handle?.setBlocking) process.stdout._handle.setBlocking(true);\n" +
+                "if (process.stderr._handle?.setBlocking) process.stderr._handle.setBlocking(true);\n" +
                 "const { chromium } = require('playwright');\n" +
                 "const __fn = (" + scriptContent + ");\n" +
                 "(async () => {\n" +
@@ -412,7 +414,9 @@ namespace QAToolkit.Controllers
             Response.ContentType = "text/event-stream; charset=utf-8";
             Response.Headers["Cache-Control"] = "no-cache";
             Response.Headers["X-Accel-Buffering"] = "no";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
             HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpResponseBodyFeature>()?.DisableBuffering();
+            await Response.Body.FlushAsync();
 
             async Task Send(string jsonData, string? evtName = null)
             {
