@@ -464,7 +464,7 @@ function detectFieldType(key, comment, flag, defaultVal, wasString) {
         if (opts.length >= 2 && comment.includes('|')) return { type: 'select', options: opts };
         if (/\barray\b/i.test(comment)) return { type: 'array' };
     }
-    if (/password/i.test(key) || /password/i.test(flagName)) return { type: 'password' };
+    if (/password|username/i.test(key) || /password/i.test(flagName)) return { type: 'password' };
     if (/^(is[A-Z]|has[A-Z]|unique$)/.test(key)) return { type: 'boolean' };
     // Key-name based number detection (reliable regardless of value type)
     if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Pct|Offset|Duration|Questions?|Amount|Exams?|Discount|Received|Payment|Fee|Price|Qty|Min$|Max$|Start$|End$|Parallel$)$/i.test(key)
@@ -945,6 +945,38 @@ document.getElementById('runBtnBottom')?.addEventListener('click', doRun);
 
 if (detected) {
     buildForm(detected.items);
+
+    // Conditional section visibility based on examMode
+    (function setupConditionalSections() {
+        const container = document.getElementById('paramFormFields');
+        if (!container) return;
+        let currentSection = null;
+        for (const el of Array.from(container.children)) {
+            const lbl = el.querySelector('.param-section-label');
+            if (lbl) {
+                const txt = lbl.textContent.toLowerCase();
+                currentSection = txt.includes('saq mode only') ? 'saq'
+                               : txt.includes('online written mode only') ? 'written'
+                               : null;
+                if (currentSection) el.dataset.condSection = currentSection;
+                else el.removeAttribute('data-cond-section');
+            } else if (currentSection) {
+                el.dataset.condSection = currentSection;
+            }
+        }
+        function refresh() {
+            const modeEl = container.querySelector('[data-key="examMode"]');
+            const mode = modeEl ? modeEl.value : '';
+            const showSaq     = mode === 'saq_only'  || mode === 'mcq_saq';
+            const showWritten = mode === 'mcq_written' || mode === 'written_only';
+            container.querySelectorAll('[data-cond-section]').forEach(el => {
+                const s = el.dataset.condSection;
+                el.style.display = (s === 'saq' ? showSaq : showWritten) ? '' : 'none';
+            });
+        }
+        const modeEl = container.querySelector('[data-key="examMode"]');
+        if (modeEl) { modeEl.addEventListener('change', refresh); refresh(); }
+    })();
 
     // Pre-fill defaults from item definitions (before saved values override them)
     const defaults = {};
