@@ -684,11 +684,60 @@ function classifyLine(t) {
         return { icon, cls: bad ? 'tl-error' : ok ? 'tl-success' : 'tl-server', label: `[S${srv}:${n}] ${content}` };
     }
 
-    // Playwright reporter
+    // Playwright reporter lines
     if (/^\s*(✓|×|✗|Running \d|\d+ (passed|failed))/i.test(t))
         return { icon: '🎭', cls: 'tl-dim', label: t.trimStart() };
 
-    return { icon: ' ', cls: 'tl-normal', label: t };
+    // Strip optional [TAG] prefix and classify on content
+    const tagM = t.match(/^\[([A-Z0-9_]+)\]\s+([\s\S]*)/i);
+    const msg = tagM ? tagM[2] : t;
+
+    // ==== ALL DONE ==== or similar completion banner
+    if (/^=*\s*ALL DONE\s*=*$/i.test(msg))
+        return { icon: '🏁', cls: 'tl-success tl-bold', label: msg };
+
+    // === SECTION === headers
+    const secM = msg.match(/^===+\s*(.+?)\s*===+$/);
+    if (secM) return { icon: '📌', cls: 'tl-info tl-bold', label: secM[1] };
+
+    // DONE / summary with saved= or "X saved, Y failed"
+    const doneM = msg.match(/saved=(\d+)\/\d+.*failed=(\d+)/i)
+               || msg.match(/(\d+) saved[^,]*,\s*(\d+) failed/i);
+    if (doneM) {
+        const failed = parseInt(doneM[2], 10);
+        return failed > 0
+            ? { icon: '⚠',  cls: 'tl-warn tl-bold',   label: msg }
+            : { icon: '✅', cls: 'tl-success tl-bold', label: msg };
+    }
+
+    // Explicit WARN
+    if (/^WARN[:\s]/i.test(msg)) return { icon: '⚠', cls: 'tl-warn', label: msg };
+
+    // Error / failure keywords
+    if (/\b(error|fail(ed)?|crash|exception|timeout)\b/i.test(msg))
+        return { icon: '❌', cls: 'tl-error', label: msg };
+
+    // Success / saved keywords
+    if (/\b(saved|success|passed|ok|done|complete[d]?|granted|logged in)\b/i.test(msg))
+        return { icon: '✅', cls: 'tl-success', label: msg };
+
+    // Setup / config steps
+    if (/\b(cascade|branch|exam|program|course|session|org)\b.*:/i.test(msg))
+        return { icon: '⚙', cls: 'tl-info', label: msg };
+
+    // Lookup / discovery
+    if (/\b(look(ing)? up|discover|resolv|found|fetch)/i.test(msg))
+        return { icon: '🔍', cls: 'tl-dim', label: msg };
+
+    // Progress counters  X/Y  or  step N of M
+    if (/\b\d+\s*\/\s*\d+\b/.test(msg) || /\bstep \d+/i.test(msg))
+        return { icon: '·', cls: 'tl-dim', label: msg };
+
+    // npm / system noise
+    if (/^npm (notice|warn|ERR)/i.test(msg))
+        return { icon: ' ', cls: 'tl-dim', label: msg };
+
+    return { icon: tagM ? '·' : ' ', cls: tagM ? 'tl-dim' : 'tl-normal', label: msg };
 }
 
 function addCursor(container) {
