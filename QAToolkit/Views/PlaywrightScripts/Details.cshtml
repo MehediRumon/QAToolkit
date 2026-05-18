@@ -213,6 +213,9 @@
     .tl-success { color: #56d364; }
     .tl-error   { color: #f85149; }
     .tl-warn    { color: #e3b341; }
+    .tl-shot    { color: #d2a8ff; }
+    .tl-shot a  { color: inherit; text-decoration: underline; }
+    .tl-shot-img { display: block; margin-top: 6px; max-width: 480px; max-height: 320px; border: 1px solid #30363d; border-radius: 4px; }
     .tl-bold    { font-weight: 600; }
     @@keyframes tl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
     .tl-blink   { animation: tl-blink 1s step-end infinite; }
@@ -482,7 +485,12 @@ function detectFieldType(key, comment, flag, defaultVal, wasString) {
 }
 
 function humanize(key) {
-    return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+    return key
+        .replace(/_+/g, ' ')
+        .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+        .replace(/^./, s => s.toUpperCase())
+        .trim();
 }
 
 function esc(s) {
@@ -642,6 +650,10 @@ function getParamsJson() {
 function classifyLine(t) {
     if (!t) return null;
 
+    // Screenshot — render inline image preview + link
+    const shotM = t.match(/^\[SCREENSHOT\]\s+(\S+)/);
+    if (shotM) return { icon: '📸', cls: 'tl-shot', label: shotM[1], shotUrl: shotM[1] };
+
     // State/fs
     if (t.startsWith('[state]')) {
         const msg = t.slice(7).trim();
@@ -760,7 +772,12 @@ function appendTermLine(container, rawText) {
     if (!cl) return;
     const div = document.createElement('div');
     div.className = 'tl ' + cl.cls;
-    div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text">${esc(cl.label)}</span>`;
+    if (cl.shotUrl) {
+        const u = esc(cl.shotUrl);
+        div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text"><a href="${u}" target="_blank">${u}</a><br><a href="${u}" target="_blank"><img src="${u}" class="tl-shot-img" loading="lazy"></a></span>`;
+    } else {
+        div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text">${esc(cl.label)}</span>`;
+    }
     container.appendChild(div);
 }
 

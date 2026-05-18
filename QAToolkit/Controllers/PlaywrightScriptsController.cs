@@ -16,14 +16,16 @@ namespace QAToolkit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IWebHostEnvironment _env;
 
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Process> _activeRuns = new();
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _stoppedRuns = new();
 
-        public PlaywrightScriptsController(ApplicationDbContext context, IConfiguration config)
+        public PlaywrightScriptsController(ApplicationDbContext context, IConfiguration config, IWebHostEnvironment env)
         {
             _context = context;
             _config = config;
+            _env = env;
         }
 
         private string ResolveNodeDirectory()
@@ -60,10 +62,31 @@ namespace QAToolkit.Controllers
         private string WrapForPlaywright(string scriptContent)
         {
             var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
+            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+            var shotDir = Path.Combine(webRoot, "outputs", "screenshots")
+                .Replace('\\', '/').Replace("'", "\\'");
             return
                 "if (process.stdout._handle?.setBlocking) process.stdout._handle.setBlocking(true);\n" +
                 "if (process.stderr._handle?.setBlocking) process.stderr._handle.setBlocking(true);\n" +
                 "const { chromium } = require('playwright');\n" +
+                "const __fs = require('fs'), __path = require('path');\n" +
+                "const __SHOT_DIR = '" + shotDir + "';\n" +
+                "async function __snap(browser, tag) {\n" +
+                "  if (!browser) return;\n" +
+                "  try {\n" +
+                "    __fs.mkdirSync(__SHOT_DIR, { recursive: true });\n" +
+                "    const pages = browser.contexts().flatMap(c => c.pages());\n" +
+                "    const ts = new Date().toISOString().replace(/[:.]/g, '-');\n" +
+                "    for (let i = 0; i < pages.length; i++) {\n" +
+                "      const fn = `${ts}_${tag}_p${i}.png`;\n" +
+                "      const fp = __path.join(__SHOT_DIR, fn);\n" +
+                "      try {\n" +
+                "        await pages[i].screenshot({ path: fp, fullPage: true });\n" +
+                "        process.stderr.write('[SCREENSHOT] /outputs/screenshots/' + fn + '\\n');\n" +
+                "      } catch (e) { process.stderr.write('[SCREENSHOT-FAIL] ' + e.message + '\\n'); }\n" +
+                "    }\n" +
+                "  } catch (e) { process.stderr.write('[SCREENSHOT-FAIL] ' + e.message + '\\n'); }\n" +
+                "}\n" +
                 "const __fn = (" + scriptContent + ");\n" +
                 "(async () => {\n" +
                 "  let browser;\n" +
@@ -80,9 +103,13 @@ namespace QAToolkit.Controllers
                 "    } else if (result != null && !Array.isArray(result)) {\n" +
                 "      console.log(JSON.stringify(result, null, 2));\n" +
                 "    }\n" +
+                "    const subFailed = result && Array.isArray(result.results) && result.results.some(r => r && r.success === false);\n" +
+                "    const failed = (result && result.success === false) || subFailed;\n" +
+                "    if (failed) await __snap(browser, 'fail');\n" +
                 "    process.exit(result && result.success === false ? 1 : 0);\n" +
                 "  } catch (err) {\n" +
                 "    process.stderr.write('\\n[ERROR] ' + err.message + '\\n');\n" +
+                "    await __snap(browser, 'error');\n" +
                 "    process.exit(1);\n" +
                 "  } finally {\n" +
                 "    if (browser) try { await browser.close(); } catch (_) {}\n" +
