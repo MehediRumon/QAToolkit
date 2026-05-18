@@ -650,9 +650,44 @@ function getParamsJson() {
 function classifyLine(t) {
     if (!t) return null;
 
+    // Strip UTF box-drawing chars (U+2500..U+259F) and their cp1252-mangled forms (ΓöÇ, ΓÇ║...)
+    t = t.replace(/[─-▟]+/g, '')
+         .replace(/(?:Γ[öÇ][-ÿ]?)+/g, '')
+         .trim();
+    if (!t || t.length < 2) return null;
+
+    // Hide redundant noise:
+    //   - Playwright "attachment #N: ..." (the [SCREENSHOT] line below it has the info)
+    //   - Raw absolute screenshot paths from list reporter
+    //   - "Error Context: ...error-context.md" internal artifact
+    //   - "Slow test file:" reporter footer
+    //   - "Located here:" / "Use --reporter=" hints
+    //   - npm notice (version nag)
+    //   - Empty Playwright separators "──" or just numbers like "1)"
+    if (/^attachment #\d+:/i.test(t)) return null;
+    if (/^\.{0,2}[\/\\]?.*\\outputs\\screenshots\\.*\.(png|jpe?g)$/i.test(t)) return null;
+    if (/^Error Context:/i.test(t)) return null;
+    if (/^Slow test (file|tests):/i.test(t)) return null;
+    if (/^npm (notice|warn)/i.test(t)) return null;
+    if (/^\d+\)\s*$/.test(t)) return null;
+    if (/^[-=]{3,}$/.test(t)) return null;
+
     // Screenshot — render inline image preview + link
     const shotM = t.match(/^\[SCREENSHOT\]\s+(\S+)/);
     if (shotM) return { icon: '📸', cls: 'tl-shot', label: shotM[1], shotUrl: shotM[1] };
+
+    // Playwright failure lines
+    if (/^Error:\s/.test(t))                  return { icon: '❌', cls: 'tl-error tl-bold', label: t };
+    if (/^(Locator|Expected|Received|Timeout):\s/.test(t))
+                                              return { icon: '·',  cls: 'tl-warn',          label: t };
+    if (/^Call log:/i.test(t))                return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^\s*-\s+(waiting for|locator resolved|Expect)/i.test(t))
+                                              return { icon: '·',  cls: 'tl-dim',           label: t.trim() };
+    if (/^at\s+.+:\d+:\d+\)?$/.test(t))       return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^>\s*\d+\s*\|/.test(t))              return { icon: '·',  cls: 'tl-error',         label: t };
+    if (/^\s*\d+\s*\|/.test(t))               return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^\s*\|/.test(t))                     return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^\d+\s+(failed|passed)\b/i.test(t))  return { icon: t.includes('failed') ? '❌' : '✅', cls: (t.includes('failed') ? 'tl-error' : 'tl-success') + ' tl-bold', label: t };
 
     // State/fs
     if (t.startsWith('[state]')) {
