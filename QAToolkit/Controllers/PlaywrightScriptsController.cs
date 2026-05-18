@@ -59,6 +59,55 @@ namespace QAToolkit.Controllers
             return false;
         }
 
+        // Build per-run Playwright config + custom reporter that emits [SCREENSHOT] lines.
+        // Returns the absolute path of the generated config file.
+        private async Task<string> BuildPlaywrightConfigAsync(string effectiveWorkingDir, string testFileName, int timeoutMs)
+        {
+            var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
+            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+            var shotDir = Path.Combine(webRoot, "outputs", "screenshots").Replace('\\', '/');
+            Directory.CreateDirectory(shotDir);
+
+            // Single shared reporter file — overwritten each run (contents are identical, so no race issue)
+            var reporterFile = Path.Combine(effectiveWorkingDir, "qa_reporter.js");
+            await System.IO.File.WriteAllTextAsync(reporterFile,
+                "const path = require('path');\n" +
+                "class QAReporter {\n" +
+                "  constructor(options) { this.webRoot = (options && options.webRoot) || ''; }\n" +
+                "  onTestEnd(test, result) {\n" +
+                "    for (const att of (result.attachments || [])) {\n" +
+                "      if (att.path && /\\.(png|jpe?g)$/i.test(att.path)) {\n" +
+                "        let url = att.path;\n" +
+                "        if (this.webRoot) {\n" +
+                "          const rel = path.relative(this.webRoot, att.path);\n" +
+                "          if (rel && !rel.startsWith('..')) url = '/' + rel.replace(/\\\\/g, '/');\n" +
+                "        }\n" +
+                "        process.stderr.write('[SCREENSHOT] ' + url + '\\n');\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n" +
+                "module.exports = QAReporter;\n");
+
+            var reporterJsPath = reporterFile.Replace('\\', '/').Replace("'", "\\'");
+            var webRootEsc = webRoot.Replace('\\', '/').Replace("'", "\\'");
+            var shotDirEsc = shotDir.Replace("'", "\\'");
+
+            var pwConfigFile = Path.Combine(effectiveWorkingDir, $"qa_config_{Guid.NewGuid():N}.js");
+            await System.IO.File.WriteAllTextAsync(pwConfigFile,
+                "module.exports = {\n" +
+                "  testDir: './__qa_temp',\n" +
+                $"  testMatch: ['{testFileName}'],\n" +
+                $"  reporter: [['list'], ['{reporterJsPath}', {{ webRoot: '{webRootEsc}' }}]],\n" +
+                "  workers: 1,\n" +
+                $"  timeout: {timeoutMs},\n" +
+                $"  outputDir: '{shotDirEsc}',\n" +
+                $"  use: {{ headless: {headless}, screenshot: 'only-on-failure' }}\n" +
+                "};\n");
+
+            return pwConfigFile;
+        }
+
         private string WrapForPlaywright(string scriptContent)
         {
             var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
@@ -361,14 +410,8 @@ namespace QAToolkit.Controllers
                 if (isPlaywrightRunner)
                 {
                     var timeoutMs = timeoutSec * 1000;
-                    var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
                     var testFileName = Path.GetFileName(tempFile);
-                    // Minimal per-run config: only runs our one temp file
-                    pwConfigFile = Path.Combine(effectiveWorkingDir, $"qa_config_{Guid.NewGuid():N}.js");
-                    await System.IO.File.WriteAllTextAsync(pwConfigFile,
-                        $"module.exports = {{ testDir: './__qa_temp', testMatch: ['{testFileName}'], " +
-                        $"reporter: [['list']], workers: 1, timeout: {timeoutMs}, " +
-                        $"use: {{ headless: {headless} }} }};");
+                    pwConfigFile = await BuildPlaywrightConfigAsync(effectiveWorkingDir, testFileName, timeoutMs);
                     args = $"/c npx playwright test --config \"{pwConfigFile}\"";
                 }
                 else
@@ -510,13 +553,8 @@ namespace QAToolkit.Controllers
                 if (isPlaywrightRunner)
                 {
                     var timeoutMs = timeoutSec * 1000;
-                    var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
                     var testFileName = Path.GetFileName(tempFile);
-                    pwConfigFile = Path.Combine(effectiveWorkingDir, $"qa_config_{Guid.NewGuid():N}.js");
-                    await System.IO.File.WriteAllTextAsync(pwConfigFile,
-                        $"module.exports = {{ testDir: './__qa_temp', testMatch: ['{testFileName}'], " +
-                        $"reporter: [['list']], workers: 1, timeout: {timeoutMs}, " +
-                        $"use: {{ headless: {headless} }} }};");
+                    pwConfigFile = await BuildPlaywrightConfigAsync(effectiveWorkingDir, testFileName, timeoutMs);
                     args = $"/c npx playwright test --config \"{pwConfigFile}\"";
                 }
                 else
