@@ -5,71 +5,56 @@
     ViewData["Title"] = $"Logs — {schedule?.Name}";
 }
 
-<style>
-    .logs-page { background: #0d1117; min-height: 100vh; padding: 1.5rem; }
-    .page-header { margin-bottom: 1.5rem; }
-    .breadcrumb-row { display: flex; align-items: center; gap: 0.5rem; color: #484f58; font-size: 0.82rem; margin-bottom: 0.6rem; }
-    .breadcrumb-row a { color: #58a6ff; text-decoration: none; }
-    .breadcrumb-row a:hover { text-decoration: underline; }
-    .page-title { color: #e6edf3; font-size: 1.3rem; font-weight: 600; margin: 0; }
-    .page-meta { color: #8b949e; font-size: 0.83rem; margin-top: 0.2rem; }
-    .logs-container { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
-    .table { margin: 0; color: #e6edf3; }
-    .table thead th { background: #21262d; color: #8b949e; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #30363d; padding: 0.75rem 1rem; border-top: none; }
-    .table tbody td { border-color: #21262d; padding: 0.75rem 1rem; vertical-align: top; }
-    .table tbody tr:hover td { background: #1c2129; }
-    .table tbody tr:last-child td { border-bottom: none; }
-    .badge-status { font-size: 0.72rem; padding: 0.2rem 0.55rem; border-radius: 20px; font-weight: 500; }
-    .status-ok { background: #1a3a2a; color: #3fb950; border: 1px solid #238636; }
-    .status-error { background: #3a1a1a; color: #f85149; border: 1px solid #da3633; }
-    .status-timeout { background: #3a2a1a; color: #d29922; border: 1px solid #9e6a03; }
-    .status-running { background: #1f3a5f; color: #58a6ff; border: 1px solid #1f6feb; }
-    .exit-code { font-family: monospace; font-size: 0.82rem; color: #8b949e; }
-    .exit-ok { color: #3fb950; }
-    .exit-bad { color: #f85149; }
-    .duration { color: #8b949e; font-size: 0.82rem; font-family: monospace; }
-    .output-preview { font-family: 'Courier New', monospace; font-size: 0.75rem; color: #8b949e; white-space: pre-wrap; max-height: 100px; overflow: hidden; cursor: pointer; border: 1px solid #21262d; background: #0d1117; padding: 0.5rem; border-radius: 4px; }
-    .output-preview.expanded { max-height: none; }
-    .expand-btn { color: #58a6ff; font-size: 0.75rem; background: none; border: none; cursor: pointer; padding: 0; margin-top: 0.3rem; display: block; }
-    .empty-state { text-align: center; padding: 3rem; color: #484f58; }
-    .ts { color: #8b949e; font-size: 0.82rem; white-space: nowrap; }
-</style>
-
-<div class="logs-page">
-    <div class="page-header">
-        <div class="breadcrumb-row">
-            <a href="/ScheduledRuns">Scheduled Runs</a>
-            <span>›</span>
-            <span>@schedule?.Name</span>
-        </div>
-        <h1 class="page-title">Run Logs</h1>
-        <p class="page-meta">
-            Script: <a href="/PlaywrightScripts/Details/@schedule?.ScriptId" style="color:#58a6ff;text-decoration:none">@scriptName</a>
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb" class="mb-1">
+            <ol class="breadcrumb mb-0" style="font-size:0.82rem">
+                <li class="breadcrumb-item"><a asp-controller="ScheduledRuns" asp-action="Index">Scheduled Runs</a></li>
+                <li class="breadcrumb-item active">@schedule?.Name</li>
+            </ol>
+        </nav>
+        <h1>Run Logs</h1>
+        <p class="text-muted">
+            Script: <a asp-controller="PlaywrightScripts" asp-action="Details" asp-route-id="@schedule?.ScriptId" class="text-decoration-none">@scriptName</a>
             @if (schedule?.ScheduleType == "daily")
-            { <span> · Daily at @schedule.DailyTime BD</span> }
+            { <span class="ms-2 text-muted small">· Daily at @schedule.DailyTime BD</span> }
             else if (schedule?.ScheduleType == "interval")
-            { <span> · Every @schedule.IntervalMinutes min</span> }
+            {
+                var iv = schedule.IntervalMinutes ?? 0;
+                var ivText = iv >= 1440 ? $"Every {iv/1440}d" : iv >= 60 ? $"Every {iv/60}h" : $"Every {iv}m";
+                <span class="ms-2 text-muted small">· @ivText</span>
+            }
             else if (schedule?.RunOnce.HasValue == true)
-            { <span> · Once at @schedule.RunOnce.Value.ToString("dd MMM yyyy HH:mm")</span> }
+            { <span class="ms-2 text-muted small">· Once at @schedule.RunOnce.Value.ToString("dd MMM yyyy HH:mm")</span> }
         </p>
     </div>
+    <div class="page-header-actions">
+        <a asp-action="Edit" asp-route-id="@schedule?.Id" class="btn btn-secondary btn-sm">
+            <i class="bi bi-pencil me-1"></i> Edit Schedule
+        </a>
+    </div>
+</div>
 
-    <div class="logs-container">
-        @if (!Model.Any())
-        {
-            <div class="empty-state">
-                <p>No runs yet. The scheduler will log results here once the script executes.</p>
-            </div>
-        }
-        else
-        {
-            <table class="table table-dark mb-0">
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-journal-text" style="font-size: 2.5rem; color: var(--gray-300);"></i>
+            <p class="mt-3 text-muted">No runs yet. The scheduler will log results here once the script executes.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>Started</th>
                         <th>Status</th>
                         <th>Duration</th>
-                        <th>Exit Code</th>
+                        <th>Exit</th>
                         <th>Output</th>
                     </tr>
                 </thead>
@@ -77,56 +62,75 @@
                     @foreach (var log in Model)
                     {
                         <tr>
-                            <td class="ts">@log.StartedAt.ToString("dd MMM yyyy HH:mm:ss")</td>
+                            <td class="text-nowrap small text-muted">@log.StartedAt.ToString("dd MMM yyyy HH:mm:ss")</td>
                             <td>
-                                <span class="badge-status status-@(log.Status == "ok" ? "ok" : log.Status == "timeout" ? "timeout" : "error")">
-                                    @log.Status
-                                </span>
-                            </td>
-                            <td class="duration">
-                                @if (log.DurationMs >= 60000)
-                                { @($"{log.DurationMs / 60000}m {(log.DurationMs % 60000) / 1000}s") }
-                                else if (log.DurationMs >= 1000)
-                                { @($"{log.DurationMs / 1000.0:F1}s") }
+                                @if (log.Status == "ok")
+                                { <span class="status-badge status-success"><span class="status-dot"></span>ok</span> }
+                                else if (log.Status == "error")
+                                { <span class="status-badge status-danger"><span class="status-dot"></span>error</span> }
+                                else if (log.Status == "timeout")
+                                { <span class="status-badge status-warning"><span class="status-dot"></span>timeout</span> }
+                                else if (log.Status == "running")
+                                { <span class="status-badge status-info"><span class="status-dot"></span>running</span> }
                                 else
-                                { @($"{log.DurationMs}ms") }
+                                { <span class="text-muted small">@log.Status</span> }
                             </td>
-                            <td class="exit-code">
+                            <td class="small text-nowrap">
+                                @if (log.DurationMs >= 60000)
+                                { <span>@($"{log.DurationMs / 60000}m {(log.DurationMs % 60000) / 1000}s")</span> }
+                                else if (log.DurationMs >= 1000)
+                                { <span>@($"{log.DurationMs / 1000.0:F1}s")</span> }
+                                else
+                                { <span>@($"{log.DurationMs}ms")</span> }
+                            </td>
+                            <td class="small">
                                 @if (log.ExitCode.HasValue)
                                 {
-                                    <span class="@(log.ExitCode == 0 ? "exit-ok" : "exit-bad")">@log.ExitCode</span>
+                                    <code class="@(log.ExitCode == 0 ? "text-success" : "text-danger")">@log.ExitCode</code>
                                 }
-                                else { <span>—</span> }
+                                else { <span class="text-muted">—</span> }
                             </td>
-                            <td style="max-width:500px">
+                            <td style="max-width:520px">
                                 @if (!string.IsNullOrEmpty(log.Output))
                                 {
                                     var logId = $"out-{log.Id}";
-                                    <div class="output-preview" id="@logId">@log.Output</div>
-                                    <button class="expand-btn" onclick="toggleOutput('@logId', this)">Show more</button>
+                                    <pre id="@logId" class="log-output mb-1">@log.Output</pre>
+                                    <button class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.75rem" onclick="toggleOutput('@logId', this)">Show more</button>
                                 }
                                 else
                                 {
-                                    <span style="color:#484f58;font-size:0.8rem">(no output)</span>
+                                    <span class="text-muted small">(no output)</span>
                                 }
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
-        }
+        </div>
     </div>
-</div>
+}
+
+<style>
+    .log-output {
+        font-size: 0.73rem;
+        max-height: 90px;
+        overflow: hidden;
+        background: var(--surface-secondary, #f6f8fa);
+        border: 1px solid var(--border-color, #e0e0e0);
+        border-radius: 4px;
+        padding: 0.4rem 0.6rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 0;
+        cursor: pointer;
+    }
+    .log-output.expanded { max-height: none; }
+</style>
 
 <script>
 function toggleOutput(id, btn) {
     const el = document.getElementById(id);
-    if (el.classList.contains('expanded')) {
-        el.classList.remove('expanded');
-        btn.textContent = 'Show more';
-    } else {
-        el.classList.add('expanded');
-        btn.textContent = 'Show less';
-    }
+    const expanded = el.classList.toggle('expanded');
+    btn.textContent = expanded ? 'Show less' : 'Show more';
 }
 </script>

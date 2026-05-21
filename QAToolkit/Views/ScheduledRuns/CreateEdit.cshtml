@@ -5,67 +5,41 @@
     ViewData["Title"] = isEdit ? "Edit Schedule" : "New Schedule";
     var scripts = ViewBag.Scripts as List<PlaywrightScript> ?? new List<PlaywrightScript>();
     var preselected = (int?)ViewBag.PreselectedScriptId;
+    var schedType = Model?.ScheduleType ?? "once";
 }
 
-<style>
-    .form-page { background: #0d1117; min-height: 100vh; padding: 1.5rem; }
-    .form-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; max-width: 680px; margin: 0 auto; overflow: hidden; }
-    .form-card-header { background: #21262d; border-bottom: 1px solid #30363d; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-    .form-card-title { color: #e6edf3; font-size: 1rem; font-weight: 600; margin: 0; }
-    .form-card-body { padding: 1.5rem; }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-label { color: #8b949e; font-size: 0.82rem; font-weight: 500; margin-bottom: 0.4rem; display: block; text-transform: uppercase; letter-spacing: 0.04em; }
-    .form-control, .form-select { background: #0d1117; border: 1px solid #30363d; color: #e6edf3; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.9rem; width: 100%; transition: border-color 0.2s; }
-    .form-control:focus, .form-select:focus { border-color: #58a6ff; background: #0d1117; color: #e6edf3; box-shadow: 0 0 0 3px rgba(88,166,255,0.1); outline: none; }
-    .form-control::placeholder { color: #484f58; }
-    textarea.form-control { resize: vertical; font-family: 'Courier New', monospace; font-size: 0.83rem; min-height: 90px; }
-    .schedule-type-tabs { display: flex; gap: 0.5rem; margin-bottom: 0; }
-    .type-tab { flex: 1; padding: 0.6rem; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #8b949e; cursor: pointer; text-align: center; font-size: 0.85rem; transition: all 0.2s; user-select: none; }
-    .type-tab.active { border-color: #58a6ff; background: #1f3a5f; color: #58a6ff; }
-    .type-tab:hover:not(.active) { border-color: #484f58; color: #e6edf3; }
-    .schedule-section { display: none; padding-top: 1.25rem; }
-    .schedule-section.visible { display: block; }
-    .hint { color: #484f58; font-size: 0.78rem; margin-top: 0.3rem; }
-    .form-actions { display: flex; gap: 0.75rem; padding-top: 0.5rem; }
-    .btn-submit { background: #238636; border: 1px solid #2ea043; color: #e6edf3; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; font-weight: 500; }
-    .btn-submit:hover { background: #2ea043; }
-    .btn-cancel { background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.2s; }
-    .btn-cancel:hover { border-color: #484f58; color: #e6edf3; text-decoration: none; }
-    .interval-row { display: flex; gap: 0.5rem; align-items: flex-start; }
-    .interval-input { width: 120px; flex-shrink: 0; }
-    .interval-select { flex: 1; }
-    .preset-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
-    .preset-btn { background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 0.25rem 0.6rem; border-radius: 5px; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
-    .preset-btn:hover { border-color: #58a6ff; color: #58a6ff; }
-    .error-msg { color: #f85149; background: #3a1a1a; border: 1px solid #da3633; border-radius: 6px; padding: 0.6rem 0.9rem; font-size: 0.85rem; margin-bottom: 1rem; }
-</style>
+<div class="page-header">
+    <div>
+        <h1>@(isEdit ? "Edit Schedule" : "New Schedule")</h1>
+        <p>@(isEdit ? $"Editing \"{Model!.Name}\"" : "Automate a script to run at a set time or interval.")</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Back</a>
+    </div>
+</div>
 
-<div class="form-page">
-    <div class="form-card">
-        <div class="form-card-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <h2 class="form-card-title">@(isEdit ? "Edit Schedule" : "New Schedule")</h2>
-        </div>
-        <div class="form-card-body">
-            @if (TempData["Error"] != null)
-            {
-                <div class="error-msg">@TempData["Error"]</div>
-            }
+<form method="post" action="/ScheduledRuns/@(isEdit ? $"Edit/{Model!.Id}" : "Create")" id="scheduleForm">
+    @Html.AntiForgeryToken()
 
-            <form method="post" action="/ScheduledRuns/@(isEdit ? $"Edit/{Model!.Id}" : "Create")">
-                @Html.AntiForgeryToken()
+<div class="row g-4">
 
-                <div class="form-group">
-                    <label class="form-label">Schedule Name</label>
+    <!-- Left column: schedule config -->
+    <div class="col-lg-5">
+
+        <div class="card mb-4">
+            <div class="card-header py-2 px-3">
+                <span class="fw-medium small"><i class="bi bi-gear me-1"></i>Schedule Settings</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Schedule Name</label>
                     <input type="text" name="name" class="form-control" placeholder="e.g. Daily smoke test" required
                            value="@(Model?.Name ?? "")" />
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Script</label>
-                    <select name="scriptId" class="form-select" required>
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Script</label>
+                    <select name="scriptId" id="scriptSelect" class="form-select" required>
                         <option value="">— select a script —</option>
                         @foreach (var sc in scripts)
                         {
@@ -75,102 +49,407 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Schedule Type</label>
-                    <div class="schedule-type-tabs">
-                        <div class="type-tab @(Model?.ScheduleType == "once" || !isEdit ? "active" : "")" data-type="once" onclick="selectType('once')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            One-time
-                        </div>
-                        <div class="type-tab @(Model?.ScheduleType == "daily" ? "active" : "")" data-type="daily" onclick="selectType('daily')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            Daily
-                        </div>
-                        <div class="type-tab @(Model?.ScheduleType == "interval" ? "active" : "")" data-type="interval" onclick="selectType('interval')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                            Interval
-                        </div>
-                    </div>
-                    <input type="hidden" name="scheduleType" id="scheduleTypeInput" value="@(Model?.ScheduleType ?? "once")" />
-                </div>
-
-                <!-- One-time section -->
-                <div class="schedule-section @(Model == null || Model.ScheduleType == "once" ? "visible" : "")" id="section-once">
-                    <div class="form-group">
-                        <label class="form-label">Run At (Bangladesh Time)</label>
-                        <input type="datetime-local" name="runOnce" class="form-control" id="runOnceInput"
-                               value="@(Model?.RunOnce?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
-                        <p class="hint">The script will run once at this time, then be disabled.</p>
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Schedule Type</label>
+                    <div class="d-flex gap-2">
+                        @foreach (var (val, label, icon) in new[]{("once","One-time","bi-calendar-event"),("daily","Daily","bi-clock"),("interval","Interval","bi-arrow-repeat")})
+                        {
+                            <label class="type-tab @(schedType == val ? "active" : "")" data-type="@val">
+                                <input type="radio" name="scheduleType" value="@val" @(schedType == val ? "checked" : "") style="display:none">
+                                <i class="bi @icon me-1"></i>@label
+                            </label>
+                        }
                     </div>
                 </div>
 
-                <!-- Daily section -->
-                <div class="schedule-section @(Model?.ScheduleType == "daily" ? "visible" : "")" id="section-daily">
-                    <div class="form-group">
-                        <label class="form-label">Time of Day (BD Time, HH:MM)</label>
-                        <input type="time" name="dailyTime" class="form-control" style="max-width:160px"
-                               value="@(Model?.DailyTime ?? "09:00")" />
-                        <p class="hint">Runs every day at this time (Bangladesh Standard Time).</p>
+                <!-- One-time -->
+                <div class="sched-section @(schedType == "once" ? "" : "d-none")" id="section-once">
+                    <label class="form-label fw-medium small">Run At <span class="text-muted fw-normal">(Bangladesh Time)</span></label>
+                    <input type="datetime-local" name="runOnce" id="runOnceInput" class="form-control"
+                           value="@(Model?.RunOnce?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                    <small class="text-muted">Script runs once then the schedule is disabled.</small>
+                </div>
+
+                <!-- Daily -->
+                <div class="sched-section @(schedType == "daily" ? "" : "d-none")" id="section-daily">
+                    <label class="form-label fw-medium small">Time of Day <span class="text-muted fw-normal">(BD Time HH:MM)</span></label>
+                    <input type="time" name="dailyTime" class="form-control" style="max-width:160px"
+                           value="@(Model?.DailyTime ?? "09:00")" />
+                    <small class="text-muted">Runs every day at this time.</small>
+                </div>
+
+                <!-- Interval -->
+                <div class="sched-section @(schedType == "interval" ? "" : "d-none")" id="section-interval">
+                    <label class="form-label fw-medium small">Repeat Every</label>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <input type="number" name="intervalMinutes" id="intervalMinutes" class="form-control"
+                               style="max-width:110px" min="1" max="10080" placeholder="30"
+                               value="@(Model?.IntervalMinutes?.ToString() ?? "")" />
+                        <span class="text-muted small">minutes</span>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap">
+                        @foreach (var (m, lbl) in new[]{("15","15m"),("30","30m"),("60","1h"),("120","2h"),("360","6h"),("720","12h"),("1440","24h")})
+                        {
+                            <button type="button" class="btn btn-ghost btn-sm py-0 px-2"
+                                    style="font-size:11px;border:1px solid var(--border-subtle)"
+                                    onclick="document.getElementById('intervalMinutes').value='@m'">@lbl</button>
+                        }
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Interval section -->
-                <div class="schedule-section @(Model?.ScheduleType == "interval" ? "visible" : "")" id="section-interval">
-                    <div class="form-group">
-                        <label class="form-label">Repeat Every</label>
-                        <div class="interval-row">
-                            <input type="number" name="intervalMinutes" id="intervalMinutes" class="form-control interval-input"
-                                   min="1" max="10080" placeholder="30"
-                                   value="@(Model?.IntervalMinutes?.ToString() ?? "")" />
-                            <span style="color:#8b949e;font-size:0.9rem;padding-top:0.55rem">minutes</span>
-                        </div>
-                        <div class="preset-btns">
-                            <button type="button" class="preset-btn" onclick="setInterval(15)">15 min</button>
-                            <button type="button" class="preset-btn" onclick="setInterval(30)">30 min</button>
-                            <button type="button" class="preset-btn" onclick="setInterval(60)">1 hour</button>
-                            <button type="button" class="preset-btn" onclick="setInterval(120)">2 hours</button>
-                            <button type="button" class="preset-btn" onclick="setInterval(360)">6 hours</button>
-                            <button type="button" class="preset-btn" onclick="setInterval(720)">12 hours</button>
-                            <button type="button" class="preset-btn" onclick="setInterval(1440)">24 hours</button>
-                        </div>
-                    </div>
-                </div>
+    </div>
 
-                <div class="form-group">
-                    <label class="form-label">Parameters (JSON) <span style="color:#484f58;font-weight:400;text-transform:none">— optional, overrides script defaults</span></label>
-                    <textarea name="paramsJson" class="form-control" placeholder='{"key": "value"}' rows="4">@(Model?.ParamsJson ?? "")</textarea>
-                    <p class="hint">Leave blank if the script has no parameters or uses its own defaults.</p>
+    <!-- Right column: params -->
+    <div class="col-lg-7">
+        <div class="card" id="paramsCard">
+            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-medium small"><i class="bi bi-sliders me-1"></i>Parameters</span>
+                    <span class="badge badge-warning small" id="paramsRequiredBadge" style="display:none">Required before run</span>
                 </div>
+                <div class="btn-group btn-group-sm" id="viewToggle" style="display:none">
+                    <button type="button" class="btn btn-outline-secondary active" id="formViewBtn">
+                        <i class="bi bi-ui-checks me-1"></i>Form
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="jsonViewBtn">
+                        <i class="bi bi-braces me-1"></i>JSON
+                    </button>
+                </div>
+            </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn-submit">@(isEdit ? "Save Changes" : "Create Schedule")</button>
-                    <a href="/ScheduledRuns" class="btn-cancel">Cancel</a>
-                </div>
-            </form>
+            <!-- Loading state -->
+            <div class="card-body text-center py-4 text-muted" id="paramsLoading" style="display:none">
+                <div class="spinner-border spinner-border-sm me-2"></div>Loading parameters…
+            </div>
+
+            <!-- No script / no params -->
+            <div class="card-body text-muted small" id="paramsEmpty">
+                <i class="bi bi-info-circle me-1"></i>Select a script above to configure its parameters.
+            </div>
+
+            <!-- Form view -->
+            <div id="paramFormView" class="card-body pt-3 pb-2" style="display:none">
+                <div class="row g-0" id="paramFormFields"></div>
+            </div>
+
+            <!-- JSON view -->
+            <div id="paramJsonView" class="card-body pt-3 pb-2" style="display:none">
+                <p class="small text-muted mb-2">
+                    <i class="bi bi-info-circle me-1"></i>Edit JSON directly. Switch to <strong>Form</strong> to sync into fields.
+                </p>
+                <textarea id="paramsJsonEditor" class="form-control font-monospace"
+                          rows="10" style="font-size:13px;resize:vertical;"
+                          placeholder='{ "key": "value" }'></textarea>
+                <div id="jsonParseError" class="text-danger small mt-1" style="display:none"></div>
+            </div>
+
+            <!-- No-params script: raw JSON textarea -->
+            <div id="paramsRaw" class="card-body pt-3 pb-2" style="display:none">
+                <p class="small text-muted mb-2">This script has no parameter declarations. Paste raw JSON if needed.</p>
+                <textarea id="paramsRawEditor" class="form-control font-monospace"
+                          rows="5" style="font-size:13px;resize:vertical;"
+                          placeholder='{ "key": "value" }'>@(Model?.ParamsJson ?? "")</textarea>
+            </div>
+
+            <input type="hidden" name="paramsJson" id="paramsJsonHidden" value="@(Model?.ParamsJson ?? "")" />
         </div>
     </div>
+
 </div>
 
+<div class="d-flex gap-2 mt-4">
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-1"></i>@(isEdit ? "Save Changes" : "Create Schedule")
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</div>
+
+</form>
+
+@section Scripts {
+<style>
+    .type-tab {
+        flex: 1; text-align: center; padding: 7px 10px;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm, 6px);
+        background: var(--surface-base);
+        color: var(--text-muted);
+        cursor: pointer; font-size: 0.85rem;
+        transition: all .15s;
+        user-select: none;
+    }
+    .type-tab:hover { border-color: var(--color-accent, #0d6efd); color: var(--text-primary); }
+    .type-tab.active { border-color: var(--color-accent, #0d6efd); background: var(--color-accent-subtle, #e7f3ff); color: var(--color-accent, #0d6efd); font-weight: 600; }
+    [data-theme="dark"] .type-tab.active { background: rgba(88,166,255,.12); }
+
+    .param-field { padding: 0 12px 16px 12px; }
+    .param-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+    .param-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    .param-section-header { padding: 12px 12px 6px 12px; }
+    .param-section-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+    .param-section-line { flex: 1; height: 1px; background: var(--border-subtle); margin-left: 8px; }
+    .input-pwd-group { position: relative; }
+    .input-pwd-group input { padding-right: 36px; }
+    .input-pwd-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 2px 4px; color: var(--text-muted); cursor: pointer; }
+</style>
+
 <script>
-function selectType(type) {
-    document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`.type-tab[data-type="${type}"]`).classList.add('active');
-    document.getElementById('scheduleTypeInput').value = type;
-    document.querySelectorAll('.schedule-section').forEach(s => s.classList.remove('visible'));
-    document.getElementById(`section-${type}`).classList.add('visible');
-}
+// ── Schedule type tabs ────────────────────────────────────────────────────────
+document.querySelectorAll('.type-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        tab.querySelector('input[type=radio]').checked = true;
+        const type = tab.dataset.type;
+        document.querySelectorAll('.sched-section').forEach(s => s.classList.add('d-none'));
+        document.getElementById('section-' + type).classList.remove('d-none');
+    });
+});
 
-function setInterval(mins) {
-    document.getElementById('intervalMinutes').value = mins;
-}
-
-// Default the datetime-local min to now
+// Default runOnce to now+5min if empty
 (function() {
     const inp = document.getElementById('runOnceInput');
     if (inp && !inp.value) {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() + 5);
-        inp.value = now.toISOString().slice(0, 16);
+        const d = new Date(); d.setMinutes(d.getMinutes() + 5);
+        inp.value = d.toISOString().slice(0, 16);
     }
 })();
+
+// ── Params form (same logic as Details page) ──────────────────────────────────
+let activeView = 'form';
+let currentScriptIsTemplate = false;
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parseParamDefs(content) {
+    const indirectM = content.match(/const\s+(\w+)\s*=\s*__PARAMS__/);
+    const directPattern = indirectM
+        ? new RegExp('const\\s*\\{([^}]+)\\}\\s*=\\s*' + indirectM[1] + '(?!\\w)')
+        : /const\s*\{([^}]+)\}\s*=\s*__PARAMS__/;
+    const match = content.match(directPattern) || content.match(/const\s*\{([^}]+)\}\s*=\s*__PARAMS__/);
+    if (match) {
+        const items = [];
+        for (const line of match[1].split('\n').map(l => l.replace(/\r$/, ''))) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            if (trimmed.startsWith('//')) {
+                items.push({ type: 'section', label: trimmed.replace(/^\/\/\s*/, '') });
+                continue;
+            }
+            const commentMatch = line.match(/\/\/(.+)$/);
+            const comment = commentMatch ? commentMatch[1].trim() : null;
+            const codePart = line.replace(/\/\/.*$/, '');
+            for (const part of codePart.split(',').map(s => s.trim()).filter(Boolean)) {
+                const defM = part.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(.+)$/);
+                const plainM = !defM && part.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)$/);
+                if (!defM && !plainM) continue;
+                const key = defM ? defM[1] : plainM[1];
+                let defaultVal = null, wasString = false;
+                if (defM) {
+                    const raw = defM[2].trim();
+                    if (/^['"`]/.test(raw)) {
+                        wasString = true;
+                        const q = raw[0], end = raw.lastIndexOf(q);
+                        defaultVal = raw.slice(1, end < 1 ? raw.length : end);
+                    } else { defaultVal = raw; }
+                }
+                items.push({ type: 'field', key, comment, defaultVal, wasString });
+            }
+        }
+        if (items.length) return items;
+    }
+    return [];
+}
+
+function detectScriptParams(content) {
+    if (content.includes('__PARAMS__')) {
+        const items = parseParamDefs(content);
+        return items.length ? { scriptType: 'params', items } : null;
+    }
+    return null;
+}
+
+function detectFieldType(key, comment, flag, defaultVal, wasString) {
+    if (comment) {
+        const opts = [...comment.matchAll(/'([^']+)'/g)].map(m => m[1]);
+        if (opts.length >= 2 && comment.includes('|')) return { type: 'select', options: opts };
+        if (/\barray\b/i.test(comment)) return { type: 'array' };
+    }
+    if (/password|username/i.test(key)) return { type: 'password' };
+    if (/^(is[A-Z]|has[A-Z])/.test(key)) return { type: 'boolean' };
+    if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Questions?|Amount|Fee|Price|Qty)$/i.test(key)) return { type: 'number' };
+    if (!wasString && defaultVal != null && /^-?\d+(\.\d+)?$/.test(String(defaultVal))) return { type: 'number' };
+    if (!wasString && Array.isArray(defaultVal) || (typeof defaultVal === 'string' && defaultVal.startsWith('['))) return { type: 'array' };
+    return { type: 'text' };
+}
+
+function humanize(key) {
+    return key.replace(/_+/g,' ').replace(/([a-z\d])([A-Z])/g,'$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase()).trim();
+}
+
+function buildForm(items) {
+    const container = document.getElementById('paramFormFields');
+    let html = '';
+    for (const item of items) {
+        if (item.type === 'section') {
+            html += `<div class="col-12 param-section-header"><div class="d-flex align-items-center"><span class="param-section-label">${esc(item.label)}</span><div class="param-section-line"></div></div></div>`;
+            continue;
+        }
+        const { key, comment, flag, defaultVal, wasString } = item;
+        const def = detectFieldType(key, comment, flag, defaultVal, wasString);
+        const label = humanize(key);
+        const hint = comment ? `<div class="param-hint">${esc(comment)}</div>` : '';
+        const dv = defaultVal != null ? esc(String(defaultVal)) : '';
+        let inp = '';
+        if (def.type === 'select') {
+            const opts = def.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            inp = `<select class="form-select form-select-sm param-input" data-key="${esc(key)}" data-type="select"><option value="">— select —</option>${opts}</select>`;
+        } else if (def.type === 'password') {
+            inp = `<div class="input-pwd-group"><input type="password" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="password" autocomplete="off" value="${dv}"><button type="button" class="input-pwd-toggle" onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'"><i class="bi bi-eye"></i></button></div>`;
+        } else if (def.type === 'boolean') {
+            inp = `<div class="form-check mt-1"><input class="form-check-input param-input" type="checkbox" data-key="${esc(key)}" data-type="boolean" id="param_${esc(key)}"><label class="form-check-label small" for="param_${esc(key)}">Enable</label></div>`;
+        } else if (def.type === 'number') {
+            inp = `<input type="number" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="number" placeholder="0" value="${dv}">`;
+        } else if (def.type === 'array') {
+            inp = `<input type="text" class="form-control form-control-sm param-input font-monospace" data-key="${esc(key)}" data-type="array" placeholder="[1,2,3]" value="${dv}">`;
+        } else {
+            inp = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" value="${dv}">`;
+        }
+        html += `<div class="col-md-6 param-field"><div class="param-label">${esc(label)}</div>${inp}${hint}</div>`;
+    }
+    container.innerHTML = html;
+}
+
+function formToObj() {
+    const obj = {};
+    document.querySelectorAll('.param-input').forEach(el => {
+        const key = el.dataset.key, type = el.dataset.type;
+        if (type === 'boolean') { obj[key] = el.checked; return; }
+        if (el.value === '') { obj[key] = null; return; }
+        if (type === 'number') { obj[key] = Number(el.value); return; }
+        if (type === 'array') {
+            const v = el.value.trim();
+            if (!v) { obj[key] = null; return; }
+            try { obj[key] = JSON.parse(v); return; } catch {}
+            try { obj[key] = JSON.parse(v.replace(/'/g,'"')); return; } catch {}
+            obj[key] = v; return;
+        }
+        obj[key] = el.value;
+    });
+    return obj;
+}
+
+function objToForm(obj) {
+    document.querySelectorAll('.param-input').forEach(el => {
+        const val = obj[el.dataset.key];
+        if (val == null) return;
+        if (el.dataset.type === 'boolean') { el.checked = Boolean(val); return; }
+        if (el.dataset.type === 'array') { el.value = Array.isArray(val) ? JSON.stringify(val) : String(val); return; }
+        el.value = String(val);
+    });
+}
+
+function switchToJson() {
+    document.getElementById('paramsJsonEditor').value = JSON.stringify(formToObj(), null, 2);
+    document.getElementById('paramFormView').style.display = 'none';
+    document.getElementById('paramJsonView').style.display = 'block';
+    document.getElementById('formViewBtn').classList.remove('active');
+    document.getElementById('jsonViewBtn').classList.add('active');
+    activeView = 'json';
+}
+
+function switchToForm() {
+    try {
+        objToForm(JSON.parse(document.getElementById('paramsJsonEditor').value));
+        document.getElementById('paramFormView').style.display = 'block';
+        document.getElementById('paramJsonView').style.display = 'none';
+        document.getElementById('formViewBtn').classList.add('active');
+        document.getElementById('jsonViewBtn').classList.remove('active');
+        activeView = 'form';
+    } catch(e) {
+        document.getElementById('jsonParseError').textContent = 'Invalid JSON: ' + e.message;
+        document.getElementById('jsonParseError').style.display = 'block';
+    }
+}
+
+async function loadScriptParams(scriptId) {
+    if (!scriptId) {
+        document.getElementById('paramsLoading').style.display = 'none';
+        document.getElementById('paramsEmpty').style.display = 'block';
+        document.getElementById('paramFormView').style.display = 'none';
+        document.getElementById('paramJsonView').style.display = 'none';
+        document.getElementById('paramsRaw').style.display = 'none';
+        document.getElementById('viewToggle').style.display = 'none';
+        document.getElementById('paramsRequiredBadge').style.display = 'none';
+        currentScriptIsTemplate = false;
+        return;
+    }
+
+    document.getElementById('paramsEmpty').style.display = 'none';
+    document.getElementById('paramFormView').style.display = 'none';
+    document.getElementById('paramJsonView').style.display = 'none';
+    document.getElementById('paramsRaw').style.display = 'none';
+    document.getElementById('paramsLoading').style.display = 'block';
+
+    try {
+        const r = await fetch('/PlaywrightScripts/GetContent/' + scriptId);
+        if (!r.ok) throw new Error('Failed to load');
+        const { content } = await r.json();
+        document.getElementById('paramsLoading').style.display = 'none';
+
+        const detected = detectScriptParams(content);
+        if (detected) {
+            currentScriptIsTemplate = true;
+            buildForm(detected.items);
+
+            // Pre-fill from existing paramsJson if available
+            const existing = document.getElementById('paramsJsonHidden').value;
+            if (existing) {
+                try { objToForm(JSON.parse(existing)); } catch {}
+            }
+
+            document.getElementById('paramFormView').style.display = 'block';
+            document.getElementById('viewToggle').style.display = '';
+            document.getElementById('paramsRequiredBadge').style.display = '';
+            activeView = 'form';
+        } else {
+            currentScriptIsTemplate = false;
+            document.getElementById('paramsRaw').style.display = 'block';
+            document.getElementById('viewToggle').style.display = 'none';
+            document.getElementById('paramsRequiredBadge').style.display = 'none';
+        }
+    } catch {
+        document.getElementById('paramsLoading').style.display = 'none';
+        document.getElementById('paramsEmpty').style.display = 'block';
+    }
+}
+
+// On script change: reload params
+document.getElementById('scriptSelect').addEventListener('change', function() {
+    loadScriptParams(this.value);
+});
+
+// On submit: serialize params into hidden field
+document.getElementById('scheduleForm').addEventListener('submit', function() {
+    if (currentScriptIsTemplate) {
+        const json = activeView === 'json'
+            ? document.getElementById('paramsJsonEditor').value
+            : JSON.stringify(formToObj());
+        document.getElementById('paramsJsonHidden').value = json;
+    } else {
+        document.getElementById('paramsJsonHidden').value = document.getElementById('paramsRawEditor').value || '';
+    }
+});
+
+document.getElementById('formViewBtn').addEventListener('click', switchToForm);
+document.getElementById('jsonViewBtn').addEventListener('click', switchToJson);
+
+// Load params for initial script selection
+const initialScript = document.getElementById('scriptSelect').value;
+if (initialScript) loadScriptParams(initialScript);
 </script>
+}

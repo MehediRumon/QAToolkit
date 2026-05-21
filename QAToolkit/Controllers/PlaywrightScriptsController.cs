@@ -217,6 +217,16 @@ namespace QAToolkit.Controllers
             return File(bytes, "application/octet-stream", fileName);
         }
 
+        [AllowAnonymous]
+        public async Task<IActionResult> GetContent(int id)
+        {
+            var script = await _context.PlaywrightScripts.FindAsync(id);
+            if (script == null) return NotFound();
+            if (!script.IsPublic && User.Identity?.IsAuthenticated != true)
+                return Unauthorized();
+            return Json(new { content = script.ScriptContent, runMode = script.RunMode });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Run(int id, [FromForm] string? paramsJson = null)
