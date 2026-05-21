@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QAToolkit.Data;
 using QAToolkit.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using QAToolkit.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,12 @@ builder.Services.AddHttpClient();
 
 // Register OMR Filler Service
 builder.Services.AddScoped<IOmrFillerService, OmrFillerService>();
+
+// Register Playwright runner (scoped — needs DbContext)
+builder.Services.AddScoped<PlaywrightRunnerService>();
+
+// Register background scheduler
+builder.Services.AddHostedService<SchedulerHostedService>();
 
 // Configure Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -65,6 +72,50 @@ using (var scope = app.Services.CreateScope())
             IsPublic INTEGER NOT NULL DEFAULT 0
         )");
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_PlaywrightScripts_Tags ON PlaywrightScripts (Tags)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ScheduledRuns (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ScriptId INTEGER NOT NULL,
+            Name TEXT NOT NULL,
+            ScheduleType TEXT NOT NULL DEFAULT 'once',
+            RunOnce TEXT,
+            DailyTime TEXT,
+            IntervalMinutes INTEGER,
+            ParamsJson TEXT,
+            IsEnabled INTEGER NOT NULL DEFAULT 1,
+            LastRunAt TEXT,
+            LastRunStatus TEXT,
+            NextRunAt TEXT,
+            CreatedBy TEXT,
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRuns_ScriptId ON ScheduledRuns (ScriptId)");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRuns_NextRunAt ON ScheduledRuns (NextRunAt)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ScheduledRunLogs (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ScheduledRunId INTEGER NOT NULL,
+            StartedAt TEXT NOT NULL,
+            FinishedAt TEXT,
+            Status TEXT NOT NULL DEFAULT '',
+            Output TEXT,
+            ExitCode INTEGER,
+            DurationMs INTEGER NOT NULL DEFAULT 0
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRunLogs_ScheduledRunId ON ScheduledRunLogs (ScheduledRunId)");
+
+    // Seed NextRunAt for any existing schedules that don't have it set
+    var pendingSchedules = db.ScheduledRuns
+        .Where(s => s.IsEnabled && s.NextRunAt == null && s.ScheduleType != "once")
+        .ToList();
+    foreach (var s in pendingSchedules)
+    {
+        s.NextRunAt = SchedulerHostedService.CalculateNextRun(s, DateTimeHelper.BdNow);
+    }
+    if (pendingSchedules.Count > 0) db.SaveChanges();
 }
 
 // Configure the HTTP request pipeline.

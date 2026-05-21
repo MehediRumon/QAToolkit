@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using QAToolkit.Data;
 using QAToolkit.Helpers;
 using QAToolkit.Models;
+using QAToolkit.Services;
 using System.Diagnostics;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Channels;
 
 namespace QAToolkit.Controllers
@@ -15,155 +15,15 @@ namespace QAToolkit.Controllers
     public class PlaywrightScriptsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _config;
-        private readonly IWebHostEnvironment _env;
+        private readonly PlaywrightRunnerService _runner;
 
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Process> _activeRuns = new();
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _stoppedRuns = new();
 
-        public PlaywrightScriptsController(ApplicationDbContext context, IConfiguration config, IWebHostEnvironment env)
+        public PlaywrightScriptsController(ApplicationDbContext context, PlaywrightRunnerService runner)
         {
             _context = context;
-            _config = config;
-            _env = env;
-        }
-
-        private string ResolveNodeDirectory()
-        {
-            var configured = _config.GetValue<string>("Playwright:NodeDirectory");
-            if (!string.IsNullOrWhiteSpace(configured) && System.IO.File.Exists(Path.Combine(configured, "node.exe")))
-                return configured;
-
-            var candidates = new[]
-            {
-                @"C:\Program Files\nodejs",
-                @"C:\Program Files (x86)\nodejs",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "nodejs"),
-            };
-            foreach (var path in candidates)
-                if (System.IO.File.Exists(Path.Combine(path, "node.exe")))
-                    return path;
-
-            return "";
-        }
-
-        private static bool IsPageFunction(string content)
-        {
-            foreach (var line in content.Split('\n'))
-            {
-                var t = line.Trim();
-                if (string.IsNullOrEmpty(t) || t.StartsWith("//")) continue;
-                return t.StartsWith("async (page) =>") || t.StartsWith("async(page)=>");
-            }
-            return false;
-        }
-
-        // Build per-run Playwright config + custom reporter that emits [SCREENSHOT] lines.
-        // Returns the absolute path of the generated config file.
-        private async Task<string> BuildPlaywrightConfigAsync(string effectiveWorkingDir, string testFileName, int timeoutMs)
-        {
-            var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
-            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var shotDir = Path.Combine(webRoot, "outputs", "screenshots").Replace('\\', '/');
-            Directory.CreateDirectory(shotDir);
-
-            // Single shared reporter file — overwritten each run (contents are identical, so no race issue)
-            var reporterFile = Path.Combine(effectiveWorkingDir, "qa_reporter.js");
-            await System.IO.File.WriteAllTextAsync(reporterFile,
-                "const path = require('path');\n" +
-                "class QAReporter {\n" +
-                "  constructor(options) { this.webRoot = (options && options.webRoot) || ''; }\n" +
-                "  onTestEnd(test, result) {\n" +
-                "    for (const att of (result.attachments || [])) {\n" +
-                "      if (att.path && /\\.(png|jpe?g)$/i.test(att.path)) {\n" +
-                "        let url = att.path;\n" +
-                "        if (this.webRoot) {\n" +
-                "          const rel = path.relative(this.webRoot, att.path);\n" +
-                "          if (rel && !rel.startsWith('..')) url = '/' + rel.replace(/\\\\/g, '/');\n" +
-                "        }\n" +
-                "        process.stderr.write('[SCREENSHOT] ' + url + '\\n');\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n" +
-                "module.exports = QAReporter;\n");
-
-            var reporterJsPath = reporterFile.Replace('\\', '/').Replace("'", "\\'");
-            var webRootEsc = webRoot.Replace('\\', '/').Replace("'", "\\'");
-            var shotDirEsc = shotDir.Replace("'", "\\'");
-
-            var pwConfigFile = Path.Combine(effectiveWorkingDir, $"qa_config_{Guid.NewGuid():N}.js");
-            await System.IO.File.WriteAllTextAsync(pwConfigFile,
-                "module.exports = {\n" +
-                "  testDir: './__qa_temp',\n" +
-                $"  testMatch: ['{testFileName}'],\n" +
-                $"  reporter: [['list'], ['{reporterJsPath}', {{ webRoot: '{webRootEsc}' }}]],\n" +
-                "  workers: 1,\n" +
-                $"  timeout: {timeoutMs},\n" +
-                $"  outputDir: '{shotDirEsc}',\n" +
-                $"  use: {{ headless: {headless}, screenshot: 'only-on-failure' }}\n" +
-                "};\n");
-
-            return pwConfigFile;
-        }
-
-        private string WrapForPlaywright(string scriptContent)
-        {
-            var headless = _config.GetValue<bool>("Playwright:Headless") ? "true" : "false";
-            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var shotDir = Path.Combine(webRoot, "outputs", "screenshots")
-                .Replace('\\', '/').Replace("'", "\\'");
-            return
-                "if (process.stdout._handle?.setBlocking) process.stdout._handle.setBlocking(true);\n" +
-                "if (process.stderr._handle?.setBlocking) process.stderr._handle.setBlocking(true);\n" +
-                "const { chromium } = require('playwright');\n" +
-                "const __fs = require('fs'), __path = require('path');\n" +
-                "const __SHOT_DIR = '" + shotDir + "';\n" +
-                "async function __snap(browser, tag) {\n" +
-                "  if (!browser) return;\n" +
-                "  try {\n" +
-                "    __fs.mkdirSync(__SHOT_DIR, { recursive: true });\n" +
-                "    const pages = browser.contexts().flatMap(c => c.pages());\n" +
-                "    const ts = new Date().toISOString().replace(/[:.]/g, '-');\n" +
-                "    for (let i = 0; i < pages.length; i++) {\n" +
-                "      const fn = `${ts}_${tag}_p${i}.png`;\n" +
-                "      const fp = __path.join(__SHOT_DIR, fn);\n" +
-                "      try {\n" +
-                "        await pages[i].screenshot({ path: fp, fullPage: true });\n" +
-                "        process.stderr.write('[SCREENSHOT] /outputs/screenshots/' + fn + '\\n');\n" +
-                "      } catch (e) { process.stderr.write('[SCREENSHOT-FAIL] ' + e.message + '\\n'); }\n" +
-                "    }\n" +
-                "  } catch (e) { process.stderr.write('[SCREENSHOT-FAIL] ' + e.message + '\\n'); }\n" +
-                "}\n" +
-                "const __fn = (" + scriptContent + ");\n" +
-                "(async () => {\n" +
-                "  let browser;\n" +
-                "  try {\n" +
-                "    browser = await chromium.launch({ headless: " + headless + " });\n" +
-                "    const page = await browser.newPage();\n" +
-                "    const result = await __fn(page);\n" +
-                "    if (result && typeof result === 'object' && !Array.isArray(result)) {\n" +
-                "      if (Array.isArray(result.log)) result.log.forEach(l => console.log(l));\n" +
-                "      if (Array.isArray(result.results)) result.results.forEach(r => {\n" +
-                "        if (r && Array.isArray(r.log)) r.log.forEach(l => console.log(l));\n" +
-                "        if (r && r.success === false) process.stderr.write('[FAIL] ' + (r.message || '') + '\\n');\n" +
-                "      });\n" +
-                "    } else if (result != null && !Array.isArray(result)) {\n" +
-                "      console.log(JSON.stringify(result, null, 2));\n" +
-                "    }\n" +
-                "    const subFailed = result && Array.isArray(result.results) && result.results.some(r => r && r.success === false);\n" +
-                "    const failed = (result && result.success === false) || subFailed;\n" +
-                "    if (failed) await __snap(browser, 'fail');\n" +
-                "    process.exit(result && result.success === false ? 1 : 0);\n" +
-                "  } catch (err) {\n" +
-                "    process.stderr.write('\\n[ERROR] ' + err.message + '\\n');\n" +
-                "    await __snap(browser, 'error');\n" +
-                "    process.exit(1);\n" +
-                "  } finally {\n" +
-                "    if (browser) try { await browser.close(); } catch (_) {}\n" +
-                "  }\n" +
-                "})();\n";
+            _runner = runner;
         }
 
         public async Task<IActionResult> Index(string? tag)
@@ -361,120 +221,15 @@ namespace QAToolkit.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Run(int id, [FromForm] string? paramsJson = null)
         {
-            var script = await _context.PlaywrightScripts.FindAsync(id);
-            if (script == null) return NotFound();
-
-            var content = script.ScriptContent;
-
-            if (!string.IsNullOrWhiteSpace(paramsJson))
+            var result = await _runner.RunAsync(id, paramsJson);
+            return Json(new
             {
-                try { JsonDocument.Parse(paramsJson); }
-                catch (Exception ex) { return Json(new { success = false, exitCode = -1, output = $"Invalid JSON in parameters: {ex.Message}", durationMs = 0L, timedOut = false }); }
-                content = InjectParams(content, paramsJson);
-            }
-            else if (content.Contains("__PARAMS__"))
-            {
-                return Json(new { success = false, exitCode = -1, output = "This is a template script — fill in the Parameters panel before running.", durationMs = 0L, timedOut = false });
-            }
-
-            var workingDir = _config["Playwright:WorkingDirectory"] ?? @"D:\Projects";
-            var timeoutSec = _config.GetValue<int?>("Playwright:TimeoutSeconds") ?? 300;
-            var isPlaywrightRunner = script.RunMode == "playwright";
-
-            // Wrap page-function scripts for node runner only
-            if (!isPlaywrightRunner && IsPageFunction(content))
-                content = WrapForPlaywright(content);
-
-            var ext = script.FileExtension ?? ".js";
-            var effectiveWorkingDir = Directory.Exists(workingDir) ? workingDir : Path.GetTempPath();
-            string tempFile;
-            string? pwConfigFile = null;
-
-            if (isPlaywrightRunner)
-            {
-                // Test file must be inside the working directory so playwright can discover it
-                var testTempDir = Path.Combine(effectiveWorkingDir, "__qa_temp");
-                Directory.CreateDirectory(testTempDir);
-                tempFile = Path.Combine(testTempDir, $"qa_{Guid.NewGuid():N}{ext}");
-            }
-            else
-            {
-                tempFile = Path.Combine(Path.GetTempPath(), $"qa_script_{Guid.NewGuid():N}{ext}");
-            }
-
-            try
-            {
-                await System.IO.File.WriteAllTextAsync(tempFile, content, System.Text.Encoding.UTF8);
-
-                string args;
-                if (isPlaywrightRunner)
-                {
-                    var timeoutMs = timeoutSec * 1000;
-                    var testFileName = Path.GetFileName(tempFile);
-                    pwConfigFile = await BuildPlaywrightConfigAsync(effectiveWorkingDir, testFileName, timeoutMs);
-                    args = $"/c npx playwright test --config \"{pwConfigFile}\"";
-                }
-                else
-                {
-                    args = $"/c node \"{tempFile}\"";
-                }
-
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "cmd.exe",
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = effectiveWorkingDir
-                };
-                // Prepend node directory to PATH so IIS app pool can find node/npx
-                var nodeDir = ResolveNodeDirectory();
-                if (!string.IsNullOrWhiteSpace(nodeDir))
-                {
-                    var currentPath = psi.Environment.ContainsKey("PATH") ? psi.Environment["PATH"] : "";
-                    psi.Environment["PATH"] = nodeDir + ";" + currentPath;
-                }
-                psi.Environment["NODE_PATH"] = Path.Combine(workingDir, "node_modules");
-                // Use shared browser path so Chromium is found regardless of which Windows user IIS runs as
-                var browsersPath = _config.GetValue<string>("Playwright:BrowsersPath") ?? @"C:\playwright-browsers";
-                psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = browsersPath;
-
-                var sw = Stopwatch.StartNew();
-                using var process = Process.Start(psi)!;
-
-                var stdoutTask = process.StandardOutput.ReadToEndAsync();
-                var stderrTask = process.StandardError.ReadToEndAsync();
-
-                bool completed = true;
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec));
-                try { await process.WaitForExitAsync(cts.Token); }
-                catch (OperationCanceledException) { completed = false; try { process.Kill(true); } catch { } }
-
-                sw.Stop();
-                var stdout = await stdoutTask;
-                var stderr = await stderrTask;
-                var output = stdout + (stderr.Length > 0 ? (stdout.Length > 0 ? "\n" : "") + stderr : "");
-
-                return Json(new
-                {
-                    success = completed && process.ExitCode == 0,
-                    exitCode = completed ? process.ExitCode : -1,
-                    output,
-                    durationMs = sw.ElapsedMilliseconds,
-                    timedOut = !completed
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, exitCode = -1, output = $"Failed to start process: {ex.Message}", durationMs = 0L, timedOut = false });
-            }
-            finally
-            {
-                try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
-                try { if (pwConfigFile != null && System.IO.File.Exists(pwConfigFile)) System.IO.File.Delete(pwConfigFile); } catch { }
-            }
+                success = result.Success,
+                exitCode = result.ExitCode,
+                output = result.Output,
+                durationMs = result.DurationMs,
+                timedOut = result.TimedOut
+            });
         }
 
         [HttpPost]
@@ -513,7 +268,7 @@ namespace QAToolkit.Controllers
                     await Send("{\"exitCode\":-1,\"durationMs\":0,\"timedOut\":false}", "done");
                     return;
                 }
-                content = InjectParams(content, paramsJson);
+                content = PlaywrightRunnerService.InjectParams(content, paramsJson);
             }
             else if (content.Contains("__PARAMS__"))
             {
@@ -522,12 +277,13 @@ namespace QAToolkit.Controllers
                 return;
             }
 
-            var workingDir = _config["Playwright:WorkingDirectory"] ?? @"D:\Projects";
-            var timeoutSec = _config.GetValue<int?>("Playwright:TimeoutSeconds") ?? 300;
+            var workingDir = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Playwright:WorkingDirectory"] ?? @"D:\Projects";
+            var config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            var timeoutSec = config.GetValue<int?>("Playwright:TimeoutSeconds") ?? 300;
             var isPlaywrightRunner = script.RunMode == "playwright";
 
-            if (!isPlaywrightRunner && IsPageFunction(content))
-                content = WrapForPlaywright(content);
+            if (!isPlaywrightRunner && PlaywrightRunnerService.IsPageFunction(content))
+                content = _runner.WrapForPlaywright(content);
 
             var ext = script.FileExtension ?? ".js";
             var effectiveWorkingDir = Directory.Exists(workingDir) ? workingDir : Path.GetTempPath();
@@ -554,7 +310,7 @@ namespace QAToolkit.Controllers
                 {
                     var timeoutMs = timeoutSec * 1000;
                     var testFileName = Path.GetFileName(tempFile);
-                    pwConfigFile = await BuildPlaywrightConfigAsync(effectiveWorkingDir, testFileName, timeoutMs);
+                    pwConfigFile = await _runner.BuildPlaywrightConfigAsync(effectiveWorkingDir, testFileName, timeoutMs);
                     args = $"/c npx playwright test --config \"{pwConfigFile}\"";
                 }
                 else
@@ -562,26 +318,7 @@ namespace QAToolkit.Controllers
                     args = $"/c node \"{tempFile}\"";
                 }
 
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "cmd.exe",
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    WorkingDirectory = effectiveWorkingDir
-                };
-                var nodeDir = ResolveNodeDirectory();
-                if (!string.IsNullOrWhiteSpace(nodeDir))
-                {
-                    var currentPath = psi.Environment.ContainsKey("PATH") ? psi.Environment["PATH"] : "";
-                    psi.Environment["PATH"] = nodeDir + ";" + currentPath;
-                }
-                psi.Environment["NODE_PATH"] = Path.Combine(workingDir, "node_modules");
-                var browsersPath = _config.GetValue<string>("Playwright:BrowsersPath") ?? @"C:\playwright-browsers";
-                psi.Environment["PLAYWRIGHT_BROWSERS_PATH"] = browsersPath;
-
+                var psi = _runner.BuildProcessStartInfo(args, effectiveWorkingDir);
                 var runId = Guid.NewGuid().ToString("N");
                 var sw = Stopwatch.StartNew();
                 using var process = Process.Start(psi)!;
@@ -650,75 +387,6 @@ namespace QAToolkit.Controllers
                 return Json(new { success = true });
             }
             return Json(new { success = false });
-        }
-
-        // ── Param injection helpers ───────────────────────────────────────────
-
-        private static string InjectParams(string content, string paramsJson)
-        {
-            if (content.Contains("__PARAMS__"))
-                return content.Replace("__PARAMS__", paramsJson);
-
-            Dictionary<string, JsonElement>? p;
-            try { p = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(paramsJson); }
-            catch { return content; }
-            if (p == null || p.Count == 0) return content;
-
-            if (Regex.IsMatch(content, @"const\s+CONFIG\s*=\s*\{"))
-                return Regex.Replace(content, @"const\s+CONFIG\s*=\s*\{[\s\S]*?\n[ \t]*\};", $"const CONFIG = {paramsJson};");
-
-            if (content.Contains("process.argv"))
-                return InjectArgv(content, p);
-
-            return InjectConstants(content, p);
-        }
-
-        // Build process.argv shim from options comment: //   -s <servers>  desc  (default: 5)
-        private static string InjectArgv(string content, Dictionary<string, JsonElement> p)
-        {
-            var argv = new List<string> { "node", "script.js" };
-
-            // Positional from: //   node script.js <mobile> [options]
-            var pos = Regex.Match(content, @"//\s+node\s+\S+\.js\s+<(\w+)>");
-            if (pos.Success)
-            {
-                var key = pos.Groups[1].Value;
-                if (p.TryGetValue(key, out var v) && v.ValueKind != JsonValueKind.Null)
-                {
-                    var s = v.ValueKind == JsonValueKind.String ? v.GetString()! : v.ToString();
-                    if (!string.IsNullOrEmpty(s)) argv.Add(s);
-                }
-            }
-
-            // Flags from: //   -s <servers>  or  //   --session <year>
-            foreach (Match m in Regex.Matches(content, @"//\s+(--?\w+)\s+<(\w+)>", RegexOptions.Multiline))
-            {
-                var flag = m.Groups[1].Value;
-                var varName = m.Groups[2].Value;
-                if (p.TryGetValue(varName, out var v) && v.ValueKind != JsonValueKind.Null)
-                {
-                    var s = v.ValueKind == JsonValueKind.String ? v.GetString()! : v.ToString();
-                    if (!string.IsNullOrEmpty(s)) { argv.Add(flag); argv.Add(s); }
-                }
-            }
-
-            return $"process.argv = {JsonSerializer.Serialize(argv)};\n" + content;
-        }
-
-        // Replace top-level const declarations: const KEY = 'old' → const KEY = 'new'
-        private static string InjectConstants(string content, Dictionary<string, JsonElement> p)
-        {
-            foreach (var (key, val) in p)
-            {
-                if (val.ValueKind == JsonValueKind.Null) continue;
-                var jsLit = val.ValueKind == JsonValueKind.String
-                    ? $"'{val.GetString()?.Replace("\\", "\\\\").Replace("'", "\\'")}'"
-                    : val.ToString();
-                content = Regex.Replace(content,
-                    $@"(const\s+{Regex.Escape(key)}\s*=\s*)(?:'[^']*'|""[^""]*""|`[^`]*`|\[[^\]]*\]|-?\d+(?:\.\d+)?)",
-                    m => m.Groups[1].Value + jsLit);
-            }
-            return content;
         }
     }
 }

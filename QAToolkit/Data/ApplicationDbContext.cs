@@ -18,6 +18,8 @@ namespace QAToolkit.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Workflow> Workflows { get; set; }
         public DbSet<PlaywrightScript> PlaywrightScripts { get; set; }
+        public DbSet<ScheduledRun> ScheduledRuns { get; set; }
+        public DbSet<ScheduledRunLog> ScheduledRunLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,6 +55,15 @@ namespace QAToolkit.Data
 
             modelBuilder.Entity<PlaywrightScript>()
                 .HasIndex(s => s.Tags);
+
+            modelBuilder.Entity<ScheduledRun>()
+                .HasIndex(s => s.ScriptId);
+
+            modelBuilder.Entity<ScheduledRun>()
+                .HasIndex(s => s.NextRunAt);
+
+            modelBuilder.Entity<ScheduledRunLog>()
+                .HasIndex(l => l.ScheduledRunId);
         }
     }
 }
