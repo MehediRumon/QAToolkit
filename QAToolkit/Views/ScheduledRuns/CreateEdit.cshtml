@@ -302,7 +302,7 @@ function buildForm(items) {
         const { key, comment, flag, defaultVal, wasString } = item;
         const def = detectFieldType(key, comment, flag, defaultVal, wasString);
         const label = humanize(key);
-        const hint = comment ? `<div class="param-hint">${esc(comment)}</div>` : '';
+        const hint = (comment && def.type !== 'select') ? `<div class="param-hint">${esc(comment)}</div>` : '';
         const dv = defaultVal != null ? esc(String(defaultVal)) : '';
         let inp = '';
         if (def.type === 'select') {

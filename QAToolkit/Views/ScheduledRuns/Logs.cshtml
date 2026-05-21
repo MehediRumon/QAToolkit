@@ -39,7 +39,7 @@
     <div class="page-header-actions">
         <form asp-action="RunNow" asp-route-id="@schedule?.Id" method="post" class="d-inline">
             @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-secondary btn-sm" title="Queue this schedule to run within 30 seconds">
+            <button type="submit" class="btn btn-secondary btn-sm">
                 <i class="bi bi-lightning-fill me-1"></i> Run Now
             </button>
         </form>
@@ -133,7 +133,7 @@ else
                                 @if (!string.IsNullOrEmpty(log.Output))
                                 {
                                     <button class="btn btn-ghost btn-sm py-0" style="font-size:0.78rem"
-                                            onclick="showOutput(@log.Id, @(log.Status == "ok" ? "true" : "false"))"
+                                            onclick="showOutput(@log.Id)"
                                             title="View output">
                                         <i class="bi bi-terminal me-1"></i>View
                                     </button>
@@ -155,57 +155,202 @@ else
 <!-- Output modal -->
 <div class="modal fade" id="outputModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header py-2 px-3">
-                <span class="modal-title fw-medium" style="font-size:0.9rem">
-                    <i class="bi bi-terminal me-2"></i>Run Output
-                </span>
-                <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+        <div class="modal-content" style="background:#0d1117;border-color:#30363d;">
+            <div class="modal-header py-2 px-3" style="background:#161b22;border-bottom:1px solid #30363d;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="log-term-dots">
+                        <span style="background:#ff5f56"></span>
+                        <span style="background:#ffbd2e"></span>
+                        <span style="background:#27c93f"></span>
+                    </div>
+                    <span class="small fw-medium" style="color:#8b949e">Terminal Output</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-0">
-                <pre id="outputModalBody" class="output-pre m-0"></pre>
+                <div class="log-term-body" id="outputModalBody"></div>
             </div>
-            <div class="modal-footer py-2 px-3 justify-content-start">
-                <button class="btn btn-secondary btn-sm" onclick="copyOutput()">
+            <div class="modal-footer py-2 px-3 justify-content-start" style="background:#161b22;border-top:1px solid #30363d;">
+                <button class="btn btn-sm btn-outline-secondary" id="copyOutputBtn" onclick="copyRawOutput()">
                     <i class="bi bi-clipboard me-1"></i> Copy
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .output-pre {
-        font-family: 'Cascadia Code', 'Consolas', monospace;
-        font-size: 0.75rem;
-        white-space: pre-wrap;
-        word-break: break-all;
-        background: var(--gray-950, #0d1117);
-        color: var(--gray-100, #f0f6fc);
-        padding: 1rem;
-        min-height: 120px;
-        max-height: 65vh;
-        overflow-y: auto;
-    }
+    .log-term-dots { display:flex; gap:6px; align-items:center; }
+    .log-term-dots span { width:12px; height:12px; border-radius:50%; display:inline-block; }
+    .log-term-body { padding:16px 20px; font-family:'Courier New',monospace; font-size:13px; line-height:1.7; min-height:120px; max-height:65vh; overflow-y:auto; background:#0d1117; }
+    .tl  { display:flex; gap:8px; min-height:1.7em; }
+    .tl-icon { flex-shrink:0; width:20px; text-align:center; }
+    .tl-text { flex:1; min-width:0; word-break:break-word; white-space:pre-wrap; }
+    .tl-dim     { color:#6e7681; }
+    .tl-info    { color:#79c0ff; }
+    .tl-normal  { color:#c9d1d9; }
+    .tl-server  { color:#d2a8ff; }
+    .tl-success { color:#56d364; }
+    .tl-error   { color:#f85149; }
+    .tl-warn    { color:#e3b341; }
+    .tl-shot    { color:#d2a8ff; }
+    .tl-shot a  { color:inherit; text-decoration:underline; }
+    .tl-shot-img { display:block; margin-top:6px; max-width:480px; max-height:320px; border:1px solid #30363d; border-radius:4px; }
+    .tl-bold    { font-weight:600; }
+    @@keyframes tl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .tl-blink   { animation:tl-blink 1s step-end infinite; }
 </style>
 
 <script>
-function showOutput(logId, isOk) {
+let _rawOutput = '';
+
+function showOutput(logId) {
     const dataEl = document.getElementById('output-data-' + logId);
     if (!dataEl) return;
-    const text = JSON.parse(dataEl.textContent);
-    document.getElementById('outputModalBody').textContent = text;
-    const modal = new bootstrap.Modal(document.getElementById('outputModal'));
-    modal.show();
+    _rawOutput = JSON.parse(dataEl.textContent);
+
+    const container = document.getElementById('outputModalBody');
+    container.innerHTML = '';
+    for (const line of _rawOutput.split('\n'))
+        appendTermLine(container, line);
+
+    new bootstrap.Modal(document.getElementById('outputModal')).show();
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
 }
-function copyOutput() {
-    const text = document.getElementById('outputModalBody').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = event.target.closest('button');
+
+function copyRawOutput() {
+    navigator.clipboard.writeText(_rawOutput).then(() => {
+        const btn = document.getElementById('copyOutputBtn');
         const orig = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check me-1"></i> Copied';
-        setTimeout(() => btn.innerHTML = orig, 1500);
+        setTimeout(() => { btn.innerHTML = orig; }, 1500);
     });
+}
+
+function stripAnsi(s) {
+    return s.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '');
+}
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function classifyLine(t) {
+    if (!t) return null;
+    t = t.replace(/[─-▟]+/g, '').replace(/(?:Γ[öÇ][-ÿ]?)+/g, '').trim();
+    if (!t || t.length < 2) return null;
+
+    if (/^attachment #\d+:/i.test(t)) return null;
+    if (/^\.{0,2}[\/\\]?.*\\outputs\\screenshots\\.*\.(png|jpe?g)$/i.test(t)) return null;
+    if (/^Error Context:/i.test(t)) return null;
+    if (/^Slow test (file|tests):/i.test(t)) return null;
+    if (/^npm (notice|warn)/i.test(t)) return null;
+    if (/^\d+\)\s*$/.test(t)) return null;
+    if (/^[-=]{3,}$/.test(t)) return null;
+
+    const shotM = t.match(/^\[SCREENSHOT\]\s+(\S+)/);
+    if (shotM) return { icon: '📸', cls: 'tl-shot', label: shotM[1], shotUrl: shotM[1] };
+
+    if (/^Error:\s/.test(t))                  return { icon: '❌', cls: 'tl-error tl-bold', label: t };
+    if (/^(Locator|Expected|Received|Timeout):\s/.test(t)) return { icon: '·', cls: 'tl-warn', label: t };
+    if (/^Call log:/i.test(t))                return { icon: '·', cls: 'tl-dim',  label: t };
+    if (/^\s*-\s+(waiting for|locator resolved|Expect)/i.test(t)) return { icon: '·', cls: 'tl-dim', label: t.trim() };
+    if (/^at\s+.+:\d+:\d+\)?$/.test(t))       return { icon: '·', cls: 'tl-dim',  label: t };
+    if (/^>\s*\d+\s*\|/.test(t))              return { icon: '·', cls: 'tl-error', label: t };
+    if (/^\s*\d+\s*\|/.test(t))               return { icon: '·', cls: 'tl-dim',  label: t };
+    if (/^\s*\|/.test(t))                     return { icon: '·', cls: 'tl-dim',  label: t };
+    if (/^\d+\s+(failed|passed)\b/i.test(t))  return { icon: t.includes('failed') ? '❌' : '✅', cls: (t.includes('failed') ? 'tl-error' : 'tl-success') + ' tl-bold', label: t };
+
+    if (t.startsWith('[state]')) {
+        const msg = t.slice(7).trim();
+        return /fail|error/i.test(msg)
+            ? { icon: '⚠',  cls: 'tl-warn', label: msg }
+            : { icon: '💾', cls: 'tl-dim',  label: msg };
+    }
+    if (t.startsWith('Prefix:'))  return { icon: '🏷', cls: 'tl-info', label: t };
+    if (t.startsWith('Servers:')) return { icon: '🖥', cls: 'tl-info', label: t };
+    if (t.startsWith('Server :') || t.startsWith('Server:'))  return { icon: '🖥', cls: 'tl-info', label: t };
+    if (t.startsWith('Course :') || t.startsWith('Course:'))  return { icon: '📚', cls: 'tl-info', label: t };
+    if (t.startsWith('Portal :') || t.startsWith('Portal:'))  return { icon: '🌐', cls: 'tl-info', label: t };
+    if (t.startsWith('Mode   :') || /^Mode\s*:/i.test(t))    return { icon: '⚙',  cls: 'tl-info', label: t };
+
+    if (t.startsWith('[parallel]'))   return { icon: '⚡', cls: 'tl-dim', label: t.replace(/^\[parallel\]\s*/,'') };
+    if (t.startsWith('[sequential]')) return { icon: '▶',  cls: 'tl-dim', label: t.replace(/^\[sequential\]\s*/,'') };
+
+    if (/^All servers done/i.test(t)) return { icon: '✅', cls: 'tl-success tl-bold', label: 'All servers done!' };
+    if (/^\[?(ERROR|FAIL)\]?/.test(t)) return { icon: '❌', cls: 'tl-error', label: t.replace(/^\[(ERROR|FAIL)\]\s*/,'') };
+
+    const genM = t.match(/^\[(\d+[a-z]?)\]\s+([\s\S]*)/);
+    if (genM) {
+        const [, step, content] = genM;
+        const ok  = /saved:|"success"\s*:\s*true/i.test(content);
+        const bad = /"success"\s*:\s*false|failed|Failed:/i.test(content);
+        if (ok && !bad) return { icon: '✅', cls: 'tl-success', label: `[${step}] ${content}` };
+        if (bad)        return { icon: '❌', cls: 'tl-error',   label: `[${step}] ${content}` };
+        if (/generating|DOCX/i.test(content)) return { icon: '📄', cls: 'tl-normal', label: `[${step}] ${content}` };
+        return { icon: '·', cls: 'tl-dim', label: `[${step}] ${content}` };
+    }
+
+    const srvM = t.match(/^\[(\w+):(\d+[a-z]?)\]\s+([\s\S]*)/);
+    if (srvM) {
+        const [, srv, stepStr, content] = srvM;
+        const n = parseInt(stepStr, 10);
+        const icons = ['','','🔑','📋','🔍','📥','⚙','🔓','📅'];
+        const icon  = icons[n] || '·';
+        const ok  = /ok=true|IsSuccess.*?true|"success"\s*:\s*true|Logged in|done\.|granted/i.test(content);
+        const bad = /ok=false|IsSuccess.*?false|"success"\s*:\s*false|Crash:|Failed/i.test(content);
+        return { icon, cls: bad ? 'tl-error' : ok ? 'tl-success' : 'tl-server', label: `[S${srv}:${n}] ${content}` };
+    }
+
+    if (/^\s*(✓|×|✗|Running \d|\d+ (passed|failed))/i.test(t))
+        return { icon: '🎭', cls: 'tl-dim', label: t.trimStart() };
+
+    const tagM = t.match(/^\[([A-Z0-9_]+)\]\s+([\s\S]*)/i);
+    const msg = tagM ? tagM[2] : t;
+
+    if (/^=*\s*ALL DONE\s*=*$/i.test(msg))
+        return { icon: '🏁', cls: 'tl-success tl-bold', label: msg };
+
+    // ✅ DONE summary block (Server / Course / Portal lines at end)
+    if (/^[✅🏁]?\s*DONE$/i.test(msg) || msg.trim() === '✅ DONE')
+        return { icon: '🏁', cls: 'tl-success tl-bold', label: 'DONE' };
+
+    const secM = msg.match(/^===+\s*(.+?)\s*===+$/);
+    if (secM) return { icon: '📌', cls: 'tl-info tl-bold', label: secM[1] };
+
+    const doneM = msg.match(/saved=(\d+)\/\d+.*failed=(\d+)/i) || msg.match(/(\d+) saved[^,]*,\s*(\d+) failed/i);
+    if (doneM) {
+        const failed = parseInt(doneM[2], 10);
+        return failed > 0
+            ? { icon: '⚠',  cls: 'tl-warn tl-bold',   label: msg }
+            : { icon: '✅', cls: 'tl-success tl-bold', label: msg };
+    }
+
+    if (/^WARN[:\s]/i.test(msg)) return { icon: '⚠', cls: 'tl-warn', label: msg };
+    if (/\b(error|fail(ed)?|crash|exception|timeout)\b/i.test(msg)) return { icon: '❌', cls: 'tl-error', label: msg };
+    if (/\b(saved|success|passed|ok|done|complete[d]?|granted|logged in)\b/i.test(msg)) return { icon: '✅', cls: 'tl-success', label: msg };
+    if (/\b(cascade|branch|exam|program|course|session|org)\b.*:/i.test(msg)) return { icon: '⚙', cls: 'tl-info', label: msg };
+    if (/\b(look(ing)? up|discover|resolv|found|fetch)/i.test(msg)) return { icon: '🔍', cls: 'tl-dim', label: msg };
+    if (/\b\d+\s*\/\s*\d+\b/.test(msg) || /\bstep \d+/i.test(msg)) return { icon: '·', cls: 'tl-dim', label: msg };
+    if (/^npm (notice|warn|ERR)/i.test(msg)) return { icon: ' ', cls: 'tl-dim', label: msg };
+
+    return { icon: tagM ? '·' : ' ', cls: tagM ? 'tl-dim' : 'tl-normal', label: msg };
+}
+
+function appendTermLine(container, rawText) {
+    const t = stripAnsi(rawText || '').trim();
+    if (!t) return;
+    const cl = classifyLine(t);
+    if (!cl) return;
+    const div = document.createElement('div');
+    div.className = 'tl ' + cl.cls;
+    if (cl.shotUrl) {
+        const u = esc(cl.shotUrl);
+        div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text"><a href="${u}" target="_blank">${u}</a><br><a href="${u}" target="_blank"><img src="${u}" class="tl-shot-img" loading="lazy"></a></span>`;
+    } else {
+        div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text">${esc(cl.label)}</span>`;
+    }
+    container.appendChild(div);
 }
 </script>

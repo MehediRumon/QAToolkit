@@ -11,8 +11,11 @@
         <p>Import and run Playwright automation scripts.</p>
     </div>
     <div class="page-header-actions">
+        <a asp-controller="ScriptFiles" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-folder2 me-1"></i> Script Files
+        </a>
         <a asp-action="ScriptGuide" class="btn btn-secondary">
-            <i class="bi bi-book me-1"></i> Script Guide
+            <i class="bi bi-book me-1"></i> Guide
         </a>
         <a asp-action="Create" class="btn btn-primary">
             <i class="bi bi-upload me-1"></i> Import Script
@@ -101,13 +104,9 @@ else
                             </td>
                             <td>
                                 @if (script.IsPublic)
-                                {
-                                    <span class="status-badge status-success"><span class="status-dot"></span>Public</span>
-                                }
+                                { <span class="badge-status success">Public</span> }
                                 else
-                                {
-                                    <span class="status-badge status-muted"><span class="status-dot"></span>Private</span>
-                                }
+                                { <span class="badge-status muted">Private</span> }
                             </td>
                             <td class="text-muted small">@script.CreatedBy</td>
                             <td class="text-muted small text-nowrap">@script.CreatedAt.ToString("MMM dd, yyyy")</td>

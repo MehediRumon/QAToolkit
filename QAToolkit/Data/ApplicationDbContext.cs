@@ -20,6 +20,7 @@ namespace QAToolkit.Data
         public DbSet<PlaywrightScript> PlaywrightScripts { get; set; }
         public DbSet<ScheduledRun> ScheduledRuns { get; set; }
         public DbSet<ScheduledRunLog> ScheduledRunLogs { get; set; }
+        public DbSet<ScriptFile> ScriptFiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

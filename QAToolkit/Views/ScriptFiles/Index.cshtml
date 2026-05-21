@@ -1,0 +1,197 @@
+@model IEnumerable<QAToolkit.Models.ScriptFile>
+@{
+    ViewData["Title"] = "Script Files";
+    var uploadDir = ViewBag.UploadDir as string ?? "";
+    var fileList = Model.ToList();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Script Files</h1>
+        <p class="text-muted">Upload data files (.xls, .xlsx, .csv, etc.) that your scripts can reference by path.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Upload card -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-2 px-3">
+                <span class="fw-medium small"><i class="bi bi-cloud-upload me-2"></i>Upload File</span>
+            </div>
+            <div class="card-body">
+                <form asp-action="Upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                    @Html.AntiForgeryToken()
+                    <div class="upload-drop-zone" id="dropZone">
+                        <i class="bi bi-file-earmark-arrow-up" style="font-size:2rem;color:var(--gray-300)"></i>
+                        <p class="mt-2 mb-1 fw-medium small">Drag & drop or click to browse</p>
+                        <p class="text-muted" style="font-size:0.75rem">xls · xlsx · csv · json · txt · pdf · docx · zip · xml</p>
+                        <input type="file" id="fileInput" name="file" class="d-none"
+                               accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv">
+                    </div>
+                    <div id="filePreview" class="d-none mt-2 p-2 rounded" style="background:var(--surface-secondary);font-size:0.82rem;">
+                        <i class="bi bi-file-earmark me-1"></i>
+                        <span id="filePreviewName"></span>
+                        <span id="filePreviewSize" class="text-muted ms-2"></span>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label small fw-medium">Description <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="text" name="description" class="form-control form-control-sm"
+                               placeholder="What is this file for?" maxlength="200">
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary w-100" id="uploadBtn" disabled>
+                            <i class="bi bi-cloud-upload me-1"></i> Upload
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-3 pt-3 border-top">
+                    <p class="small text-muted mb-1"><i class="bi bi-info-circle me-1"></i>Files are stored at:</p>
+                    <code class="small" style="word-break:break-all">@uploadDir</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File list -->
+    <div class="col-lg-8">
+        @if (!fileList.Any())
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-folder2-open" style="font-size:2.5rem;color:var(--gray-300)"></i>
+                    <p class="mt-3 text-muted">No files uploaded yet.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Size</th>
+                                <th>Uploaded by</th>
+                                <th>Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in fileList)
+                            {
+                                var ext = System.IO.Path.GetExtension(f.FileName).TrimStart('.').ToLower();
+                                var iconCls = (ext == "xls" || ext == "xlsx") ? "bi-file-earmark-excel text-success"
+                                            : (ext == "csv" || ext == "tsv") ? "bi-file-earmark-spreadsheet text-primary"
+                                            : ext == "json" ? "bi-filetype-json text-warning"
+                                            : ext == "pdf" ? "bi-file-earmark-pdf text-danger"
+                                            : (ext == "docx" || ext == "doc") ? "bi-file-earmark-word text-primary"
+                                            : ext == "zip" ? "bi-file-zip text-secondary"
+                                            : "bi-file-earmark text-muted";
+                                var sizeText = f.FileSizeBytes >= 1048576 ? $"{f.FileSizeBytes / 1048576.0:F1} MB"
+                                            : f.FileSizeBytes >= 1024 ? $"{f.FileSizeBytes / 1024.0:F1} KB"
+                                            : $"{f.FileSizeBytes} B";
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi @iconCls mt-1 flex-shrink-0" style="font-size:1.1rem"></i>
+                                            <div>
+                                                <div class="fw-medium">@f.FileName</div>
+                                                @if (!string.IsNullOrEmpty(f.Description))
+                                                {
+                                                    <div class="text-muted small">@f.Description</div>
+                                                }
+                                                <div class="mt-1">
+                                                    <button class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.72rem"
+                                                            onclick="copyPath('@f.StoredPath.Replace("\\", "\\\\")', this)"
+                                                            title="Copy full path for use in scripts">
+                                                        <i class="bi bi-clipboard me-1"></i>Copy path
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-muted small text-nowrap align-middle">@sizeText</td>
+                                    <td class="text-muted small align-middle">@f.UploadedBy</td>
+                                    <td class="text-muted small text-nowrap align-middle">@f.UploadedAt.ToString("dd MMM yyyy")</td>
+                                    <td class="text-end text-nowrap align-middle">
+                                        <a asp-action="Download" asp-route-id="@f.Id" class="btn btn-ghost btn-sm" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@f.Id" method="post" class="d-inline"
+                                              data-confirm="Delete &quot;@f.FileName&quot;? The file will be permanently removed."
+                                              data-confirm-title="Delete file"
+                                              data-confirm-btn="Delete">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .upload-drop-zone {
+        border: 2px dashed var(--border-default);
+        border-radius: var(--radius-md, 8px);
+        padding: 2rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+    .upload-drop-zone:hover, .upload-drop-zone.drag-over {
+        border-color: var(--primary-500, #6366f1);
+        background: var(--primary-50, #eef2ff);
+    }
+</style>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const filePreview = document.getElementById('filePreview');
+const filePreviewName = document.getElementById('filePreviewName');
+const filePreviewSize = document.getElementById('filePreviewSize');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        updatePreview(e.dataTransfer.files[0]);
+    }
+});
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) updatePreview(fileInput.files[0]);
+});
+
+function updatePreview(file) {
+    filePreviewName.textContent = file.name;
+    const sz = file.size >= 1048576 ? `${(file.size/1048576).toFixed(1)} MB`
+             : file.size >= 1024 ? `${(file.size/1024).toFixed(1)} KB`
+             : `${file.size} B`;
+    filePreviewSize.textContent = sz;
+    filePreview.classList.remove('d-none');
+    uploadBtn.disabled = false;
+}
+
+function copyPath(path, btn) {
+    navigator.clipboard.writeText(path).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+        setTimeout(() => btn.innerHTML = orig, 1500);
+    });
+}
+</script>

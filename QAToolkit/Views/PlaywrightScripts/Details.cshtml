@@ -37,7 +37,7 @@
             }
             @if (Model.IsPublic)
             {
-                <span class="status-badge status-success"><span class="status-dot"></span>Public</span>
+                <span class="badge-status success">Public</span>
             }
         </div>
     </div>
@@ -575,7 +575,7 @@ function buildForm(items) {
         const { key, comment, flag, defaultVal, wasString } = item;
         const def = detectFieldType(key, comment, flag, defaultVal, wasString);
         const label = humanize(key);
-        const hintText = comment ? `<div class="param-hint">${esc(comment)}</div>` : '';
+        const hintText = (comment && def.type !== 'select') ? `<div class="param-hint">${esc(comment)}</div>` : '';
         const dv = defaultVal != null ? esc(String(defaultVal)) : '';
         let inputHtml = '';
 

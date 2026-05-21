@@ -107,6 +107,26 @@ using (var scope = app.Services.CreateScope())
         )");
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRunLogs_ScheduledRunId ON ScheduledRunLogs (ScheduledRunId)");
 
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ScriptFiles (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            FileName TEXT NOT NULL,
+            OriginalName TEXT NOT NULL,
+            Description TEXT,
+            FileSizeBytes INTEGER NOT NULL DEFAULT 0,
+            ContentType TEXT,
+            StoredPath TEXT NOT NULL,
+            UploadedBy TEXT NOT NULL DEFAULT '',
+            UploadedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ScriptFiles_FileName ON ScriptFiles (FileName)");
+
+    // Ensure upload directory exists
+    var uploadDir = Path.Combine(
+        app.Configuration["Playwright:WorkingDirectory"] ?? @"C:\qa-scripts",
+        "script-uploads");
+    Directory.CreateDirectory(uploadDir);
+
     // Seed NextRunAt for any existing schedules that don't have it set
     var pendingSchedules = db.ScheduledRuns
         .Where(s => s.IsEnabled && s.NextRunAt == null && s.ScheduleType != "once")
