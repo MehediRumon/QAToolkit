@@ -15,7 +15,8 @@ namespace QAToolkit.Controllers
 
         private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
-            ".xls", ".xlsx", ".csv", ".json", ".txt", ".pdf", ".docx", ".doc", ".zip", ".xml", ".tsv"
+            ".xls", ".xlsx", ".csv", ".json", ".txt", ".pdf", ".docx", ".doc", ".zip", ".xml", ".tsv",
+            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"
         };
 
         public ScriptFilesController(ApplicationDbContext context, IConfiguration config)

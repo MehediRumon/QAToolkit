@@ -605,7 +605,7 @@ function buildForm(items) {
                             <input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="C:/path/to/file" value="${dv}">
                             <label class="btn btn-secondary btn-sm flex-shrink-0 mb-0" title="Upload file to server">
                                 <i class="bi bi-upload"></i>
-                                <input type="file" class="d-none" accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv" onchange="uploadParamFile(this, '${esc(key)}')">
+                                <input type="file" class="d-none" accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv,.jpg,.jpeg,.png,.gif,.bmp,.webp" onchange="uploadParamFile(this, '${esc(key)}')">
                             </label>
                          </div>
                          <div id="upstatus-${esc(key)}" class="param-hint mt-1" style="display:none"></div>`;
