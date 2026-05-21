@@ -2,6 +2,8 @@
 @{
     var schedule = ViewBag.Schedule as QAToolkit.Models.ScheduledRun;
     var scriptName = ViewBag.ScriptName as string ?? "";
+    var logList = Model.ToList();
+    var logCount = logList.Count;
     ViewData["Title"] = $"Logs — {schedule?.Name}";
 }
 
@@ -13,34 +15,64 @@
                 <li class="breadcrumb-item active">@schedule?.Name</li>
             </ol>
         </nav>
-        <h1>Run Logs</h1>
-        <p class="text-muted">
+        <h1>
+            Run Logs
+            @if (logCount > 0)
+            {
+                <span class="badge bg-secondary ms-2" style="font-size:0.75rem;vertical-align:middle">@logCount</span>
+            }
+        </h1>
+        <p class="text-muted mb-0">
             Script: <a asp-controller="PlaywrightScripts" asp-action="Details" asp-route-id="@schedule?.ScriptId" class="text-decoration-none">@scriptName</a>
             @if (schedule?.ScheduleType == "daily")
-            { <span class="ms-2 text-muted small">· Daily at @schedule.DailyTime BD</span> }
+            { <span class="ms-2">· Daily at @schedule.DailyTime BD</span> }
             else if (schedule?.ScheduleType == "interval")
             {
                 var iv = schedule.IntervalMinutes ?? 0;
                 var ivText = iv >= 1440 ? $"Every {iv/1440}d" : iv >= 60 ? $"Every {iv/60}h" : $"Every {iv}m";
-                <span class="ms-2 text-muted small">· @ivText</span>
+                <span class="ms-2">· @ivText</span>
             }
             else if (schedule?.RunOnce.HasValue == true)
-            { <span class="ms-2 text-muted small">· Once at @schedule.RunOnce.Value.ToString("dd MMM yyyy HH:mm")</span> }
+            { <span class="ms-2">· Once at @schedule.RunOnce.Value.ToString("dd MMM yyyy HH:mm")</span> }
         </p>
     </div>
     <div class="page-header-actions">
+        <form asp-action="RunNow" asp-route-id="@schedule?.Id" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-secondary btn-sm" title="Queue this schedule to run within 30 seconds">
+                <i class="bi bi-lightning-fill me-1"></i> Run Now
+            </button>
+        </form>
         <a asp-action="Edit" asp-route-id="@schedule?.Id" class="btn btn-secondary btn-sm">
-            <i class="bi bi-pencil me-1"></i> Edit Schedule
+            <i class="bi bi-pencil me-1"></i> Edit
         </a>
+        @if (logCount > 0)
+        {
+            <form asp-action="ClearLogs" asp-route-id="@schedule?.Id" method="post" class="d-inline"
+                  data-confirm="true" data-confirm-title="Clear logs"
+                  data-confirm-message="Delete all @logCount run log(s) for this schedule?"
+                  data-confirm-btn="Clear" data-confirm-btn-variant="btn-danger">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-secondary btn-sm text-danger">
+                    <i class="bi bi-trash me-1"></i> Clear Logs
+                </button>
+            </form>
+        }
     </div>
 </div>
 
-@if (!Model.Any())
+@if (logCount == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
             <i class="bi bi-journal-text" style="font-size: 2.5rem; color: var(--gray-300);"></i>
             <p class="mt-3 text-muted">No runs yet. The scheduler will log results here once the script executes.</p>
+            <form asp-action="RunNow" asp-route-id="@schedule?.Id" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-lightning-fill me-1"></i> Run Now
+                </button>
+            </form>
         </div>
     </div>
 }
@@ -52,6 +84,7 @@ else
                 <thead>
                     <tr>
                         <th>Started</th>
+                        <th>Finished</th>
                         <th>Status</th>
                         <th>Duration</th>
                         <th>Exit</th>
@@ -59,19 +92,25 @@ else
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var log in Model)
+                    @foreach (var log in logList)
                     {
                         <tr>
-                            <td class="text-nowrap small text-muted">@log.StartedAt.ToString("dd MMM yyyy HH:mm:ss")</td>
+                            <td class="text-nowrap small text-muted">@log.StartedAt.ToString("dd MMM HH:mm:ss")</td>
+                            <td class="text-nowrap small text-muted">
+                                @if (log.FinishedAt.HasValue)
+                                { @log.FinishedAt.Value.ToString("dd MMM HH:mm:ss") }
+                                else
+                                { <span>—</span> }
+                            </td>
                             <td>
                                 @if (log.Status == "ok")
-                                { <span class="status-badge status-success"><span class="status-dot"></span>ok</span> }
+                                { <span class="badge-status success">ok</span> }
                                 else if (log.Status == "error")
-                                { <span class="status-badge status-danger"><span class="status-dot"></span>error</span> }
+                                { <span class="badge-status danger">error</span> }
                                 else if (log.Status == "timeout")
-                                { <span class="status-badge status-warning"><span class="status-dot"></span>timeout</span> }
+                                { <span class="badge-status warning">timeout</span> }
                                 else if (log.Status == "running")
-                                { <span class="status-badge status-info"><span class="status-dot"></span>running</span> }
+                                { <span class="badge-status info">running</span> }
                                 else
                                 { <span class="text-muted small">@log.Status</span> }
                             </td>
@@ -86,20 +125,23 @@ else
                             <td class="small">
                                 @if (log.ExitCode.HasValue)
                                 {
-                                    <code class="@(log.ExitCode == 0 ? "text-success" : "text-danger")">@log.ExitCode</code>
+                                    <code class="@(log.ExitCode == 0 ? "text-success" : "text-danger") fw-medium">@log.ExitCode</code>
                                 }
                                 else { <span class="text-muted">—</span> }
                             </td>
-                            <td style="max-width:520px">
+                            <td>
                                 @if (!string.IsNullOrEmpty(log.Output))
                                 {
-                                    var logId = $"out-{log.Id}";
-                                    <pre id="@logId" class="log-output mb-1">@log.Output</pre>
-                                    <button class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.75rem" onclick="toggleOutput('@logId', this)">Show more</button>
+                                    <button class="btn btn-ghost btn-sm py-0" style="font-size:0.78rem"
+                                            onclick="showOutput(@log.Id, @(log.Status == "ok" ? "true" : "false"))"
+                                            title="View output">
+                                        <i class="bi bi-terminal me-1"></i>View
+                                    </button>
+                                    <span id="output-data-@log.Id" class="d-none">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(log.Output))</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted small">(no output)</span>
+                                    <span class="text-muted small">no output</span>
                                 }
                             </td>
                         </tr>
@@ -110,27 +152,60 @@ else
     </div>
 }
 
+<!-- Output modal -->
+<div class="modal fade" id="outputModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header py-2 px-3">
+                <span class="modal-title fw-medium" style="font-size:0.9rem">
+                    <i class="bi bi-terminal me-2"></i>Run Output
+                </span>
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <pre id="outputModalBody" class="output-pre m-0"></pre>
+            </div>
+            <div class="modal-footer py-2 px-3 justify-content-start">
+                <button class="btn btn-secondary btn-sm" onclick="copyOutput()">
+                    <i class="bi bi-clipboard me-1"></i> Copy
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    .log-output {
-        font-size: 0.73rem;
-        max-height: 90px;
-        overflow: hidden;
-        background: var(--surface-secondary, #f6f8fa);
-        border: 1px solid var(--border-color, #e0e0e0);
-        border-radius: 4px;
-        padding: 0.4rem 0.6rem;
+    .output-pre {
+        font-family: 'Cascadia Code', 'Consolas', monospace;
+        font-size: 0.75rem;
         white-space: pre-wrap;
         word-break: break-all;
-        margin: 0;
-        cursor: pointer;
+        background: var(--gray-950, #0d1117);
+        color: var(--gray-100, #f0f6fc);
+        padding: 1rem;
+        min-height: 120px;
+        max-height: 65vh;
+        overflow-y: auto;
     }
-    .log-output.expanded { max-height: none; }
 </style>
 
 <script>
-function toggleOutput(id, btn) {
-    const el = document.getElementById(id);
-    const expanded = el.classList.toggle('expanded');
-    btn.textContent = expanded ? 'Show less' : 'Show more';
+function showOutput(logId, isOk) {
+    const dataEl = document.getElementById('output-data-' + logId);
+    if (!dataEl) return;
+    const text = JSON.parse(dataEl.textContent);
+    document.getElementById('outputModalBody').textContent = text;
+    const modal = new bootstrap.Modal(document.getElementById('outputModal'));
+    modal.show();
+}
+function copyOutput() {
+    const text = document.getElementById('outputModalBody').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('button');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-1"></i> Copied';
+        setTimeout(() => btn.innerHTML = orig, 1500);
+    });
 }
 </script>

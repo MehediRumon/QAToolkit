@@ -156,6 +156,37 @@ namespace QAToolkit.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RunNow(int id)
+        {
+            var schedule = await _context.ScheduledRuns.FindAsync(id);
+            if (schedule == null) return NotFound();
+
+            schedule.NextRunAt = DateTimeHelper.BdNow;
+            schedule.IsEnabled = true;
+            _context.ScheduledRuns.Update(schedule);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"\"{schedule.Name}\" queued — will run within 30 seconds.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearLogs(int id)
+        {
+            var schedule = await _context.ScheduledRuns.FindAsync(id);
+            if (schedule == null) return NotFound();
+
+            var logs = _context.ScheduledRunLogs.Where(l => l.ScheduledRunId == id);
+            _context.ScheduledRunLogs.RemoveRange(logs);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Run logs cleared.";
+            return RedirectToAction(nameof(Logs), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Toggle(int id)
         {
             var schedule = await _context.ScheduledRuns.FindAsync(id);

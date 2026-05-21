@@ -35,7 +35,7 @@ else
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th style="width:32px"></th>
+                        <th style="width:28px"></th>
                         <th>Schedule</th>
                         <th>Script</th>
                         <th>Type</th>
@@ -51,14 +51,14 @@ else
                         var nextSoon = s.NextRunAt.HasValue && s.NextRunAt.Value <= nowBd.AddHours(1);
                         var nextDue = s.NextRunAt.HasValue && s.NextRunAt.Value <= nowBd;
                         <tr>
-                            <td>
+                            <td class="align-middle">
                                 @if (s.IsEnabled)
                                 {
-                                    <span class="status-badge status-success" title="Enabled"><span class="status-dot"></span></span>
+                                    <span class="badge-status success" title="Enabled"></span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-muted" title="Disabled"><span class="status-dot"></span></span>
+                                    <span class="badge-status muted" title="Disabled"></span>
                                 }
                             </td>
                             <td>
@@ -84,11 +84,11 @@ else
                             </td>
                             <td>
                                 @if (s.ScheduleType == "once")
-                                { <span class="badge badge-info">Once</span> }
+                                { <span class="badge bg-info">Once</span> }
                                 else if (s.ScheduleType == "daily")
-                                { <span class="badge badge-success">Daily</span> }
+                                { <span class="badge bg-success">Daily</span> }
                                 else
-                                { <span class="badge badge-warning">Interval</span> }
+                                { <span class="badge bg-warning">Interval</span> }
                             </td>
                             <td class="text-nowrap small">
                                 @if (s.NextRunAt.HasValue && s.IsEnabled)
@@ -98,21 +98,21 @@ else
                                     </span>
                                 }
                                 else if (!s.IsEnabled)
-                                { <span class="text-muted">Paused</span> }
+                                { <span class="text-muted fst-italic">Paused</span> }
                                 else
                                 { <span class="text-muted">—</span> }
                             </td>
                             <td class="small">
                                 @if (s.LastRunStatus == "ok")
-                                { <span class="status-badge status-success"><span class="status-dot"></span>ok</span> }
+                                { <span class="badge-status success">ok</span> }
                                 else if (s.LastRunStatus == "error")
-                                { <span class="status-badge status-danger"><span class="status-dot"></span>error</span> }
+                                { <span class="badge-status danger">error</span> }
                                 else if (s.LastRunStatus == "timeout")
-                                { <span class="status-badge status-warning"><span class="status-dot"></span>timeout</span> }
+                                { <span class="badge-status warning">timeout</span> }
                                 else if (s.LastRunStatus == "running")
-                                { <span class="status-badge status-info"><span class="status-dot"></span>running</span> }
+                                { <span class="badge-status info">running</span> }
                                 else
-                                { <span class="text-muted">Never</span> }
+                                { <span class="text-muted">Never run</span> }
                                 @if (s.LastRunAt.HasValue && s.LastRunStatus != null)
                                 {
                                     <div class="text-muted" style="font-size:11px">@s.LastRunAt.Value.ToString("dd MMM HH:mm")</div>
@@ -125,6 +125,12 @@ else
                                 <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-ghost btn-sm" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <form asp-action="RunNow" asp-route-id="@s.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-ghost btn-sm text-primary" title="Run now">
+                                        <i class="bi bi-lightning-fill"></i>
+                                    </button>
+                                </form>
                                 <form asp-action="Toggle" asp-route-id="@s.Id" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-ghost btn-sm"
