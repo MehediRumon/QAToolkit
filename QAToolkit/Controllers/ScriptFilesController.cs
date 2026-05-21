@@ -103,6 +103,60 @@ namespace QAToolkit.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAjax(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Json(new { success = false, error = "No file selected." });
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(ext))
+                return Json(new { success = false, error = $"File type '{ext}' not allowed." });
+
+            if (file.Length > 50 * 1024 * 1024)
+                return Json(new { success = false, error = "File too large (max 50 MB)." });
+
+            var fileName = Path.GetFileNameWithoutExtension(file.FileName)
+                               .ToLowerInvariant()
+                               .Replace(' ', '_')
+                               .Replace('/', '_')
+                               .Replace('\\', '_') + ext;
+
+            Directory.CreateDirectory(UploadDir);
+            var storedPath = Path.Combine(UploadDir, fileName);
+
+            await using (var stream = System.IO.File.Create(storedPath))
+                await file.CopyToAsync(stream);
+
+            var existing = await _context.ScriptFiles.FirstOrDefaultAsync(f => f.FileName == fileName);
+            if (existing != null)
+            {
+                existing.OriginalName = file.FileName;
+                existing.FileSizeBytes = file.Length;
+                existing.ContentType = file.ContentType;
+                existing.StoredPath = storedPath;
+                existing.UploadedBy = User.Identity?.Name ?? "";
+                existing.UploadedAt = DateTimeHelper.BdNow;
+            }
+            else
+            {
+                _context.ScriptFiles.Add(new ScriptFile
+                {
+                    FileName = fileName,
+                    OriginalName = file.FileName,
+                    FileSizeBytes = file.Length,
+                    ContentType = file.ContentType,
+                    StoredPath = storedPath,
+                    UploadedBy = User.Identity?.Name ?? "",
+                    UploadedAt = DateTimeHelper.BdNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, path = storedPath, fileName });
+        }
+
         public async Task<IActionResult> Download(int id)
         {
             var file = await _context.ScriptFiles.FindAsync(id);

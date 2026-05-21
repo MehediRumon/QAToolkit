@@ -530,6 +530,7 @@ function detectFieldType(key, comment, flag, defaultVal, wasString) {
     if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Pct|Offset|Duration|Questions?|Amount|Exams?|Discount|Received|Payment|Fee|Price|Qty|Min$|Max$|Start$|End$|Parallel$)$/i.test(key)
         || /^(passMark|negativeMarkPct|teacherCount|entriesPerTeacher|tpinStart|tpinMax)$/.test(key))
         return { type: 'number' };
+    if (/File$/i.test(key)) return { type: 'file' };
     if (/(?:Path|Url)$/i.test(key)) return { type: 'path' };
     if (/email/i.test(key) || /email/i.test(flagName)) return { type: 'text' };
     // Only use defaultVal for type inference when it wasn't originally a quoted string
@@ -599,6 +600,15 @@ function buildForm(items) {
         } else if (def.type === 'array') {
             const ph = comment ? comment.match(/e\.g\.\s*(\[[^\]]+\])/)?.[1] || '[1]' : '[1]';
             inputHtml = `<input type="text" class="form-control form-control-sm param-input font-monospace" data-key="${esc(key)}" data-type="array" placeholder="${esc(ph)}" value="${dv}">`;
+        } else if (def.type === 'file') {
+            inputHtml = `<div class="d-flex gap-2 align-items-center">
+                            <input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="C:/path/to/file" value="${dv}">
+                            <label class="btn btn-secondary btn-sm flex-shrink-0 mb-0" title="Upload file to server">
+                                <i class="bi bi-upload"></i>
+                                <input type="file" class="d-none" accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv" onchange="uploadParamFile(this, '${esc(key)}')">
+                            </label>
+                         </div>
+                         <div id="upstatus-${esc(key)}" class="param-hint mt-1" style="display:none"></div>`;
         } else if (def.type === 'path') {
             const ph = /Url$/i.test(key) ? 'https://' : 'C:/path/to/file';
             inputHtml = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="${ph}" value="${dv}">`;
@@ -614,6 +624,31 @@ function buildForm(items) {
     }
 
     container.innerHTML = html;
+}
+
+async function uploadParamFile(input, paramKey) {
+    if (!input.files.length) return;
+    const statusEl = document.getElementById('upstatus-' + paramKey);
+    statusEl.style.display = '';
+    statusEl.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Uploading…';
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+    try {
+        const resp = await fetch('/ScriptFiles/UploadAjax', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': antiforgeryToken },
+            body: fd
+        });
+        const data = await resp.json();
+        if (data.success) {
+            document.querySelector(`.param-input[data-key="${paramKey}"]`).value = data.path;
+            statusEl.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>' + data.fileName + ' uploaded';
+        } else {
+            statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>' + data.error;
+        }
+    } catch {
+        statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>Upload failed.';
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -282,6 +282,7 @@ function detectFieldType(key, comment, flag, defaultVal, wasString) {
     if (/password|username/i.test(key)) return { type: 'password' };
     if (/^(is[A-Z]|has[A-Z])/.test(key)) return { type: 'boolean' };
     if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Questions?|Amount|Fee|Price|Qty)$/i.test(key)) return { type: 'number' };
+    if (/File$/i.test(key)) return { type: 'file' };
     if (!wasString && defaultVal != null && /^-?\d+(\.\d+)?$/.test(String(defaultVal))) return { type: 'number' };
     if (!wasString && Array.isArray(defaultVal) || (typeof defaultVal === 'string' && defaultVal.startsWith('['))) return { type: 'array' };
     return { type: 'text' };
@@ -316,6 +317,15 @@ function buildForm(items) {
             inp = `<input type="number" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="number" placeholder="0" value="${dv}">`;
         } else if (def.type === 'array') {
             inp = `<input type="text" class="form-control form-control-sm param-input font-monospace" data-key="${esc(key)}" data-type="array" placeholder="[1,2,3]" value="${dv}">`;
+        } else if (def.type === 'file') {
+            inp = `<div class="d-flex gap-2 align-items-center">
+                      <input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="C:/path/to/file" value="${dv}">
+                      <label class="btn btn-secondary btn-sm flex-shrink-0 mb-0" title="Upload file to server">
+                          <i class="bi bi-upload"></i>
+                          <input type="file" class="d-none" accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv" onchange="uploadParamFile(this, '${esc(key)}')">
+                      </label>
+                   </div>
+                   <div id="upstatus-${esc(key)}" class="param-hint mt-1" style="display:none"></div>`;
         } else {
             inp = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" value="${dv}">`;
         }
@@ -351,6 +361,32 @@ function objToForm(obj) {
         if (el.dataset.type === 'array') { el.value = Array.isArray(val) ? JSON.stringify(val) : String(val); return; }
         el.value = String(val);
     });
+}
+
+async function uploadParamFile(input, paramKey) {
+    if (!input.files.length) return;
+    const statusEl = document.getElementById('upstatus-' + paramKey);
+    statusEl.style.display = '';
+    statusEl.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Uploading…';
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+    try {
+        const resp = await fetch('/ScriptFiles/UploadAjax', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': token },
+            body: fd
+        });
+        const data = await resp.json();
+        if (data.success) {
+            document.querySelector(`.param-input[data-key="${paramKey}"]`).value = data.path;
+            statusEl.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>' + data.fileName + ' uploaded';
+        } else {
+            statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>' + data.error;
+        }
+    } catch {
+        statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>Upload failed.';
+    }
 }
 
 function switchToJson() {
