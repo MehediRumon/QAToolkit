@@ -1,0 +1,157 @@
+@model IEnumerable<QAToolkit.Models.ScheduledRun>
+@{
+    ViewData["Title"] = "Scheduled Runs";
+    var scriptNames = ViewBag.ScriptNames as Dictionary<int, string> ?? new Dictionary<int, string>();
+}
+
+<div class="page-header">
+    <div>
+        <h1>Scheduled Runs</h1>
+        <p>Automate script execution on a recurring or one-time schedule.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> New Schedule
+        </a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-clock" style="font-size: 2.5rem; color: var(--gray-300);"></i>
+            <p class="mt-3 text-muted">No schedules yet. Create one to automate script runs.</p>
+            <a asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i> Create Schedule
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:28px"></th>
+                        <th>Schedule</th>
+                        <th>Script</th>
+                        <th>Type</th>
+                        <th>Next Run</th>
+                        <th>Last Run</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var nowBd = DateTime.Now;
+                        var nextSoon = s.NextRunAt.HasValue && s.NextRunAt.Value <= nowBd.AddHours(1);
+                        var nextDue = s.NextRunAt.HasValue && s.NextRunAt.Value <= nowBd;
+                        <tr>
+                            <td class="align-middle">
+                                @if (s.IsEnabled)
+                                {
+                                    <span class="badge-status success" title="Enabled"></span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status muted" title="Disabled"></span>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-medium">@s.Name</div>
+                                <div class="text-muted small">
+                                    @if (s.ScheduleType == "daily")
+                                    { <span>Daily at @s.DailyTime BD</span> }
+                                    else if (s.ScheduleType == "interval")
+                                    {
+                                        var iv = s.IntervalMinutes ?? 0;
+                                        var ivText = iv >= 1440 ? $"Every {iv/1440}d" : iv >= 60 ? $"Every {iv/60}h" : $"Every {iv}m";
+                                        <span>@ivText</span>
+                                    }
+                                    else if (s.RunOnce.HasValue)
+                                    { <span>@s.RunOnce.Value.ToString("dd MMM yyyy HH:mm")</span> }
+                                </div>
+                            </td>
+                            <td>
+                                <a asp-controller="PlaywrightScripts" asp-action="Details" asp-route-id="@s.ScriptId"
+                                   class="text-decoration-none fw-medium">
+                                    @(scriptNames.TryGetValue(s.ScriptId, out var sn) ? sn : $"Script #{s.ScriptId}")
+                                </a>
+                            </td>
+                            <td>
+                                @if (s.ScheduleType == "once")
+                                { <span class="badge bg-info">Once</span> }
+                                else if (s.ScheduleType == "daily")
+                                { <span class="badge bg-success">Daily</span> }
+                                else
+                                { <span class="badge bg-warning">Interval</span> }
+                            </td>
+                            <td class="text-nowrap small">
+                                @if (s.NextRunAt.HasValue && s.IsEnabled)
+                                {
+                                    <span class="@(nextDue ? "text-danger fw-medium" : nextSoon ? "text-warning" : "text-muted")">
+                                        @s.NextRunAt.Value.ToString("dd MMM HH:mm")
+                                    </span>
+                                }
+                                else if (!s.IsEnabled)
+                                { <span class="text-muted fst-italic">Paused</span> }
+                                else
+                                { <span class="text-muted">—</span> }
+                            </td>
+                            <td class="small">
+                                @if (s.LastRunStatus == "ok")
+                                { <span class="badge-status success">ok</span> }
+                                else if (s.LastRunStatus == "error")
+                                { <span class="badge-status danger">error</span> }
+                                else if (s.LastRunStatus == "timeout")
+                                { <span class="badge-status warning">timeout</span> }
+                                else if (s.LastRunStatus == "running")
+                                { <span class="badge-status info">running</span> }
+                                else
+                                { <span class="text-muted">Never run</span> }
+                                @if (s.LastRunAt.HasValue && s.LastRunStatus != null)
+                                {
+                                    <div class="text-muted" style="font-size:11px">@s.LastRunAt.Value.ToString("dd MMM HH:mm")</div>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Logs" asp-route-id="@s.Id" class="btn btn-ghost btn-sm" title="View logs">
+                                    <i class="bi bi-list-ul"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-ghost btn-sm" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="RunNow" asp-route-id="@s.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-ghost btn-sm text-primary" title="Run now">
+                                        <i class="bi bi-lightning-fill"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Toggle" asp-route-id="@s.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-ghost btn-sm"
+                                            title="@(s.IsEnabled ? "Pause schedule" : "Enable schedule")">
+                                        <i class="bi @(s.IsEnabled ? "bi-pause-fill text-warning" : "bi-play-fill text-success")"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="d-inline"
+                                      data-confirm="true" data-confirm-title="Delete schedule"
+                                      data-confirm-message="Delete &quot;@s.Name&quot; and all its run logs?"
+                                      data-confirm-btn="Delete" data-confirm-btn-variant="btn-danger">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

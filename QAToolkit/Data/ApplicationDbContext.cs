@@ -18,6 +18,14 @@ namespace QAToolkit.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Workflow> Workflows { get; set; }
         public DbSet<PlaywrightScript> PlaywrightScripts { get; set; }
+        public DbSet<ScheduledRun> ScheduledRuns { get; set; }
+        public DbSet<ScheduledRunLog> ScheduledRunLogs { get; set; }
+        public DbSet<ScriptFile> ScriptFiles { get; set; }
+        public DbSet<HermesChat> HermesChats { get; set; }
+        public DbSet<HermesMessage> HermesMessages { get; set; }
+        public DbSet<HermesActivity> HermesActivities { get; set; }
+        public DbSet<HermesKnowledge> HermesKnowledges { get; set; }
+        public DbSet<HermesUserSettings> HermesUserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,6 +61,15 @@ namespace QAToolkit.Data
 
             modelBuilder.Entity<PlaywrightScript>()
                 .HasIndex(s => s.Tags);
+
+            modelBuilder.Entity<ScheduledRun>()
+                .HasIndex(s => s.ScriptId);
+
+            modelBuilder.Entity<ScheduledRun>()
+                .HasIndex(s => s.NextRunAt);
+
+            modelBuilder.Entity<ScheduledRunLog>()
+                .HasIndex(l => l.ScheduledRunId);
         }
     }
 }

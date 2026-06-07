@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QAToolkit.Data;
 using QAToolkit.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using QAToolkit.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,15 @@ builder.Services.AddHttpClient();
 
 // Register OMR Filler Service
 builder.Services.AddScoped<IOmrFillerService, OmrFillerService>();
+
+// Register Playwright runner (scoped — needs DbContext)
+builder.Services.AddScoped<PlaywrightRunnerService>();
+
+// Register Hermes Agent service
+builder.Services.AddScoped<QAToolkit.Services.IHermesService, QAToolkit.Services.HermesService>();
+
+// Register background scheduler
+builder.Services.AddHostedService<SchedulerHostedService>();
 
 // Configure Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -65,6 +75,123 @@ using (var scope = app.Services.CreateScope())
             IsPublic INTEGER NOT NULL DEFAULT 0
         )");
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_PlaywrightScripts_Tags ON PlaywrightScripts (Tags)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ScheduledRuns (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ScriptId INTEGER NOT NULL,
+            Name TEXT NOT NULL,
+            ScheduleType TEXT NOT NULL DEFAULT 'once',
+            RunOnce TEXT,
+            DailyTime TEXT,
+            IntervalMinutes INTEGER,
+            ParamsJson TEXT,
+            IsEnabled INTEGER NOT NULL DEFAULT 1,
+            LastRunAt TEXT,
+            LastRunStatus TEXT,
+            NextRunAt TEXT,
+            CreatedBy TEXT,
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRuns_ScriptId ON ScheduledRuns (ScriptId)");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRuns_NextRunAt ON ScheduledRuns (NextRunAt)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ScheduledRunLogs (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ScheduledRunId INTEGER NOT NULL,
+            StartedAt TEXT NOT NULL,
+            FinishedAt TEXT,
+            Status TEXT NOT NULL DEFAULT '',
+            Output TEXT,
+            ExitCode INTEGER,
+            DurationMs INTEGER NOT NULL DEFAULT 0
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ScheduledRunLogs_ScheduledRunId ON ScheduledRunLogs (ScheduledRunId)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ScriptFiles (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            FileName TEXT NOT NULL,
+            OriginalName TEXT NOT NULL,
+            Description TEXT,
+            FileSizeBytes INTEGER NOT NULL DEFAULT 0,
+            ContentType TEXT,
+            StoredPath TEXT NOT NULL,
+            UploadedBy TEXT NOT NULL DEFAULT '',
+            UploadedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ScriptFiles_FileName ON ScriptFiles (FileName)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesChats (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserName TEXT NOT NULL DEFAULT '',
+            Title TEXT NOT NULL DEFAULT 'New Chat',
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_HermesChats_UserName ON HermesChats (UserName)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesMessages (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ChatId INTEGER NOT NULL,
+            Role TEXT NOT NULL DEFAULT 'user',
+            Content TEXT NOT NULL DEFAULT '',
+            CreatedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_HermesMessages_ChatId ON HermesMessages (ChatId)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesActivities (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserName TEXT NOT NULL DEFAULT '',
+            ActivityType TEXT NOT NULL DEFAULT '',
+            EntityId INTEGER NOT NULL DEFAULT 0,
+            EntityName TEXT NOT NULL DEFAULT '',
+            Tags TEXT,
+            Extra TEXT,
+            CreatedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_HermesActivities_CreatedAt ON HermesActivities (CreatedAt)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesKnowledges (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Project TEXT NOT NULL DEFAULT '',
+            Module TEXT,
+            Summary TEXT NOT NULL DEFAULT '',
+            UpdatedAt TEXT NOT NULL,
+            UpdatedBy TEXT
+        )");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesUserSettings (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserName TEXT NOT NULL DEFAULT '',
+            Provider TEXT NOT NULL DEFAULT 'Groq',
+            ApiKey TEXT NOT NULL DEFAULT '',
+            Model TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_HermesUserSettings_UserName ON HermesUserSettings (UserName)");
+
+    // Ensure upload directory exists
+    var uploadDir = Path.Combine(
+        app.Configuration["Playwright:WorkingDirectory"] ?? @"C:\qa-scripts",
+        "script-uploads");
+    Directory.CreateDirectory(uploadDir);
+
+    // Seed NextRunAt for any existing schedules that don't have it set
+    var pendingSchedules = db.ScheduledRuns
+        .Where(s => s.IsEnabled && s.NextRunAt == null && s.ScheduleType != "once")
+        .ToList();
+    foreach (var s in pendingSchedules)
+    {
+        s.NextRunAt = SchedulerHostedService.CalculateNextRun(s, DateTimeHelper.BdNow);
+    }
+    if (pendingSchedules.Count > 0) db.SaveChanges();
 }
 
 // Configure the HTTP request pipeline.

@@ -1,0 +1,654 @@
+@using QAToolkit.Models
+@{
+    ViewData["Title"] = "Hermes Agent";
+    var chats = ViewBag.Chats as List<HermesChat> ?? new List<HermesChat>();
+    var activeChat = ViewBag.ActiveChat as HermesChat;
+    var recentActivity = ViewBag.RecentActivity as List<HermesActivity> ?? new List<HermesActivity>();
+    var hasApiKey = (bool)(ViewBag.HasApiKey ?? false);
+    var userProvider = (string)(ViewBag.UserProvider ?? "Groq");
+}
+
+<style>
+    .hermes-layout {
+        display: flex;
+        height: calc(100vh - 64px);
+        overflow: hidden;
+        margin: -1.5rem;
+    }
+
+    .hermes-sidebar {
+        width: 260px;
+        min-width: 260px;
+        border-right: 1px solid var(--border-color, #e5e7eb);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--sidebar-bg, #f9fafb);
+    }
+
+    .hermes-sidebar-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .hermes-chat-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+
+    .hermes-chat-item {
+        padding: 0.6rem 0.75rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.15s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .hermes-chat-item:hover { background: var(--hover-bg, rgba(0,0,0,0.05)); color: inherit; }
+    .hermes-chat-item.active { background: var(--active-bg, rgba(99,102,241,0.12)); color: var(--primary, #6366f1); font-weight: 500; }
+
+    .hermes-activity-panel {
+        border-top: 1px solid var(--border-color, #e5e7eb);
+        padding: 0.75rem;
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .hermes-activity-panel h6 {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted, #6b7280);
+        margin-bottom: 0.5rem;
+    }
+
+    .activity-row {
+        font-size: 0.78rem;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
+        color: var(--text-muted, #6b7280);
+    }
+
+    .activity-row:last-child { border-bottom: none; }
+    .activity-row .actor { font-weight: 600; color: var(--text-color, #111); }
+    .activity-row .type-badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: var(--badge-bg, rgba(99,102,241,0.1));
+        color: var(--primary, #6366f1);
+        margin-right: 3px;
+    }
+
+    .hermes-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .hermes-chat-header {
+        padding: 0.875rem 1.25rem;
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+    }
+
+    .hermes-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .msg-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        max-width: 820px;
+    }
+
+    .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .msg-avatar {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .msg-avatar.user { background: var(--primary, #6366f1); color: #fff; }
+    .msg-avatar.assistant { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+
+    .msg-bubble {
+        padding: 0.65rem 0.9rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        max-width: 680px;
+        word-break: break-word;
+    }
+
+    .msg-row.user .msg-bubble {
+        background: var(--primary, #6366f1);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+
+    .msg-row.assistant .msg-bubble {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-bottom-left-radius: 4px;
+    }
+
+    .msg-bubble pre {
+        margin: 0.5rem 0 0;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.82rem;
+    }
+
+    .msg-bubble code { font-size: 0.83rem; }
+
+    .save-script-btn {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .hermes-input-area {
+        padding: 0.875rem 1.25rem;
+        border-top: 1px solid var(--border-color, #e5e7eb);
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .hermes-input-area textarea {
+        flex: 1;
+        resize: none;
+        border-radius: 10px;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.9rem;
+        border: 1px solid var(--border-color, #e5e7eb);
+        background: var(--input-bg, #fff);
+        color: var(--text-color, #111);
+        max-height: 140px;
+        min-height: 44px;
+    }
+
+    .hermes-input-area textarea:focus { outline: none; border-color: var(--primary, #6366f1); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+
+    .hermes-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: var(--text-muted, #6b7280);
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .hermes-empty .hermes-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: #fff;
+        margin-bottom: 0.25rem;
+    }
+
+    .thinking-dots span {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-muted, #6b7280);
+        margin: 0 2px;
+        animation: bounce 1.2s infinite;
+    }
+    .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @@keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-6px); }
+    }
+
+    [data-theme="dark"] .hermes-sidebar { background: #1a1b23; }
+    [data-theme="dark"] .msg-row.assistant .msg-bubble { background: #1e2030; }
+    [data-theme="dark"] .hermes-input-area textarea { background: #1e2030; color: #e2e8f0; }
+    [data-theme="dark"] .hermes-chat-item:hover { background: rgba(255,255,255,0.07); }
+    [data-theme="dark"] .hermes-chat-item.active { background: rgba(99,102,241,0.18); }
+</style>
+
+<div class="hermes-layout">
+    <!-- Sidebar -->
+    <div class="hermes-sidebar">
+        <div class="hermes-sidebar-header">
+            <span style="background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;">
+                <i class="bi bi-stars"></i>
+            </span>
+            Hermes Agent
+        </div>
+
+        <div style="padding:0.5rem;display:flex;gap:0.4rem;">
+            <form asp-action="NewChat" method="post" style="flex:1;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm w-100" style="background:var(--primary,#6366f1);color:#fff;border-radius:8px;">
+                    <i class="bi bi-plus-lg me-1"></i> New Chat
+                </button>
+            </form>
+            <button class="btn btn-sm btn-ghost" title="API Settings" onclick="openSettingsModal()"
+                    style="border-radius:8px;border:1px solid var(--border-color,#e5e7eb);padding:0 0.5rem;">
+                <i class="bi bi-gear" style="@(hasApiKey ? "" : "color:#f59e0b;")"></i>
+            </button>
+        </div>
+
+        <div class="hermes-chat-list">
+            @if (!chats.Any())
+            {
+                <div class="text-muted text-center py-3" style="font-size:0.8rem;">No chats yet</div>
+            }
+            @foreach (var chat in chats)
+            {
+                var isActive = activeChat?.Id == chat.Id;
+                <a href="@Url.Action("Index", "Hermes", new { chatId = chat.Id })"
+                   class="hermes-chat-item @(isActive ? "active" : "")">
+                    <i class="bi bi-chat-text" style="font-size:0.85rem;min-width:14px;"></i>
+                    <span style="overflow:hidden;text-overflow:ellipsis;">@chat.Title</span>
+                </a>
+            }
+        </div>
+
+        @if (recentActivity.Any())
+        {
+            <div class="hermes-activity-panel">
+                <h6><i class="bi bi-activity me-1"></i>Team Activity</h6>
+                @foreach (var a in recentActivity)
+                {
+                    <div class="activity-row">
+                        <span class="type-badge">@a.ActivityType.Replace("Script", "").Replace("Created","＋").Replace("Edited","✏").Replace("Run","▶")</span>
+                        <span class="actor">@a.UserName</span>: @a.EntityName
+                        @if (!string.IsNullOrWhiteSpace(a.Extra))
+                        {
+                            <span class="text-muted"> · @a.Extra</span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Main -->
+    <div class="hermes-main">
+        @if (activeChat == null)
+        {
+            <div class="hermes-empty">
+                <div class="hermes-logo"><i class="bi bi-stars"></i></div>
+                <div style="font-size:1.1rem;font-weight:600;color:var(--text-color,#111);">Hermes Agent</div>
+                <div style="max-width:340px;">Your QA team AI assistant. Start a new chat to write scripts, track testing coverage, or ask about team activity.</div>
+                <form asp-action="NewChat" method="post" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm px-4" style="background:var(--primary,#6366f1);color:#fff;border-radius:8px;">
+                        <i class="bi bi-plus-lg me-1"></i> Start a chat
+                    </button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="hermes-chat-header">
+                <i class="bi bi-chat-text text-muted"></i>
+                <span id="chatTitle">@activeChat.Title</span>
+            </div>
+
+            <div class="hermes-messages" id="messageList">
+                <div class="hermes-empty" id="emptyState" style="display:none;">
+                    <div class="hermes-logo"><i class="bi bi-stars"></i></div>
+                    <div>Ask me anything about your QA work.</div>
+                    <div style="font-size:0.82rem;">Write scripts · Track coverage · Review team activity</div>
+                </div>
+            </div>
+
+            @if (!hasApiKey)
+            {
+                <div style="padding:0.5rem 1.25rem;">
+                    <div class="alert alert-warning py-2 px-3 mb-0 d-flex align-items-center gap-2" style="font-size:0.85rem;border-radius:10px;">
+                        <i class="bi bi-key-fill"></i>
+                        <span>No API key configured. <a href="#" onclick="openSettingsModal();return false;" class="fw-semibold alert-link">Add your key</a> to start chatting.</span>
+                    </div>
+                </div>
+            }
+
+            <div class="hermes-input-area">
+                <textarea id="msgInput" placeholder="Ask Hermes… e.g. Write a login script for Student Portal" rows="1"
+                          onkeydown="handleKey(event)" @(!hasApiKey ? "disabled" : "")></textarea>
+                <button class="btn btn-sm px-3" id="sendBtn" style="background:var(--primary,#6366f1);color:#fff;border-radius:10px;height:44px;"
+                        onclick="sendMessage()" @(!hasApiKey ? "disabled" : "")>
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- API Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-key me-2"></i>Hermes API Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="settingsForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Provider</label>
+                        <select class="form-select" id="settingsProvider" name="provider" onchange="updateModelPlaceholder()">
+                            <option value="Groq">Groq (Llama 3.3 70B) — Free</option>
+                            <option value="Gemini">Google Gemini — Free</option>
+                            <option value="Proxy">FreeLLMAPI Proxy (localhost)</option>
+                        </select>
+                        <div class="form-text">
+                            Get a free key: <a href="https://console.groq.com" target="_blank">Groq</a> ·
+                            <a href="https://aistudio.google.com/apikey" target="_blank">Gemini</a>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">API Key</label>
+                        <input type="password" class="form-control" id="settingsApiKey" name="apiKey"
+                               placeholder="Paste your API key here" autocomplete="off" required>
+                        @if (hasApiKey)
+                        {
+                            <div class="form-text text-success"><i class="bi bi-check-circle me-1"></i>Key saved. Enter a new one to replace it.</div>
+                        }
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label fw-medium">Model <span class="text-muted">(optional)</span></label>
+                        <input type="text" class="form-control" id="settingsModel" name="model"
+                               placeholder="llama-3.3-70b-versatile">
+                        <div class="form-text" id="modelHint">Leave blank to use the default model for the selected provider.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Save Script Modal -->
+<div class="modal fade" id="saveScriptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-save me-2"></i>Save Script</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="saveScriptForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Script Name</label>
+                        <input type="text" class="form-control" id="scriptName" name="name" required placeholder="e.g. UMS Student Login">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tags <span class="text-muted">(optional)</span></label>
+                        <input type="text" class="form-control" id="scriptTags" name="tags" placeholder="UMS, login, student-portal">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description <span class="text-muted">(optional)</span></label>
+                        <input type="text" class="form-control" id="scriptDescription" name="description" placeholder="Short description">
+                    </div>
+                    <input type="hidden" id="scriptContent" name="content">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save to Scripts</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    const SAVE_SETTINGS_URL = '@Url.Action("SaveSettings", "Hermes")';
+    const CHAT_ID = @(activeChat?.Id.ToString() ?? "null");
+    const SEND_URL = '@Url.Action("Send", "Hermes")';
+    const MESSAGES_URL = '@Url.Action("Messages", "Hermes")';
+    const SAVE_SCRIPT_URL = '@Url.Action("SaveScript", "Hermes")';
+    const TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    const msgList = document.getElementById('messageList');
+    const emptyState = document.getElementById('emptyState');
+    const msgInput = document.getElementById('msgInput');
+    const chatTitleEl = document.getElementById('chatTitle');
+
+    if (CHAT_ID) loadMessages();
+
+    async function loadMessages() {
+        try {
+            const res = await fetch(`${MESSAGES_URL}?chatId=${CHAT_ID}`);
+            const msgs = await res.json();
+            if (!msgs.length) { showEmpty(); return; }
+            msgs.forEach(m => appendBubble(m.role, m.content, false));
+            scrollBottom();
+        } catch { showEmpty(); }
+    }
+
+    function showEmpty() {
+        if (emptyState) emptyState.style.display = '';
+    }
+
+    function handleKey(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    async function sendMessage() {
+        if (!CHAT_ID) return;
+        const text = msgInput.value.trim();
+        if (!text) return;
+
+        if (emptyState) emptyState.style.display = 'none';
+        msgInput.value = '';
+        msgInput.style.height = 'auto';
+
+        appendBubble('user', text, false);
+        const thinkingEl = appendThinking();
+        scrollBottom();
+
+        try {
+            const fd = new FormData();
+            fd.append('chatId', CHAT_ID);
+            fd.append('message', text);
+            fd.append('__RequestVerificationToken', TOKEN);
+
+            const res = await fetch(SEND_URL, { method: 'POST', body: fd });
+            const data = await res.json();
+            thinkingEl.remove();
+
+            if (data.success) {
+                appendBubble('assistant', data.reply, true);
+                if (data.chatTitle && chatTitleEl) chatTitleEl.textContent = data.chatTitle;
+            } else {
+                appendError(data.error || 'Something went wrong.');
+            }
+        } catch (err) {
+            thinkingEl.remove();
+            appendError('Network error: ' + err.message);
+        }
+        scrollBottom();
+    }
+
+    function appendBubble(role, content, animate) {
+        const row = document.createElement('div');
+        row.className = `msg-row ${role}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = `msg-avatar ${role}`;
+        avatar.textContent = role === 'user' ? '@(User.Identity?.Name?.Substring(0,1).ToUpper() ?? "U")' : '⚡';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+
+        if (role === 'assistant') {
+            bubble.innerHTML = marked.parse(content);
+
+            const codeBlocks = bubble.querySelectorAll('pre code');
+            codeBlocks.forEach(block => {
+                const code = block.textContent;
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-sm btn-outline-primary save-script-btn';
+                saveBtn.innerHTML = '<i class="bi bi-save me-1"></i>Save as Script';
+                saveBtn.onclick = () => openSaveModal(code);
+                block.closest('pre').after(saveBtn);
+            });
+        } else {
+            bubble.textContent = content;
+        }
+
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+        if (msgList) msgList.appendChild(row);
+        return row;
+    }
+
+    function appendThinking() {
+        const row = document.createElement('div');
+        row.className = 'msg-row assistant';
+        row.innerHTML = `
+            <div class="msg-avatar assistant">⚡</div>
+            <div class="msg-bubble">
+                <div class="thinking-dots"><span></span><span></span><span></span></div>
+            </div>`;
+        if (msgList) msgList.appendChild(row);
+        return row;
+    }
+
+    function appendError(msg) {
+        const el = document.createElement('div');
+        el.className = 'alert alert-danger py-2 px-3 my-1';
+        el.style.fontSize = '0.85rem';
+        el.textContent = msg;
+        if (msgList) msgList.appendChild(el);
+    }
+
+    function scrollBottom() {
+        if (msgList) msgList.scrollTop = msgList.scrollHeight;
+    }
+
+    // Auto-resize textarea
+    if (msgInput) {
+        msgInput.addEventListener('input', () => {
+            msgInput.style.height = 'auto';
+            msgInput.style.height = Math.min(msgInput.scrollHeight, 140) + 'px';
+        });
+    }
+
+    // Settings modal
+    let settingsModal;
+    const CURRENT_PROVIDER = '@userProvider';
+
+    function openSettingsModal() {
+        if (!settingsModal) settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+        const sel = document.getElementById('settingsProvider');
+        if (sel) { sel.value = CURRENT_PROVIDER; updateModelPlaceholder(); }
+        settingsModal.show();
+    }
+
+    function updateModelPlaceholder() {
+        const p = document.getElementById('settingsProvider').value;
+        const hints = {
+            Groq: 'llama-3.3-70b-versatile',
+            Gemini: 'gemini-1.5-flash',
+            Proxy: 'llama-3.3-70b-versatile'
+        };
+        document.getElementById('settingsModel').placeholder = hints[p] || 'default';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const sf = document.getElementById('settingsForm');
+        if (sf) {
+            sf.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fd = new FormData(sf);
+                fd.append('__RequestVerificationToken', TOKEN);
+                const res = await fetch(SAVE_SETTINGS_URL, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    settingsModal.hide();
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            });
+        }
+    });
+
+    // Save script modal
+    let saveScriptModal;
+    document.addEventListener('DOMContentLoaded', () => {
+        saveScriptModal = new bootstrap.Modal(document.getElementById('saveScriptModal'));
+
+        document.getElementById('saveScriptForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            fd.append('__RequestVerificationToken', TOKEN);
+
+            const res = await fetch(SAVE_SCRIPT_URL, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                saveScriptModal.hide();
+                appendBubble('assistant', `✅ Script **"${data.scriptName}"** saved to [Playwright Scripts](/PlaywrightScripts/Details/${data.scriptId}).`, true);
+                scrollBottom();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        });
+    });
+
+    function openSaveModal(code) {
+        document.getElementById('scriptContent').value = code;
+        document.getElementById('scriptName').value = '';
+        document.getElementById('scriptTags').value = '';
+        document.getElementById('scriptDescription').value = '';
+        saveScriptModal.show();
+        setTimeout(() => document.getElementById('scriptName').focus(), 300);
+    }
+</script>
+}

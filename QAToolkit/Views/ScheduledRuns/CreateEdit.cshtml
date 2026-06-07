@@ -1,0 +1,491 @@
+@model QAToolkit.Models.ScheduledRun?
+@using QAToolkit.Models
+@{
+    var isEdit = Model != null;
+    ViewData["Title"] = isEdit ? "Edit Schedule" : "New Schedule";
+    var scripts = ViewBag.Scripts as List<PlaywrightScript> ?? new List<PlaywrightScript>();
+    var preselected = (int?)ViewBag.PreselectedScriptId;
+    var schedType = Model?.ScheduleType ?? "once";
+}
+
+<div class="page-header">
+    <div>
+        <h1>@(isEdit ? "Edit Schedule" : "New Schedule")</h1>
+        <p>@(isEdit ? $"Editing \"{Model!.Name}\"" : "Automate a script to run at a set time or interval.")</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Back</a>
+    </div>
+</div>
+
+<form method="post" action="/ScheduledRuns/@(isEdit ? $"Edit/{Model!.Id}" : "Create")" id="scheduleForm">
+    @Html.AntiForgeryToken()
+
+<div class="row g-4">
+
+    <!-- Left column: schedule config -->
+    <div class="col-lg-5">
+
+        <div class="card mb-4">
+            <div class="card-header py-2 px-3">
+                <span class="fw-medium small"><i class="bi bi-gear me-1"></i>Schedule Settings</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Schedule Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Daily smoke test" required
+                           value="@(Model?.Name ?? "")" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Script</label>
+                    <select name="scriptId" id="scriptSelect" class="form-select" required>
+                        <option value="">— select a script —</option>
+                        @foreach (var sc in scripts)
+                        {
+                            var sel = (Model?.ScriptId == sc.Id) || (!isEdit && preselected == sc.Id);
+                            <option value="@sc.Id" selected="@sel">@sc.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Schedule Type</label>
+                    <div class="d-flex gap-2">
+                        @foreach (var (val, label, icon) in new[]{("once","One-time","bi-calendar-event"),("daily","Daily","bi-clock"),("interval","Interval","bi-arrow-repeat")})
+                        {
+                            <label class="type-tab @(schedType == val ? "active" : "")" data-type="@val">
+                                <input type="radio" name="scheduleType" value="@val" @(schedType == val ? "checked" : "") style="display:none">
+                                <i class="bi @icon me-1"></i>@label
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- One-time -->
+                <div class="sched-section @(schedType == "once" ? "" : "d-none")" id="section-once">
+                    <label class="form-label fw-medium small">Run At <span class="text-muted fw-normal">(Bangladesh Time)</span></label>
+                    <input type="datetime-local" name="runOnce" id="runOnceInput" class="form-control"
+                           value="@(Model?.RunOnce?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                    <small class="text-muted">Script runs once then the schedule is disabled.</small>
+                </div>
+
+                <!-- Daily -->
+                <div class="sched-section @(schedType == "daily" ? "" : "d-none")" id="section-daily">
+                    <label class="form-label fw-medium small">Time of Day <span class="text-muted fw-normal">(BD Time HH:MM)</span></label>
+                    <input type="time" name="dailyTime" class="form-control" style="max-width:160px"
+                           value="@(Model?.DailyTime ?? "09:00")" />
+                    <small class="text-muted">Runs every day at this time.</small>
+                </div>
+
+                <!-- Interval -->
+                <div class="sched-section @(schedType == "interval" ? "" : "d-none")" id="section-interval">
+                    <label class="form-label fw-medium small">Repeat Every</label>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <input type="number" name="intervalMinutes" id="intervalMinutes" class="form-control"
+                               style="max-width:110px" min="1" max="10080" placeholder="30"
+                               value="@(Model?.IntervalMinutes?.ToString() ?? "")" />
+                        <span class="text-muted small">minutes</span>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap">
+                        @foreach (var (m, lbl) in new[]{("15","15m"),("30","30m"),("60","1h"),("120","2h"),("360","6h"),("720","12h"),("1440","24h")})
+                        {
+                            <button type="button" class="btn btn-ghost btn-sm py-0 px-2"
+                                    style="font-size:11px;border:1px solid var(--border-subtle)"
+                                    onclick="document.getElementById('intervalMinutes').value='@m'">@lbl</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right column: params -->
+    <div class="col-lg-7">
+        <div class="card" id="paramsCard">
+            <div class="card-header d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-medium small"><i class="bi bi-sliders me-1"></i>Parameters</span>
+                    <span class="badge badge-warning small" id="paramsRequiredBadge" style="display:none">Required before run</span>
+                </div>
+                <div class="btn-group btn-group-sm" id="viewToggle" style="display:none">
+                    <button type="button" class="btn btn-outline-secondary active" id="formViewBtn">
+                        <i class="bi bi-ui-checks me-1"></i>Form
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="jsonViewBtn">
+                        <i class="bi bi-braces me-1"></i>JSON
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div class="card-body text-center py-4 text-muted" id="paramsLoading" style="display:none">
+                <div class="spinner-border spinner-border-sm me-2"></div>Loading parameters…
+            </div>
+
+            <!-- No script / no params -->
+            <div class="card-body text-muted small" id="paramsEmpty">
+                <i class="bi bi-info-circle me-1"></i>Select a script above to configure its parameters.
+            </div>
+
+            <!-- Form view -->
+            <div id="paramFormView" class="card-body pt-3 pb-2" style="display:none">
+                <div class="row g-0" id="paramFormFields"></div>
+            </div>
+
+            <!-- JSON view -->
+            <div id="paramJsonView" class="card-body pt-3 pb-2" style="display:none">
+                <p class="small text-muted mb-2">
+                    <i class="bi bi-info-circle me-1"></i>Edit JSON directly. Switch to <strong>Form</strong> to sync into fields.
+                </p>
+                <textarea id="paramsJsonEditor" class="form-control font-monospace"
+                          rows="10" style="font-size:13px;resize:vertical;"
+                          placeholder='{ "key": "value" }'></textarea>
+                <div id="jsonParseError" class="text-danger small mt-1" style="display:none"></div>
+            </div>
+
+            <!-- No-params script: raw JSON textarea -->
+            <div id="paramsRaw" class="card-body pt-3 pb-2" style="display:none">
+                <p class="small text-muted mb-2">This script has no parameter declarations. Paste raw JSON if needed.</p>
+                <textarea id="paramsRawEditor" class="form-control font-monospace"
+                          rows="5" style="font-size:13px;resize:vertical;"
+                          placeholder='{ "key": "value" }'>@(Model?.ParamsJson ?? "")</textarea>
+            </div>
+
+            <input type="hidden" name="paramsJson" id="paramsJsonHidden" value="@(Model?.ParamsJson ?? "")" />
+        </div>
+    </div>
+
+</div>
+
+<div class="d-flex gap-2 mt-4">
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-1"></i>@(isEdit ? "Save Changes" : "Create Schedule")
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</div>
+
+</form>
+
+@section Scripts {
+<style>
+    .type-tab {
+        flex: 1; text-align: center; padding: 7px 10px;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm, 6px);
+        background: var(--surface-base);
+        color: var(--text-muted);
+        cursor: pointer; font-size: 0.85rem;
+        transition: all .15s;
+        user-select: none;
+    }
+    .type-tab:hover { border-color: var(--color-accent, #0d6efd); color: var(--text-primary); }
+    .type-tab.active { border-color: var(--color-accent, #0d6efd); background: var(--color-accent-subtle, #e7f3ff); color: var(--color-accent, #0d6efd); font-weight: 600; }
+    [data-theme="dark"] .type-tab.active { background: rgba(88,166,255,.12); }
+
+    .param-field { padding: 0 12px 16px 12px; }
+    .param-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+    .param-hint { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    .param-section-header { padding: 12px 12px 6px 12px; }
+    .param-section-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+    .param-section-line { flex: 1; height: 1px; background: var(--border-subtle); margin-left: 8px; }
+    .input-pwd-group { position: relative; }
+    .input-pwd-group input { padding-right: 36px; }
+    .input-pwd-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 2px 4px; color: var(--text-muted); cursor: pointer; }
+</style>
+
+<script>
+// ── Schedule type tabs ────────────────────────────────────────────────────────
+document.querySelectorAll('.type-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        tab.querySelector('input[type=radio]').checked = true;
+        const type = tab.dataset.type;
+        document.querySelectorAll('.sched-section').forEach(s => s.classList.add('d-none'));
+        document.getElementById('section-' + type).classList.remove('d-none');
+    });
+});
+
+// Default runOnce to now+5min if empty
+(function() {
+    const inp = document.getElementById('runOnceInput');
+    if (inp && !inp.value) {
+        const d = new Date(); d.setMinutes(d.getMinutes() + 5);
+        inp.value = d.toISOString().slice(0, 16);
+    }
+})();
+
+// ── Params form (same logic as Details page) ──────────────────────────────────
+let activeView = 'form';
+let currentScriptIsTemplate = false;
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parseParamDefs(content) {
+    const indirectM = content.match(/const\s+(\w+)\s*=\s*__PARAMS__/);
+    const directPattern = indirectM
+        ? new RegExp('const\\s*\\{([^}]+)\\}\\s*=\\s*' + indirectM[1] + '(?!\\w)')
+        : /const\s*\{([^}]+)\}\s*=\s*__PARAMS__/;
+    const match = content.match(directPattern) || content.match(/const\s*\{([^}]+)\}\s*=\s*__PARAMS__/);
+    if (match) {
+        const items = [];
+        for (const line of match[1].split('\n').map(l => l.replace(/\r$/, ''))) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            if (trimmed.startsWith('//')) {
+                items.push({ type: 'section', label: trimmed.replace(/^\/\/\s*/, '') });
+                continue;
+            }
+            const commentMatch = line.match(/\/\/(.+)$/);
+            const comment = commentMatch ? commentMatch[1].trim() : null;
+            const codePart = line.replace(/\/\/.*$/, '');
+            for (const part of codePart.split(',').map(s => s.trim()).filter(Boolean)) {
+                const defM = part.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(.+)$/);
+                const plainM = !defM && part.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)$/);
+                if (!defM && !plainM) continue;
+                const key = defM ? defM[1] : plainM[1];
+                let defaultVal = null, wasString = false;
+                if (defM) {
+                    const raw = defM[2].trim();
+                    if (/^['"`]/.test(raw)) {
+                        wasString = true;
+                        const q = raw[0], end = raw.lastIndexOf(q);
+                        defaultVal = raw.slice(1, end < 1 ? raw.length : end);
+                    } else { defaultVal = raw; }
+                }
+                items.push({ type: 'field', key, comment, defaultVal, wasString });
+            }
+        }
+        if (items.length) return items;
+    }
+    return [];
+}
+
+function detectScriptParams(content) {
+    if (content.includes('__PARAMS__')) {
+        const items = parseParamDefs(content);
+        return items.length ? { scriptType: 'params', items } : null;
+    }
+    return null;
+}
+
+function detectFieldType(key, comment, flag, defaultVal, wasString) {
+    if (comment) {
+        const opts = [...comment.matchAll(/'([^']+)'/g)].map(m => m[1]);
+        if (opts.length >= 2 && comment.includes('|')) return { type: 'select', options: opts };
+        if (/\barray\b/i.test(comment)) return { type: 'array' };
+    }
+    if (/password|username/i.test(key)) return { type: 'password' };
+    if (/^(is[A-Z]|has[A-Z])/.test(key)) return { type: 'boolean' };
+    if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Questions?|Amount|Fee|Price|Qty)$/i.test(key)) return { type: 'number' };
+    if (/File$/i.test(key)) return { type: 'file' };
+    if (!wasString && defaultVal != null && /^-?\d+(\.\d+)?$/.test(String(defaultVal))) return { type: 'number' };
+    if (!wasString && Array.isArray(defaultVal) || (typeof defaultVal === 'string' && defaultVal.startsWith('['))) return { type: 'array' };
+    return { type: 'text' };
+}
+
+function humanize(key) {
+    return key.replace(/_+/g,' ').replace(/([a-z\d])([A-Z])/g,'$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase()).trim();
+}
+
+function buildForm(items) {
+    const container = document.getElementById('paramFormFields');
+    let html = '';
+    for (const item of items) {
+        if (item.type === 'section') {
+            html += `<div class="col-12 param-section-header"><div class="d-flex align-items-center"><span class="param-section-label">${esc(item.label)}</span><div class="param-section-line"></div></div></div>`;
+            continue;
+        }
+        const { key, comment, flag, defaultVal, wasString } = item;
+        const def = detectFieldType(key, comment, flag, defaultVal, wasString);
+        const label = humanize(key);
+        const hint = (comment && def.type !== 'select') ? `<div class="param-hint">${esc(comment)}</div>` : '';
+        const dv = defaultVal != null ? esc(String(defaultVal)) : '';
+        let inp = '';
+        if (def.type === 'select') {
+            const opts = def.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            inp = `<select class="form-select form-select-sm param-input" data-key="${esc(key)}" data-type="select"><option value="">— select —</option>${opts}</select>`;
+        } else if (def.type === 'password') {
+            inp = `<div class="input-pwd-group"><input type="password" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="password" autocomplete="off" value="${dv}"><button type="button" class="input-pwd-toggle" onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'"><i class="bi bi-eye"></i></button></div>`;
+        } else if (def.type === 'boolean') {
+            inp = `<div class="form-check mt-1"><input class="form-check-input param-input" type="checkbox" data-key="${esc(key)}" data-type="boolean" id="param_${esc(key)}"><label class="form-check-label small" for="param_${esc(key)}">Enable</label></div>`;
+        } else if (def.type === 'number') {
+            inp = `<input type="number" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="number" placeholder="0" value="${dv}">`;
+        } else if (def.type === 'array') {
+            inp = `<input type="text" class="form-control form-control-sm param-input font-monospace" data-key="${esc(key)}" data-type="array" placeholder="[1,2,3]" value="${dv}">`;
+        } else if (def.type === 'file') {
+            inp = `<div class="d-flex gap-2 align-items-center">
+                      <input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="C:/path/to/file" value="${dv}">
+                      <label class="btn btn-secondary btn-sm flex-shrink-0 mb-0" title="Upload file to server">
+                          <i class="bi bi-upload"></i>
+                          <input type="file" class="d-none" accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv,.jpg,.jpeg,.png,.gif,.bmp,.webp" onchange="uploadParamFile(this, '${esc(key)}')">
+                      </label>
+                   </div>
+                   <div id="upstatus-${esc(key)}" class="param-hint mt-1" style="display:none"></div>`;
+        } else {
+            inp = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" value="${dv}">`;
+        }
+        html += `<div class="col-md-6 param-field"><div class="param-label">${esc(label)}</div>${inp}${hint}</div>`;
+    }
+    container.innerHTML = html;
+}
+
+function formToObj() {
+    const obj = {};
+    document.querySelectorAll('.param-input').forEach(el => {
+        const key = el.dataset.key, type = el.dataset.type;
+        if (type === 'boolean') { obj[key] = el.checked; return; }
+        if (el.value === '') { obj[key] = null; return; }
+        if (type === 'number') { obj[key] = Number(el.value); return; }
+        if (type === 'array') {
+            const v = el.value.trim();
+            if (!v) { obj[key] = null; return; }
+            try { obj[key] = JSON.parse(v); return; } catch {}
+            try { obj[key] = JSON.parse(v.replace(/'/g,'"')); return; } catch {}
+            obj[key] = v; return;
+        }
+        obj[key] = el.value;
+    });
+    return obj;
+}
+
+function objToForm(obj) {
+    document.querySelectorAll('.param-input').forEach(el => {
+        const val = obj[el.dataset.key];
+        if (val == null) return;
+        if (el.dataset.type === 'boolean') { el.checked = Boolean(val); return; }
+        if (el.dataset.type === 'array') { el.value = Array.isArray(val) ? JSON.stringify(val) : String(val); return; }
+        el.value = String(val);
+    });
+}
+
+async function uploadParamFile(input, paramKey) {
+    if (!input.files.length) return;
+    const statusEl = document.getElementById('upstatus-' + paramKey);
+    statusEl.style.display = '';
+    statusEl.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Uploading…';
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+    try {
+        const resp = await fetch('/ScriptFiles/UploadAjax', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': token },
+            body: fd
+        });
+        const data = await resp.json();
+        if (data.success) {
+            document.querySelector(`.param-input[data-key="${paramKey}"]`).value = data.path;
+            statusEl.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>' + data.fileName + ' uploaded';
+        } else {
+            statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>' + data.error;
+        }
+    } catch {
+        statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>Upload failed.';
+    }
+}
+
+function switchToJson() {
+    document.getElementById('paramsJsonEditor').value = JSON.stringify(formToObj(), null, 2);
+    document.getElementById('paramFormView').style.display = 'none';
+    document.getElementById('paramJsonView').style.display = 'block';
+    document.getElementById('formViewBtn').classList.remove('active');
+    document.getElementById('jsonViewBtn').classList.add('active');
+    activeView = 'json';
+}
+
+function switchToForm() {
+    try {
+        objToForm(JSON.parse(document.getElementById('paramsJsonEditor').value));
+        document.getElementById('paramFormView').style.display = 'block';
+        document.getElementById('paramJsonView').style.display = 'none';
+        document.getElementById('formViewBtn').classList.add('active');
+        document.getElementById('jsonViewBtn').classList.remove('active');
+        activeView = 'form';
+    } catch(e) {
+        document.getElementById('jsonParseError').textContent = 'Invalid JSON: ' + e.message;
+        document.getElementById('jsonParseError').style.display = 'block';
+    }
+}
+
+async function loadScriptParams(scriptId) {
+    if (!scriptId) {
+        document.getElementById('paramsLoading').style.display = 'none';
+        document.getElementById('paramsEmpty').style.display = 'block';
+        document.getElementById('paramFormView').style.display = 'none';
+        document.getElementById('paramJsonView').style.display = 'none';
+        document.getElementById('paramsRaw').style.display = 'none';
+        document.getElementById('viewToggle').style.display = 'none';
+        document.getElementById('paramsRequiredBadge').style.display = 'none';
+        currentScriptIsTemplate = false;
+        return;
+    }
+
+    document.getElementById('paramsEmpty').style.display = 'none';
+    document.getElementById('paramFormView').style.display = 'none';
+    document.getElementById('paramJsonView').style.display = 'none';
+    document.getElementById('paramsRaw').style.display = 'none';
+    document.getElementById('paramsLoading').style.display = 'block';
+
+    try {
+        const r = await fetch('/PlaywrightScripts/GetContent/' + scriptId);
+        if (!r.ok) throw new Error('Failed to load');
+        const { content } = await r.json();
+        document.getElementById('paramsLoading').style.display = 'none';
+
+        const detected = detectScriptParams(content);
+        if (detected) {
+            currentScriptIsTemplate = true;
+            buildForm(detected.items);
+
+            // Pre-fill from existing paramsJson if available
+            const existing = document.getElementById('paramsJsonHidden').value;
+            if (existing) {
+                try { objToForm(JSON.parse(existing)); } catch {}
+            }
+
+            document.getElementById('paramFormView').style.display = 'block';
+            document.getElementById('viewToggle').style.display = '';
+            document.getElementById('paramsRequiredBadge').style.display = '';
+            activeView = 'form';
+        } else {
+            currentScriptIsTemplate = false;
+            document.getElementById('paramsRaw').style.display = 'block';
+            document.getElementById('viewToggle').style.display = 'none';
+            document.getElementById('paramsRequiredBadge').style.display = 'none';
+        }
+    } catch {
+        document.getElementById('paramsLoading').style.display = 'none';
+        document.getElementById('paramsEmpty').style.display = 'block';
+    }
+}
+
+// On script change: reload params
+document.getElementById('scriptSelect').addEventListener('change', function() {
+    loadScriptParams(this.value);
+});
+
+// On submit: serialize params into hidden field
+document.getElementById('scheduleForm').addEventListener('submit', function() {
+    if (currentScriptIsTemplate) {
+        const json = activeView === 'json'
+            ? document.getElementById('paramsJsonEditor').value
+            : JSON.stringify(formToObj());
+        document.getElementById('paramsJsonHidden').value = json;
+    } else {
+        document.getElementById('paramsJsonHidden').value = document.getElementById('paramsRawEditor').value || '';
+    }
+});
+
+document.getElementById('formViewBtn').addEventListener('click', switchToForm);
+document.getElementById('jsonViewBtn').addEventListener('click', switchToJson);
+
+// Load params for initial script selection
+const initialScript = document.getElementById('scriptSelect').value;
+if (initialScript) loadScriptParams(initialScript);
+</script>
+}

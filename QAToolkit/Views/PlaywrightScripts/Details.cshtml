@@ -37,13 +37,16 @@
             }
             @if (Model.IsPublic)
             {
-                <span class="status-badge status-success"><span class="status-dot"></span>Public</span>
+                <span class="badge-status success">Public</span>
             }
         </div>
     </div>
     <div class="page-header-actions flex-shrink-0">
         <a href="/PlaywrightScripts/Download/@Model.Id" class="btn btn-secondary" title="Download script">
             <i class="bi bi-download me-1"></i> Download
+        </a>
+        <a href="/ScheduledRuns/Create?scriptId=@Model.Id" class="btn btn-secondary" title="Schedule this script">
+            <i class="bi bi-clock me-1"></i> Schedule
         </a>
         @if (isOwner)
         {
@@ -67,6 +70,28 @@
 {
     <p class="text-muted mb-4">@Model.Description</p>
 }
+
+<div class="run-stickybar" id="runStickybar">
+    <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 0;">
+        <i class="bi bi-file-earmark-code text-muted flex-shrink-0"></i>
+        <span class="fw-medium text-truncate small">@Model.Name</span>
+        <span class="sticky-divider"></span>
+        <span id="stickyStatus" class="small text-muted"><i class="bi bi-circle me-1"></i>Idle</span>
+        <span id="stickyDuration" class="small text-muted"></span>
+        <span id="stickyExit" class="small badge"></span>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        <button id="stickyStopBtn" class="btn btn-sm btn-outline-danger" style="display:none;" title="Stop script">
+            <i class="bi bi-stop-fill me-1"></i>Stop
+        </button>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <button id="stickyRunBtn" class="btn btn-primary btn-sm" title="Run script (or press Ctrl+Enter)">
+                <i class="bi bi-play-fill me-1"></i>@(isTemplate ? "Run with Params" : "Run")
+            </button>
+        }
+    </div>
+</div>
 
 <div class="row g-4">
 
@@ -163,6 +188,9 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     <span id="terminalStatus" class="small"></span>
+                    <button id="stopBtn" class="btn btn-sm btn-outline-danger py-0 px-2" style="display:none;" title="Stop script">
+                        <i class="bi bi-stop-fill me-1"></i>Stop
+                    </button>
                     <span id="terminalDuration" class="small text-muted"></span>
                     <span id="terminalExit" class="small badge"></span>
                 </div>
@@ -210,6 +238,9 @@
     .tl-success { color: #56d364; }
     .tl-error   { color: #f85149; }
     .tl-warn    { color: #e3b341; }
+    .tl-shot    { color: #d2a8ff; }
+    .tl-shot a  { color: inherit; text-decoration: underline; }
+    .tl-shot-img { display: block; margin-top: 6px; max-width: 480px; max-height: 320px; border: 1px solid #30363d; border-radius: 4px; }
     .tl-bold    { font-weight: 600; }
     @@keyframes tl-blink { 0%,100%{opacity:1} 50%{opacity:0} }
     .tl-blink   { animation: tl-blink 1s step-end infinite; }
@@ -235,7 +266,39 @@
     .input-pwd-group input { padding-right: 36px; }
     .input-pwd-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 2px 4px; color: var(--text-muted); cursor: pointer; }
 
-    #runBtn.running, #runBtnBottom.running { opacity: .7; pointer-events: none; }
+    #runBtn.running, #runBtnBottom.running, #stickyRunBtn.running { opacity: .7; pointer-events: none; }
+
+    /* ── Sticky run bar ── */
+    .run-stickybar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 14px;
+        margin: 0 0 1rem 0;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--border-subtle, #e5e7eb);
+        border-radius: var(--radius-md, 8px);
+        backdrop-filter: saturate(180%) blur(8px);
+        -webkit-backdrop-filter: saturate(180%) blur(8px);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    [data-theme="dark"] .run-stickybar {
+        background: rgba(13, 17, 23, 0.85);
+        border-color: #30363d;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+    .sticky-divider {
+        width: 1px;
+        height: 16px;
+        background: var(--border-subtle, #e5e7eb);
+        margin: 0 4px;
+        flex-shrink: 0;
+    }
+    [data-theme="dark"] .sticky-divider { background: #30363d; }
 </style>
 
 <script>
@@ -461,12 +524,13 @@ function detectFieldType(key, comment, flag, defaultVal, wasString) {
         if (opts.length >= 2 && comment.includes('|')) return { type: 'select', options: opts };
         if (/\barray\b/i.test(comment)) return { type: 'array' };
     }
-    if (/password/i.test(key) || /password/i.test(flagName)) return { type: 'password' };
+    if (/password|username/i.test(key) || /password/i.test(flagName)) return { type: 'password' };
     if (/^(is[A-Z]|has[A-Z]|unique$)/.test(key)) return { type: 'boolean' };
     // Key-name based number detection (reliable regardless of value type)
     if (/(?:Number|Count|Total|Marks?|Minutes?|Seconds?|Pct|Offset|Duration|Questions?|Amount|Exams?|Discount|Received|Payment|Fee|Price|Qty|Min$|Max$|Start$|End$|Parallel$)$/i.test(key)
         || /^(passMark|negativeMarkPct|teacherCount|entriesPerTeacher|tpinStart|tpinMax)$/.test(key))
         return { type: 'number' };
+    if (/File$/i.test(key)) return { type: 'file' };
     if (/(?:Path|Url)$/i.test(key)) return { type: 'path' };
     if (/email/i.test(key) || /email/i.test(flagName)) return { type: 'text' };
     // Only use defaultVal for type inference when it wasn't originally a quoted string
@@ -479,7 +543,12 @@ function detectFieldType(key, comment, flag, defaultVal, wasString) {
 }
 
 function humanize(key) {
-    return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+    return key
+        .replace(/_+/g, ' ')
+        .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+        .replace(/^./, s => s.toUpperCase())
+        .trim();
 }
 
 function esc(s) {
@@ -507,7 +576,7 @@ function buildForm(items) {
         const { key, comment, flag, defaultVal, wasString } = item;
         const def = detectFieldType(key, comment, flag, defaultVal, wasString);
         const label = humanize(key);
-        const hintText = comment ? `<div class="param-hint">${esc(comment)}</div>` : '';
+        const hintText = (comment && def.type !== 'select') ? `<div class="param-hint">${esc(comment)}</div>` : '';
         const dv = defaultVal != null ? esc(String(defaultVal)) : '';
         let inputHtml = '';
 
@@ -531,6 +600,15 @@ function buildForm(items) {
         } else if (def.type === 'array') {
             const ph = comment ? comment.match(/e\.g\.\s*(\[[^\]]+\])/)?.[1] || '[1]' : '[1]';
             inputHtml = `<input type="text" class="form-control form-control-sm param-input font-monospace" data-key="${esc(key)}" data-type="array" placeholder="${esc(ph)}" value="${dv}">`;
+        } else if (def.type === 'file') {
+            inputHtml = `<div class="d-flex gap-2 align-items-center">
+                            <input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="C:/path/to/file" value="${dv}">
+                            <label class="btn btn-secondary btn-sm flex-shrink-0 mb-0" title="Upload file to server">
+                                <i class="bi bi-upload"></i>
+                                <input type="file" class="d-none" accept=".xls,.xlsx,.csv,.json,.txt,.pdf,.docx,.doc,.zip,.xml,.tsv,.jpg,.jpeg,.png,.gif,.bmp,.webp" onchange="uploadParamFile(this, '${esc(key)}')">
+                            </label>
+                         </div>
+                         <div id="upstatus-${esc(key)}" class="param-hint mt-1" style="display:none"></div>`;
         } else if (def.type === 'path') {
             const ph = /Url$/i.test(key) ? 'https://' : 'C:/path/to/file';
             inputHtml = `<input type="text" class="form-control form-control-sm param-input" data-key="${esc(key)}" data-type="text" placeholder="${ph}" value="${dv}">`;
@@ -546,6 +624,31 @@ function buildForm(items) {
     }
 
     container.innerHTML = html;
+}
+
+async function uploadParamFile(input, paramKey) {
+    if (!input.files.length) return;
+    const statusEl = document.getElementById('upstatus-' + paramKey);
+    statusEl.style.display = '';
+    statusEl.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Uploading…';
+    const fd = new FormData();
+    fd.append('file', input.files[0]);
+    try {
+        const resp = await fetch('/ScriptFiles/UploadAjax', {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': antiforgeryToken },
+            body: fd
+        });
+        const data = await resp.json();
+        if (data.success) {
+            document.querySelector(`.param-input[data-key="${paramKey}"]`).value = data.path;
+            statusEl.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>' + data.fileName + ' uploaded';
+        } else {
+            statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>' + data.error;
+        }
+    } catch {
+        statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>Upload failed.';
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -639,6 +742,45 @@ function getParamsJson() {
 function classifyLine(t) {
     if (!t) return null;
 
+    // Strip UTF box-drawing chars (U+2500..U+259F) and their cp1252-mangled forms (ΓöÇ, ΓÇ║...)
+    t = t.replace(/[─-▟]+/g, '')
+         .replace(/(?:Γ[öÇ][-ÿ]?)+/g, '')
+         .trim();
+    if (!t || t.length < 2) return null;
+
+    // Hide redundant noise:
+    //   - Playwright "attachment #N: ..." (the [SCREENSHOT] line below it has the info)
+    //   - Raw absolute screenshot paths from list reporter
+    //   - "Error Context: ...error-context.md" internal artifact
+    //   - "Slow test file:" reporter footer
+    //   - "Located here:" / "Use --reporter=" hints
+    //   - npm notice (version nag)
+    //   - Empty Playwright separators "──" or just numbers like "1)"
+    if (/^attachment #\d+:/i.test(t)) return null;
+    if (/^\.{0,2}[\/\\]?.*\\outputs\\screenshots\\.*\.(png|jpe?g)$/i.test(t)) return null;
+    if (/^Error Context:/i.test(t)) return null;
+    if (/^Slow test (file|tests):/i.test(t)) return null;
+    if (/^npm (notice|warn)/i.test(t)) return null;
+    if (/^\d+\)\s*$/.test(t)) return null;
+    if (/^[-=]{3,}$/.test(t)) return null;
+
+    // Screenshot — render inline image preview + link
+    const shotM = t.match(/^\[SCREENSHOT\]\s+(\S+)/);
+    if (shotM) return { icon: '📸', cls: 'tl-shot', label: shotM[1], shotUrl: shotM[1] };
+
+    // Playwright failure lines
+    if (/^Error:\s/.test(t))                  return { icon: '❌', cls: 'tl-error tl-bold', label: t };
+    if (/^(Locator|Expected|Received|Timeout):\s/.test(t))
+                                              return { icon: '·',  cls: 'tl-warn',          label: t };
+    if (/^Call log:/i.test(t))                return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^\s*-\s+(waiting for|locator resolved|Expect)/i.test(t))
+                                              return { icon: '·',  cls: 'tl-dim',           label: t.trim() };
+    if (/^at\s+.+:\d+:\d+\)?$/.test(t))       return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^>\s*\d+\s*\|/.test(t))              return { icon: '·',  cls: 'tl-error',         label: t };
+    if (/^\s*\d+\s*\|/.test(t))               return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^\s*\|/.test(t))                     return { icon: '·',  cls: 'tl-dim',           label: t };
+    if (/^\d+\s+(failed|passed)\b/i.test(t))  return { icon: t.includes('failed') ? '❌' : '✅', cls: (t.includes('failed') ? 'tl-error' : 'tl-success') + ' tl-bold', label: t };
+
     // State/fs
     if (t.startsWith('[state]')) {
         const msg = t.slice(7).trim();
@@ -681,11 +823,60 @@ function classifyLine(t) {
         return { icon, cls: bad ? 'tl-error' : ok ? 'tl-success' : 'tl-server', label: `[S${srv}:${n}] ${content}` };
     }
 
-    // Playwright reporter
+    // Playwright reporter lines
     if (/^\s*(✓|×|✗|Running \d|\d+ (passed|failed))/i.test(t))
         return { icon: '🎭', cls: 'tl-dim', label: t.trimStart() };
 
-    return { icon: ' ', cls: 'tl-normal', label: t };
+    // Strip optional [TAG] prefix and classify on content
+    const tagM = t.match(/^\[([A-Z0-9_]+)\]\s+([\s\S]*)/i);
+    const msg = tagM ? tagM[2] : t;
+
+    // ==== ALL DONE ==== or similar completion banner
+    if (/^=*\s*ALL DONE\s*=*$/i.test(msg))
+        return { icon: '🏁', cls: 'tl-success tl-bold', label: msg };
+
+    // === SECTION === headers
+    const secM = msg.match(/^===+\s*(.+?)\s*===+$/);
+    if (secM) return { icon: '📌', cls: 'tl-info tl-bold', label: secM[1] };
+
+    // DONE / summary with saved= or "X saved, Y failed"
+    const doneM = msg.match(/saved=(\d+)\/\d+.*failed=(\d+)/i)
+               || msg.match(/(\d+) saved[^,]*,\s*(\d+) failed/i);
+    if (doneM) {
+        const failed = parseInt(doneM[2], 10);
+        return failed > 0
+            ? { icon: '⚠',  cls: 'tl-warn tl-bold',   label: msg }
+            : { icon: '✅', cls: 'tl-success tl-bold', label: msg };
+    }
+
+    // Explicit WARN
+    if (/^WARN[:\s]/i.test(msg)) return { icon: '⚠', cls: 'tl-warn', label: msg };
+
+    // Error / failure keywords
+    if (/\b(error|fail(ed)?|crash|exception|timeout)\b/i.test(msg))
+        return { icon: '❌', cls: 'tl-error', label: msg };
+
+    // Success / saved keywords
+    if (/\b(saved|success|passed|ok|done|complete[d]?|granted|logged in)\b/i.test(msg))
+        return { icon: '✅', cls: 'tl-success', label: msg };
+
+    // Setup / config steps
+    if (/\b(cascade|branch|exam|program|course|session|org)\b.*:/i.test(msg))
+        return { icon: '⚙', cls: 'tl-info', label: msg };
+
+    // Lookup / discovery
+    if (/\b(look(ing)? up|discover|resolv|found|fetch)/i.test(msg))
+        return { icon: '🔍', cls: 'tl-dim', label: msg };
+
+    // Progress counters  X/Y  or  step N of M
+    if (/\b\d+\s*\/\s*\d+\b/.test(msg) || /\bstep \d+/i.test(msg))
+        return { icon: '·', cls: 'tl-dim', label: msg };
+
+    // npm / system noise
+    if (/^npm (notice|warn|ERR)/i.test(msg))
+        return { icon: ' ', cls: 'tl-dim', label: msg };
+
+    return { icon: tagM ? '·' : ' ', cls: tagM ? 'tl-dim' : 'tl-normal', label: msg };
 }
 
 function addCursor(container) {
@@ -708,7 +899,12 @@ function appendTermLine(container, rawText) {
     if (!cl) return;
     const div = document.createElement('div');
     div.className = 'tl ' + cl.cls;
-    div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text">${esc(cl.label)}</span>`;
+    if (cl.shotUrl) {
+        const u = esc(cl.shotUrl);
+        div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text"><a href="${u}" target="_blank">${u}</a><br><a href="${u}" target="_blank"><img src="${u}" class="tl-shot-img" loading="lazy"></a></span>`;
+    } else {
+        div.innerHTML = `<span class="tl-icon">${cl.icon}</span><span class="tl-text">${esc(cl.label)}</span>`;
+    }
     container.appendChild(div);
 }
 
@@ -762,6 +958,21 @@ async function doRun() {
         autoScroll = (termOut.scrollHeight - termOut.scrollTop - termOut.clientHeight) < 60;
     }, { passive: true, once: false });
 
+    const stopBtn = document.getElementById('stopBtn');
+    let currentRunId = null;
+    stopBtn.style.display = 'none';
+    stopBtn.disabled = false;
+    stopBtn.innerHTML = '<i class="bi bi-stop-fill me-1"></i>Stop';
+    stopBtn.onclick = async () => {
+        if (!currentRunId) return;
+        stopBtn.disabled = true;
+        stopBtn.innerHTML = '<i class="bi bi-hourglass me-1"></i>Stopping…';
+        await fetch('/PlaywrightScripts/StopRun/' + currentRunId, {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': antiforgeryToken }
+        }).catch(() => {});
+    };
+
     try {
         const fd = new FormData();
         if (paramsJson) fd.append('paramsJson', paramsJson);
@@ -803,6 +1014,9 @@ async function doRun() {
 
                 if (evtLine?.includes('done')) {
                     doneData = payload;
+                } else if (evtLine?.includes('start')) {
+                    currentRunId = payload?.runId ?? null;
+                    if (currentRunId) stopBtn.style.display = 'inline-flex';
                 } else {
                     const text = String(payload || '');
                     if (text) {
@@ -817,11 +1031,15 @@ async function doRun() {
 
         cursor.remove(); cursor = null;
 
+        stopBtn.style.display = 'none';
+
         if (doneData) {
-            const { exitCode, durationMs, timedOut } = doneData;
+            const { exitCode, durationMs, timedOut, stopped } = doneData;
             clearInterval(timerInterval);
             termDur.textContent = `${(durationMs / 1000).toFixed(2)}s`;
-            if (timedOut) {
+            if (stopped) {
+                termStat.innerHTML = '<span class="text-warning"><i class="bi bi-stop-fill me-1"></i>Stopped</span>';
+            } else if (timedOut) {
                 termStat.innerHTML = '<span class="text-warning"><i class="bi bi-clock-history me-1"></i>Timed out</span>';
             } else if (exitCode === 0) {
                 termStat.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Passed</span>';
@@ -868,9 +1086,97 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 
 document.getElementById('runBtn')?.addEventListener('click', doRun);
 document.getElementById('runBtnBottom')?.addEventListener('click', doRun);
+document.getElementById('stickyRunBtn')?.addEventListener('click', doRun);
+document.getElementById('stickyStopBtn')?.addEventListener('click', () => document.getElementById('stopBtn')?.click());
+
+// Ctrl/Cmd+Enter to run
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const btn = document.getElementById('stickyRunBtn') || document.getElementById('runBtn');
+        if (btn && !btn.classList.contains('running')) { e.preventDefault(); btn.click(); }
+    }
+});
+
+// Mirror terminal status/duration/exit + Run/Stop button state to the sticky bar.
+(function setupStickyMirror() {
+    const mirror = (srcId, dstId) => {
+        const src = document.getElementById(srcId), dst = document.getElementById(dstId);
+        if (!src || !dst) return;
+        const sync = () => {
+            dst.innerHTML = src.innerHTML;
+            // For the exit badge, copy class to inherit success/danger styling
+            if (src.id === 'terminalExit') {
+                dst.textContent = src.textContent;
+                dst.className = src.className;
+            }
+        };
+        sync();
+        new MutationObserver(sync).observe(src, { attributes: true, childList: true, subtree: true, characterData: true });
+    };
+    mirror('terminalStatus', 'stickyStatus');
+    mirror('terminalDuration', 'stickyDuration');
+    mirror('terminalExit', 'stickyExit');
+
+    // Mirror Run button busy state (from #runBtn or #runBtnBottom — whichever exists)
+    const runSrc = document.getElementById('runBtn') || document.getElementById('runBtnBottom');
+    const runDst = document.getElementById('stickyRunBtn');
+    if (runSrc && runDst) {
+        new MutationObserver(() => {
+            runDst.classList.toggle('running', runSrc.classList.contains('running'));
+            // Sync the inner label/spinner
+            const hasSpinner = runSrc.innerHTML.includes('btn-spinner');
+            runDst.innerHTML = hasSpinner
+                ? '<span class="btn-spinner me-1"></span>Running...'
+                : `<i class="bi bi-play-fill me-1"></i>${isTemplate ? 'Run with Params' : 'Run'}`;
+        }).observe(runSrc, { attributes: true, childList: true, subtree: true });
+    }
+    // Mirror Stop button visibility/state
+    const stopSrc = document.getElementById('stopBtn'), stopDst = document.getElementById('stickyStopBtn');
+    if (stopSrc && stopDst) {
+        const syncStop = () => {
+            stopDst.style.display = stopSrc.style.display;
+            stopDst.disabled = stopSrc.disabled;
+            stopDst.innerHTML = stopSrc.innerHTML;
+        };
+        syncStop();
+        new MutationObserver(syncStop).observe(stopSrc, { attributes: true, childList: true, subtree: true });
+    }
+})();
 
 if (detected) {
     buildForm(detected.items);
+
+    // Conditional section visibility based on examMode
+    (function setupConditionalSections() {
+        const container = document.getElementById('paramFormFields');
+        if (!container) return;
+        let currentSection = null;
+        for (const el of Array.from(container.children)) {
+            const lbl = el.querySelector('.param-section-label');
+            if (lbl) {
+                const txt = lbl.textContent.toLowerCase();
+                currentSection = txt.includes('saq mode only') ? 'saq'
+                               : txt.includes('online written mode only') ? 'written'
+                               : null;
+                if (currentSection) el.dataset.condSection = currentSection;
+                else el.removeAttribute('data-cond-section');
+            } else if (currentSection) {
+                el.dataset.condSection = currentSection;
+            }
+        }
+        function refresh() {
+            const modeEl = container.querySelector('[data-key="examMode"]');
+            const mode = modeEl ? modeEl.value : '';
+            const showSaq     = mode === 'saq_only'  || mode === 'mcq_saq';
+            const showWritten = mode === 'mcq_written' || mode === 'written_only';
+            container.querySelectorAll('[data-cond-section]').forEach(el => {
+                const s = el.dataset.condSection;
+                el.style.display = (s === 'saq' ? showSaq : showWritten) ? '' : 'none';
+            });
+        }
+        const modeEl = container.querySelector('[data-key="examMode"]');
+        if (modeEl) { modeEl.addEventListener('change', refresh); refresh(); }
+    })();
 
     // Pre-fill defaults from item definitions (before saved values override them)
     const defaults = {};
