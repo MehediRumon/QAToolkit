@@ -397,7 +397,7 @@
                     <div class="mb-1">
                         <label class="form-label fw-medium">Model <span class="text-muted">(optional)</span></label>
                         <input type="text" class="form-control" id="settingsModel" name="model"
-                               placeholder="llama-3.3-70b-versatile">
+                               placeholder="llama-3.1-8b-instant">
                         <div class="form-text" id="modelHint">Leave blank to use the default model for the selected provider.</div>
                     </div>
                 </div>
@@ -506,12 +506,19 @@
                 appendBubble('assistant', data.reply, true);
                 if (data.chatTitle && chatTitleEl) chatTitleEl.textContent = data.chatTitle;
             } else {
-                appendError(data.error || 'Something went wrong.');
+                const msg = data.error || 'Something went wrong.';
+                const friendly = msg.includes('429') || msg.includes('rate_limit')
+                    ? '⏳ Rate limit reached. Please wait a few seconds and try again. (Tip: set model to `llama-3.1-8b-instant` in ⚙ settings for higher limits.)'
+                    : msg.includes('401') || msg.includes('invalid_api_key')
+                    ? '🔑 Invalid API key. Click ⚙ to update your key.'
+                    : msg;
+                appendError(friendly);
             }
         } catch (err) {
             thinkingEl.remove();
             appendError('Network error: ' + err.message);
         }
+
         scrollBottom();
     }
 
@@ -594,7 +601,7 @@
     function updateModelPlaceholder() {
         const p = document.getElementById('settingsProvider').value;
         const hints = {
-            Groq: 'llama-3.3-70b-versatile',
+            Groq: 'llama-3.1-8b-instant',
             Gemini: 'gemini-1.5-flash',
             Proxy: 'llama-3.3-70b-versatile'
         };
