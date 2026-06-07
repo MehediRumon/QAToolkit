@@ -606,8 +606,7 @@
         if (sf) {
             sf.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const fd = new FormData(sf);
-                fd.append('__RequestVerificationToken', TOKEN);
+                const fd = new FormData(sf); // already includes __RequestVerificationToken from @Html.AntiForgeryToken()
                 const res = await fetch(SAVE_SETTINGS_URL, { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
