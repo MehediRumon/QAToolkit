@@ -16,14 +16,16 @@ namespace QAToolkit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly PlaywrightRunnerService _runner;
+        private readonly Services.IHermesService _hermes;
 
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Process> _activeRuns = new();
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _stoppedRuns = new();
 
-        public PlaywrightScriptsController(ApplicationDbContext context, PlaywrightRunnerService runner)
+        public PlaywrightScriptsController(ApplicationDbContext context, PlaywrightRunnerService runner, Services.IHermesService hermes)
         {
             _context = context;
             _runner = runner;
+            _hermes = hermes;
         }
 
         public async Task<IActionResult> Index(string? tag)
@@ -118,6 +120,7 @@ namespace QAToolkit.Controllers
 
             _context.Add(script);
             await _context.SaveChangesAsync();
+            _ = _hermes.LogActivityAsync("ScriptCreated", User.Identity?.Name ?? "", script.Id, script.Name, script.Tags);
             TempData["Success"] = "Script imported successfully!";
             return RedirectToAction(nameof(Details), new { id = script.Id });
         }
@@ -179,6 +182,7 @@ namespace QAToolkit.Controllers
 
             _context.Update(script);
             await _context.SaveChangesAsync();
+            _ = _hermes.LogActivityAsync("ScriptEdited", User.Identity?.Name ?? "", script.Id, script.Name, script.Tags);
             TempData["Success"] = "Script updated successfully!";
             return RedirectToAction(nameof(Details), new { id = script.Id });
         }
@@ -232,6 +236,12 @@ namespace QAToolkit.Controllers
         public async Task<IActionResult> Run(int id, [FromForm] string? paramsJson = null)
         {
             var result = await _runner.RunAsync(id, paramsJson);
+            var script = await _context.PlaywrightScripts.FindAsync(id);
+            if (script != null)
+            {
+                var status = result.TimedOut ? "timeout" : (result.Success ? "ok" : "error");
+                _ = _hermes.LogActivityAsync("ScriptRun", User.Identity?.Name ?? "", id, script.Name, script.Tags, status);
+            }
             return Json(new
             {
                 success = result.Success,

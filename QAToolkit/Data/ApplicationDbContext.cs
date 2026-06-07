@@ -21,6 +21,11 @@ namespace QAToolkit.Data
         public DbSet<ScheduledRun> ScheduledRuns { get; set; }
         public DbSet<ScheduledRunLog> ScheduledRunLogs { get; set; }
         public DbSet<ScriptFile> ScriptFiles { get; set; }
+        public DbSet<HermesChat> HermesChats { get; set; }
+        public DbSet<HermesMessage> HermesMessages { get; set; }
+        public DbSet<HermesActivity> HermesActivities { get; set; }
+        public DbSet<HermesKnowledge> HermesKnowledges { get; set; }
+        public DbSet<HermesUserSettings> HermesUserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

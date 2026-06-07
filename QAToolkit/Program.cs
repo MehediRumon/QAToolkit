@@ -16,6 +16,9 @@ builder.Services.AddScoped<IOmrFillerService, OmrFillerService>();
 // Register Playwright runner (scoped — needs DbContext)
 builder.Services.AddScoped<PlaywrightRunnerService>();
 
+// Register Hermes Agent service
+builder.Services.AddScoped<QAToolkit.Services.IHermesService, QAToolkit.Services.HermesService>();
+
 // Register background scheduler
 builder.Services.AddHostedService<SchedulerHostedService>();
 
@@ -120,6 +123,59 @@ using (var scope = app.Services.CreateScope())
             UploadedAt TEXT NOT NULL
         )");
     db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ScriptFiles_FileName ON ScriptFiles (FileName)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesChats (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserName TEXT NOT NULL DEFAULT '',
+            Title TEXT NOT NULL DEFAULT 'New Chat',
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_HermesChats_UserName ON HermesChats (UserName)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesMessages (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ChatId INTEGER NOT NULL,
+            Role TEXT NOT NULL DEFAULT 'user',
+            Content TEXT NOT NULL DEFAULT '',
+            CreatedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_HermesMessages_ChatId ON HermesMessages (ChatId)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesActivities (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserName TEXT NOT NULL DEFAULT '',
+            ActivityType TEXT NOT NULL DEFAULT '',
+            EntityId INTEGER NOT NULL DEFAULT 0,
+            EntityName TEXT NOT NULL DEFAULT '',
+            Tags TEXT,
+            Extra TEXT,
+            CreatedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_HermesActivities_CreatedAt ON HermesActivities (CreatedAt)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesKnowledges (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Project TEXT NOT NULL DEFAULT '',
+            Module TEXT,
+            Summary TEXT NOT NULL DEFAULT '',
+            UpdatedAt TEXT NOT NULL,
+            UpdatedBy TEXT
+        )");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS HermesUserSettings (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserName TEXT NOT NULL DEFAULT '',
+            Provider TEXT NOT NULL DEFAULT 'Groq',
+            ApiKey TEXT NOT NULL DEFAULT '',
+            Model TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_HermesUserSettings_UserName ON HermesUserSettings (UserName)");
 
     // Ensure upload directory exists
     var uploadDir = Path.Combine(
