@@ -376,12 +376,14 @@
                     <div class="mb-3">
                         <label class="form-label fw-medium">Provider</label>
                         <select class="form-select" id="settingsProvider" name="provider" onchange="updateModelPlaceholder()">
-                            <option value="Groq">Groq (Llama 3.3 70B) — Free</option>
+                            <option value="Groq">Groq (Llama 3.1 8B) — Free</option>
+                            <option value="Cerebras">Cerebras (Llama 3.3 70B) — Free, 30M/mo</option>
                             <option value="Gemini">Google Gemini — Free</option>
                             <option value="Proxy">FreeLLMAPI Proxy (localhost)</option>
                         </select>
                         <div class="form-text">
                             Get a free key: <a href="https://console.groq.com" target="_blank">Groq</a> ·
+                            <a href="https://cloud.cerebras.ai" target="_blank">Cerebras</a> ·
                             <a href="https://aistudio.google.com/apikey" target="_blank">Gemini</a>
                         </div>
                     </div>
@@ -602,6 +604,7 @@
         const p = document.getElementById('settingsProvider').value;
         const hints = {
             Groq: 'llama-3.1-8b-instant',
+            Cerebras: 'llama-3.3-70b',
             Gemini: 'gemini-1.5-flash',
             Proxy: 'llama-3.3-70b-versatile'
         };

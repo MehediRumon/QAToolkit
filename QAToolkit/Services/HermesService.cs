@@ -317,29 +317,35 @@ namespace QAToolkit.Services
             {
                 return userSettings.Provider switch
                 {
-                    "Gemini" => ("https://generativelanguage.googleapis.com/v1beta/openai/",
-                                 userSettings.ApiKey,
-                                 userSettings.Model ?? "gemini-1.5-flash"),
-                    "Proxy"  => (_config["Hermes:ProxyUrl"] ?? "http://localhost:3001/v1/",
-                                 userSettings.ApiKey,
-                                 userSettings.Model ?? "llama-3.3-70b-versatile"),
-                    _        => ("https://api.groq.com/openai/v1/",
-                                 userSettings.ApiKey,
-                                 userSettings.Model ?? "llama-3.3-70b-versatile")
+                    "Gemini"   => ("https://generativelanguage.googleapis.com/v1beta/openai/",
+                                   userSettings.ApiKey,
+                                   userSettings.Model ?? "gemini-1.5-flash"),
+                    "Cerebras" => ("https://api.cerebras.ai/v1/",
+                                   userSettings.ApiKey,
+                                   userSettings.Model ?? "llama-3.3-70b"),
+                    "Proxy"    => (_config["Hermes:ProxyUrl"] ?? "http://localhost:3001/v1/",
+                                   userSettings.ApiKey,
+                                   userSettings.Model ?? "llama-3.3-70b-versatile"),
+                    _          => ("https://api.groq.com/openai/v1/",
+                                   userSettings.ApiKey,
+                                   userSettings.Model ?? "llama-3.3-70b-versatile")
                 };
             }
 
             return (_config["Hermes:Provider"] ?? "Groq") switch
             {
-                "Gemini" => ("https://generativelanguage.googleapis.com/v1beta/openai/",
-                             _config["Hermes:GeminiApiKey"] ?? "",
-                             _config["Hermes:GeminiModel"] ?? "gemini-1.5-flash"),
-                "Proxy"  => (_config["Hermes:ProxyUrl"] ?? "http://localhost:3001/v1/",
-                             _config["Hermes:ProxyApiKey"] ?? "no-key",
-                             _config["Hermes:ProxyModel"] ?? "llama-3.3-70b-versatile"),
-                _        => ("https://api.groq.com/openai/v1/",
-                             _config["Hermes:GroqApiKey"] ?? "",
-                             _config["Hermes:GroqModel"] ?? "llama-3.3-70b-versatile")
+                "Gemini"   => ("https://generativelanguage.googleapis.com/v1beta/openai/",
+                               _config["Hermes:GeminiApiKey"] ?? "",
+                               _config["Hermes:GeminiModel"] ?? "gemini-1.5-flash"),
+                "Cerebras" => ("https://api.cerebras.ai/v1/",
+                               _config["Hermes:CerebrasApiKey"] ?? "",
+                               _config["Hermes:CerebrasModel"] ?? "llama-3.3-70b"),
+                "Proxy"    => (_config["Hermes:ProxyUrl"] ?? "http://localhost:3001/v1/",
+                               _config["Hermes:ProxyApiKey"] ?? "no-key",
+                               _config["Hermes:ProxyModel"] ?? "llama-3.3-70b-versatile"),
+                _          => ("https://api.groq.com/openai/v1/",
+                               _config["Hermes:GroqApiKey"] ?? "",
+                               _config["Hermes:GroqModel"] ?? "llama-3.3-70b-versatile")
             };
         }
 
