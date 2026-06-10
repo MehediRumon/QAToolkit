@@ -33,6 +33,7 @@
                     <a href="#pwtest"     class="toc-link small">5 · &#64;playwright/test (TS)</a>
                     <a href="#pagefn"     class="toc-link small">Page Function Shorthand</a>
                     <a href="#fieldtypes" class="toc-link small">Field Type Detection</a>
+                    <a href="#umscascade" class="toc-link small">UMS Cascading Dropdowns</a>
                     <a href="#aiprompt"   class="toc-link small">AI Prompt Generator</a>
                     <a href="#tips"       class="toc-link small">Tips &amp; Rules</a>
                     <a href="#deploy"     class="toc-link small">Deployment Setup</a>
@@ -465,6 +466,54 @@ const __fn = (async (page) => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-4">
+
+        <!-- UMS Cascading Dropdowns -->
+        <section id="umscascade" class="mb-5">
+            <h4 class="fw-semibold mb-1">UMS Cascading Dropdowns</h4>
+            <p class="text-muted small mb-3">UMS exam scripts-এর জন্য Organization → Program → Session → Course live dropdown হিসেবে load হয়</p>
+
+            <p class="small">Script-এর <code>__PARAMS__</code> destructure-এ নিচের <strong>৭টা parameter একসাথে</strong> থাকলে form-এ একটা <span class="badge bg-primary"><i class="bi bi-cloud-download me-1"></i>Load UMS dropdowns</span> button দেখা যাবে:</p>
+
+            <div class="code-block mb-3">
+                <div class="code-block-header"><span>required parameter names</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>const {
+    servers,           // [2] → ums-2.osl.team, [0] → ums.osl.team
+    username,          // UMS login email
+    password,          // UMS login password
+    cascadeOrg        = 'UDVASH',
+    cascadeProgram    = 'Engineering Admission',
+    cascadeSession    = '2025',
+    cascadeCourse     = 'Engineering Full Course',
+} = __PARAMS__;</pre>
+            </div>
+
+            <h6 class="fw-semibold mb-2">কিভাবে কাজ করে</h6>
+            <ol class="small">
+                <li><strong>Servers, Username, Password</strong> fill করো</li>
+                <li><strong>Load UMS dropdowns</strong> button-এ click করো — system server-side-এ UMS-এ login করে Organization list নিয়ে আসে</li>
+                <li>Organization select করলে Program load হয় → Program select করলে Session → Session select করলে Course</li>
+                <li>আগে থেকে field-এ value থাকলে (যেমন saved values) সেটা automatically preselect হয়</li>
+            </ol>
+
+            <div class="alert alert-info small d-flex gap-2">
+                <i class="bi bi-info-circle flex-shrink-0 mt-1"></i>
+                <div>
+                    Login session টা server-এ <strong>10 মিনিট</strong> cache থাকে (per server + user) — বারবার button চাপলে নতুন করে login হয় না।
+                    Credentials ভুল হলে button-এর পাশে error message দেখাবে।
+                </div>
+            </div>
+
+            <div class="alert alert-warning small d-flex gap-2">
+                <i class="bi bi-exclamation-triangle flex-shrink-0 mt-1"></i>
+                <div>
+                    Parameter names <strong>হুবহু এক</strong> হতে হবে (<code>cascadeOrg</code>, <code>cascadeProgram</code>, <code>cascadeSession</code>, <code>cascadeCourse</code>, <code>servers</code>, <code>username</code>, <code>password</code>)।
+                    একটাও miss হলে button আসবে না — তখন field গুলো সাধারণ text input হিসেবেই কাজ করবে।
+                    Dropdown-এ select করা <strong>name</strong> টাই param value হিসেবে script-এ যায়।
                 </div>
             </div>
         </section>

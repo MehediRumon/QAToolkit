@@ -624,6 +624,140 @@ function buildForm(items) {
     }
 
     container.innerHTML = html;
+    setupUmsCascade();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2b. UMS CASCADING DROPDOWNS  (cascadeOrg → cascadeProgram → cascadeSession → cascadeCourse)
+//     Shown only when the script has cascade* + servers + username + password params.
+// ─────────────────────────────────────────────────────────────────────────────
+function setupUmsCascade() {
+    const need = ['cascadeOrg', 'cascadeProgram', 'cascadeSession', 'cascadeCourse', 'username', 'password', 'servers'];
+    if (!need.every(k => document.querySelector(`.param-input[data-key="${k}"]`))) return;
+    const orgField = document.querySelector('.param-input[data-key="cascadeOrg"]').closest('.param-field');
+    const wrap = document.createElement('div');
+    wrap.className = 'col-12';
+    wrap.innerHTML = `<button type="button" class="btn btn-outline-primary btn-sm" id="umsLoadBtn">
+                          <i class="bi bi-cloud-download me-1"></i>Load UMS dropdowns
+                      </button>
+                      <span id="umsLoadStatus" class="param-hint ms-2"></span>`;
+    orgField.parentNode.insertBefore(wrap, orgField);
+    document.getElementById('umsLoadBtn').addEventListener('click', () => umsLoadChain());
+}
+
+function umsCreds() {
+    const sv = document.querySelector('.param-input[data-key="servers"]').value.trim();
+    let server = '';
+    try {
+        const arr = JSON.parse(sv.replace(/'/g, '"'));
+        server = Array.isArray(arr) ? String(arr[0] ?? '') : String(arr);
+    } catch { server = sv.replace(/[\[\]\s'"]/g, '').split(',')[0] || ''; }
+    return {
+        server,
+        username: document.querySelector('.param-input[data-key="username"]').value.trim(),
+        password: document.querySelector('.param-input[data-key="password"]').value
+    };
+}
+
+async function umsCall(action, body) {
+    const resp = await fetch('/UmsCascade/' + action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': antiforgeryToken },
+        body: JSON.stringify(body)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
+}
+
+function umsStatus(msg, isError) {
+    const el = document.getElementById('umsLoadStatus');
+    el.textContent = msg || '';
+    el.style.color = isError ? '#dc3545' : '';
+}
+
+function umsToSelect(key, items, onChange) {
+    const old = document.querySelector(`.param-input[data-key="${key}"]`);
+    const current = (old.value || '').toLowerCase();
+    const sel = document.createElement('select');
+    sel.className = 'form-select form-select-sm param-input';
+    sel.dataset.key = key;
+    sel.dataset.type = 'text';
+    sel.innerHTML = '<option value="">— select —</option>' +
+        items.map(i => `<option value="${esc(i.name)}" data-id="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+    old.replaceWith(sel);
+    if (current) {
+        const opt = [...sel.options].find(o => o.value.toLowerCase() === current)
+                 || [...sel.options].find(o => o.value && o.value.toLowerCase().includes(current));
+        if (opt) sel.value = opt.value;
+    }
+    if (!sel.value && items.length === 1) sel.value = items[0].name;
+    if (onChange) sel.addEventListener('change', onChange);
+    return sel;
+}
+
+function umsSelectedId(key) {
+    const sel = document.querySelector(`.param-input[data-key="${key}"]`);
+    if (!sel || sel.tagName !== 'SELECT') return '';
+    const opt = sel.options[sel.selectedIndex];
+    return opt ? (opt.dataset.id || '') : '';
+}
+
+async function umsLoadChain() {
+    const creds = umsCreds();
+    if (!creds.username || !creds.password) { umsStatus('Fill in Username & Password first.', true); return; }
+    const btn = document.getElementById('umsLoadBtn');
+    btn.disabled = true;
+    try {
+        umsStatus('Logging in to UMS…');
+        const data = await umsCall('Organizations', creds);
+        if (!data.success) { umsStatus(data.error || 'Failed to load organizations.', true); return; }
+        const sel = umsToSelect('cascadeOrg', data.items, () => umsLoadPrograms());
+        umsStatus('Organizations loaded.');
+        if (sel.value) await umsLoadPrograms();
+    } catch (e) {
+        umsStatus('Error: ' + e.message, true);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function umsLoadPrograms() {
+    const orgId = umsSelectedId('cascadeOrg');
+    if (!orgId) return;
+    try {
+        umsStatus('Loading programs…');
+        const data = await umsCall('Programs', { ...umsCreds(), orgId });
+        if (!data.success) { umsStatus(data.error || 'Failed to load programs.', true); return; }
+        const sel = umsToSelect('cascadeProgram', data.items, () => umsLoadSessions());
+        umsStatus('Programs loaded.');
+        if (sel.value) await umsLoadSessions();
+    } catch (e) { umsStatus('Error: ' + e.message, true); }
+}
+
+async function umsLoadSessions() {
+    const programId = umsSelectedId('cascadeProgram');
+    if (!programId) return;
+    try {
+        umsStatus('Loading sessions…');
+        const data = await umsCall('Sessions', { ...umsCreds(), programId });
+        if (!data.success) { umsStatus(data.error || 'Failed to load sessions.', true); return; }
+        const sel = umsToSelect('cascadeSession', data.items, () => umsLoadCourses());
+        umsStatus('Sessions loaded.');
+        if (sel.value) await umsLoadCourses();
+    } catch (e) { umsStatus('Error: ' + e.message, true); }
+}
+
+async function umsLoadCourses() {
+    const programId = umsSelectedId('cascadeProgram');
+    const sessionId = umsSelectedId('cascadeSession');
+    if (!programId || !sessionId) return;
+    try {
+        umsStatus('Loading courses…');
+        const data = await umsCall('Courses', { ...umsCreds(), programId, sessionId });
+        if (!data.success) { umsStatus(data.error || 'Failed to load courses.', true); return; }
+        umsToSelect('cascadeCourse', data.items);
+        umsStatus('All dropdowns loaded ✓');
+    } catch (e) { umsStatus('Error: ' + e.message, true); }
 }
 
 async function uploadParamFile(input, paramKey) {
