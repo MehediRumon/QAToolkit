@@ -376,13 +376,26 @@
                     <div class="mb-3">
                         <label class="form-label fw-medium">Provider</label>
                         <select class="form-select" id="settingsProvider" name="provider" onchange="updateModelPlaceholder()">
-                            <option value="Groq">Groq (Llama 3.3 70B) — Free</option>
-                            <option value="Gemini">Google Gemini — Free</option>
-                            <option value="Proxy">FreeLLMAPI Proxy (localhost)</option>
+                            <option value="Groq">Groq — 30M/mo · Llama 3.1 8B</option>
+                            <option value="Cerebras">Cerebras — 30M/mo · Llama 3.3 70B</option>
+                            <option value="OpenRouter">OpenRouter — 6M/mo · 19 free models</option>
+                            <option value="SambaNova">SambaNova — 3M/mo · Llama 3.3 70B</option>
+                            <option value="Mistral">Mistral — 1B/mo · Mistral Small</option>
+                            <option value="GitHub">GitHub Models — 18M/mo est. · Llama 3.3 70B</option>
+                            <option value="Gemini">Google Gemini — 3M/mo · Gemini 2.0 Flash</option>
+                            <option value="Zhipu">Zhipu (Z.ai) — 30M/mo · GLM-4 Flash</option>
+                            <option value="Proxy">Custom Proxy / OpenAI-compatible</option>
                         </select>
                         <div class="form-text">
-                            Get a free key: <a href="https://console.groq.com" target="_blank">Groq</a> ·
-                            <a href="https://aistudio.google.com/apikey" target="_blank">Gemini</a>
+                            Free keys:
+                            <a href="https://console.groq.com" target="_blank">Groq</a> ·
+                            <a href="https://cloud.cerebras.ai" target="_blank">Cerebras</a> ·
+                            <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a> ·
+                            <a href="https://cloud.sambanova.ai" target="_blank">SambaNova</a> ·
+                            <a href="https://console.mistral.ai" target="_blank">Mistral</a> ·
+                            <a href="https://github.com/settings/tokens" target="_blank">GitHub</a> ·
+                            <a href="https://aistudio.google.com/apikey" target="_blank">Gemini</a> ·
+                            <a href="https://open.bigmodel.cn" target="_blank">Zhipu</a>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -397,7 +410,7 @@
                     <div class="mb-1">
                         <label class="form-label fw-medium">Model <span class="text-muted">(optional)</span></label>
                         <input type="text" class="form-control" id="settingsModel" name="model"
-                               placeholder="llama-3.3-70b-versatile">
+                               placeholder="llama-3.1-8b-instant">
                         <div class="form-text" id="modelHint">Leave blank to use the default model for the selected provider.</div>
                     </div>
                 </div>
@@ -506,12 +519,19 @@
                 appendBubble('assistant', data.reply, true);
                 if (data.chatTitle && chatTitleEl) chatTitleEl.textContent = data.chatTitle;
             } else {
-                appendError(data.error || 'Something went wrong.');
+                const msg = data.error || 'Something went wrong.';
+                const friendly = msg.includes('429') || msg.includes('rate_limit')
+                    ? '⏳ Rate limit reached. Please wait a few seconds and try again. (Tip: set model to `llama-3.1-8b-instant` in ⚙ settings for higher limits.)'
+                    : msg.includes('401') || msg.includes('invalid_api_key')
+                    ? '🔑 Invalid API key. Click ⚙ to update your key.'
+                    : msg;
+                appendError(friendly);
             }
         } catch (err) {
             thinkingEl.remove();
             appendError('Network error: ' + err.message);
         }
+
         scrollBottom();
     }
 
@@ -594,9 +614,15 @@
     function updateModelPlaceholder() {
         const p = document.getElementById('settingsProvider').value;
         const hints = {
-            Groq: 'llama-3.3-70b-versatile',
-            Gemini: 'gemini-1.5-flash',
-            Proxy: 'llama-3.3-70b-versatile'
+            Groq:       'llama-3.1-8b-instant',
+            Cerebras:   'llama-3.3-70b',
+            OpenRouter: 'meta-llama/llama-3.3-70b-instruct:free',
+            SambaNova:  'Meta-Llama-3.3-70B-Instruct',
+            Mistral:    'mistral-small-latest',
+            GitHub:     'Meta-Llama-3.3-70B-Instruct',
+            Gemini:     'gemini-2.0-flash',
+            Zhipu:      'glm-4-flash',
+            Proxy:      'llama-3.3-70b-versatile'
         };
         document.getElementById('settingsModel').placeholder = hints[p] || 'default';
     }
@@ -606,8 +632,7 @@
         if (sf) {
             sf.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const fd = new FormData(sf);
-                fd.append('__RequestVerificationToken', TOKEN);
+                const fd = new FormData(sf); // already includes __RequestVerificationToken from @Html.AntiForgeryToken()
                 const res = await fetch(SAVE_SETTINGS_URL, { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
