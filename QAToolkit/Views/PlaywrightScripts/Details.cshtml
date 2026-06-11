@@ -634,14 +634,23 @@ function buildForm(items) {
 function setupUmsCascade() {
     const need = ['cascadeOrg', 'cascadeProgram', 'cascadeSession', 'cascadeCourse', 'username', 'password', 'servers'];
     if (!need.every(k => document.querySelector(`.param-input[data-key="${k}"]`))) return;
-    const orgField = document.querySelector('.param-input[data-key="cascadeOrg"]').closest('.param-field');
+
+    // Move the cascade fields directly below the username/password fields,
+    // with the load button between them.
+    const passField = document.querySelector('.param-input[data-key="password"]').closest('.param-field');
     const wrap = document.createElement('div');
     wrap.className = 'col-12';
     wrap.innerHTML = `<button type="button" class="btn btn-outline-primary btn-sm" id="umsLoadBtn">
                           <i class="bi bi-cloud-download me-1"></i>Load UMS dropdowns
                       </button>
                       <span id="umsLoadStatus" class="param-hint ms-2"></span>`;
-    orgField.parentNode.insertBefore(wrap, orgField);
+    passField.after(wrap);
+    let anchor = wrap;
+    for (const k of ['cascadeOrg', 'cascadeProgram', 'cascadeSession', 'cascadeCourse']) {
+        const f = document.querySelector(`.param-input[data-key="${k}"]`).closest('.param-field');
+        anchor.after(f);
+        anchor = f;
+    }
     document.getElementById('umsLoadBtn').addEventListener('click', () => umsLoadChain());
 }
 
