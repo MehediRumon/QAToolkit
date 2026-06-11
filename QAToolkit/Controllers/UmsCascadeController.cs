@@ -118,10 +118,18 @@ namespace QAToolkit.Controllers
                             return Json(new { success = false, error = loginError });
                     }
 
-                    var items = await work(client);
-                    if (items.Count > 0 || attempt == 1)
-                        return Json(new { success = true, items });
-                    // Empty on first attempt → cookie may be stale; retry with fresh login.
+                    try
+                    {
+                        var items = await work(client);
+                        if (items.Count > 0 || attempt == 1)
+                            return Json(new { success = true, items });
+                        // Empty on first attempt → cookie may be stale; retry with fresh login.
+                    }
+                    catch (InvalidOperationException) when (attempt == 0)
+                    {
+                        // Could be a stale session causing a permission redirect —
+                        // fall through to attempt 1 (fresh login) before surfacing it.
+                    }
                 }
                 return Json(new { success = true, items = new List<Item>() });
             }
@@ -170,8 +178,28 @@ namespace QAToolkit.Controllers
                 Content = new FormUrlEncodedContent(form)
             };
             request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+            // Some UMS servers (e.g. ums-1, ums-5) gate the CommonAjax endpoints on
+            // a same-origin Referer/Origin — without these they return PermissionDenied.
+            var origin = client.BaseAddress!.GetLeftPart(UriPartial.Authority);
+            request.Headers.TryAddWithoutValidation("Referer", $"{origin}/Exam/Exams/CreateExam");
+            request.Headers.TryAddWithoutValidation("Origin", origin);
             var resp = await client.SendAsync(request);
             var txt = await resp.Content.ReadAsStringAsync();
+
+            // The cascade endpoints are permission-gated. When the logged-in user
+            // lacks access, UMS redirects to /Home/PermissionDenied (HTML, not JSON).
+            // Surface that as a clear error instead of a silently empty dropdown.
+            var finalUrl = resp.RequestMessage?.RequestUri?.AbsoluteUri ?? "";
+            if (finalUrl.Contains("PermissionDenied", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    "Permission denied — this UMS account cannot load Program/Session/Course on this server. " +
+                    "Ask a UMS admin to grant exam permission for this account on this server.");
+
+            var looksHtml = txt.TrimStart().StartsWith("<", StringComparison.Ordinal);
+            if (looksHtml)
+                throw new InvalidOperationException(
+                    "Unexpected response from UMS (not a data list) — likely a permission or session issue on this server.");
+
             return ParseJsonList(txt);
         }
 

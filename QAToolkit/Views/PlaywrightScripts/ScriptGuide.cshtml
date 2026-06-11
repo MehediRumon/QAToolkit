@@ -475,14 +475,14 @@ const __fn = (async (page) => {
         <!-- UMS Cascading Dropdowns -->
         <section id="umscascade" class="mb-5">
             <h4 class="fw-semibold mb-1">UMS Cascading Dropdowns</h4>
-            <p class="text-muted small mb-3">UMS exam scripts-এর জন্য Organization → Program → Session → Course live dropdown হিসেবে load হয়</p>
+            <p class="text-muted small mb-3">Organization → Program → Session → Course — form-এ live dropdown হিসেবে, এবং script-এর ভেতরে <code>ums-helpers</code> দিয়ে auto-resolve</p>
 
             <p class="small">Script-এর <code>__PARAMS__</code> destructure-এ নিচের <strong>৭টা parameter একসাথে</strong> থাকলে form-এ একটা <span class="badge bg-primary"><i class="bi bi-cloud-download me-1"></i>Load UMS dropdowns</span> button দেখা যাবে:</p>
 
             <div class="code-block mb-3">
                 <div class="code-block-header"><span>required parameter names</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
 <pre>const {
-    servers,           // [2] → ums-2.osl.team, [0] → ums.osl.team
+    servers,           // 2 → ums-2.osl.team, 0 → ums.osl.team (multiple: "1,3")
     username,          // UMS login email
     password,          // UMS login password
     cascadeOrg        = 'UDVASH',
@@ -514,6 +514,87 @@ const __fn = (async (page) => {
                     Parameter names <strong>হুবহু এক</strong> হতে হবে (<code>cascadeOrg</code>, <code>cascadeProgram</code>, <code>cascadeSession</code>, <code>cascadeCourse</code>, <code>servers</code>, <code>username</code>, <code>password</code>)।
                     একটাও miss হলে button আসবে না — তখন field গুলো সাধারণ text input হিসেবেই কাজ করবে।
                     Dropdown-এ select করা <strong>name</strong> টাই param value হিসেবে script-এ যায়।
+                </div>
+            </div>
+
+            <!-- ums-helpers in your own script -->
+            <h5 class="fw-semibold mb-1 mt-4">নিজের script-এ Org/Program/Session/Course auto-load</h5>
+            <p class="text-muted small mb-3">Dropdown form-এ name দেখায়, কিন্তু UMS-এর API-তে <strong>id</strong> দরকার। <code>ums-helpers</code> module টা name → id resolve করে এবং যেকোনো UMS page-এর cascade dropdown fill করে দেয়। প্রতিটা script-এ logic copy করার দরকার নেই — শুধু <code>require()</code> করো।</p>
+
+            <p class="small mb-2"><span class="badge badge-success me-1"><i class="bi bi-check-circle"></i></span>Module টা server-এ already deploy করা আছে — app start হওয়ার সময় <code>ScriptLibs/</code> থেকে <code>node_modules</code>-এ copy হয়ে যায়। তুমি শুধু <code>require('ums-helpers')</code> লিখবে।</p>
+
+            <h6 class="fw-semibold mb-2 mt-3">পূর্ণ example</h6>
+            <div class="code-block mb-3">
+                <div class="code-block-header"><span>my-ums-script.js — node runner</span><button class="btn-copy" onclick="copyCode(this)"><i class="bi bi-clipboard"></i></button></div>
+<pre>async (page) =&gt; {
+    const PARAMS = __PARAMS__;
+    const {
+        // এই ৭টা নাম দিলে form-এ "Load UMS dropdowns" button আসবে
+        servers,           // 2 → ums-2.osl.team, 0 → ums.osl.team
+        username,          // UMS login email
+        password,          // UMS login password
+        cascadeOrg        = 'UDVASH',
+        cascadeProgram    = 'Engineering Admission',
+        cascadeSession    = '2025',
+        cascadeCourse     = 'Engineering Full Course',
+    } = PARAMS;
+
+    const ums = require('ums-helpers');
+    const log = [];
+    const step = m =&gt; { log.push(m); console.log(m); };
+
+    const list = ums.serverList(servers);          // "1,3" / 2 / [2] → array
+    if (!username || !password) return { success: false, message: 'credentials required', log };
+    if (list.length === 0)      return { success: false, message: 'server required', log };
+
+    const base = ums.umsBase(list[0]);             // 2 → https://ums-2.osl.team
+
+    // 1. Login
+    await ums.login(page, base, username, password);
+    step('Logged in to ' + base);
+
+    // 2. Name → id resolve (Org/Program/Session/Course)
+    await page.goto(base + '/Exam/Exams/CreateExam');
+    await page.waitForLoadState('domcontentloaded');
+    const ids = await ums.resolveCascade(page, base, {
+        org: cascadeOrg, program: cascadeProgram,
+        session: cascadeSession, course: cascadeCourse,
+    }, step);
+
+    // 3. যেকোনো UMS page-এর dropdown fill করো
+    await ums.applyCascade(page, ids, ums.SELS_FORM());   // entry forms
+    // await ums.applyCascade(page, ids, ums.SELS_SEARCH); // search/filter forms
+
+    // …এখন এই script যা করার তা করো…
+    return { success: true, ids, log };
+}</pre>
+            </div>
+
+            <h6 class="fw-semibold mb-2 mt-3"><code>ums-helpers</code> API</h6>
+            <div class="card mb-3">
+                <div class="table-responsive">
+                    <table class="table mb-0 small">
+                        <thead>
+                            <tr><th>Function</th><th>কাজ</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>umsBase(server)</code></td><td><code>2</code> → <code>https://ums-2.osl.team</code>, <code>0</code>/<code>''</code> → <code>https://ums.osl.team</code></td></tr>
+                            <tr><td><code>serverList(servers)</code></td><td><code>[1,3]</code> / <code>2</code> / <code>"1,3"</code> → normalize করে array দেয়</td></tr>
+                            <tr><td><code>login(page, base, user, pass)</code></td><td>Login করে; ভুল credentials-এ throw করে</td></tr>
+                            <tr><td><code>resolveCascade(page, base, names, log?)</code></td><td>name → id resolve করে <code>{org, prog, sess, course}</code> দেয়। না মিললে available list সহ error দেয়</td></tr>
+                            <tr><td><code>applyCascade(page, ids, sels)</code></td><td>৪টা cascade dropdown id দিয়ে select করে</td></tr>
+                            <tr><td><code>SELS_FORM(ov?)</code> / <code>SELS_SEARCH</code></td><td>entry form / search form-এর selector set। কোনো page আলাদা হলে override: <code>SELS_FORM(&#123; course: '#course' &#125;)</code></td></tr>
+                            <tr><td><code>postForm</code>, <code>normList</code>, <code>pickByName</code>, <code>waitOpts</code>, <code>isUmsResp</code></td><td>নিজের custom flow বানানোর জন্য low-level helper</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="alert alert-info small d-flex gap-2">
+                <i class="bi bi-lightbulb flex-shrink-0 mt-1"></i>
+                <div>
+                    <code>resolveCascade</code> অবশ্যই এমন একটা logged-in page-এ চালাতে হবে যেখানে <code>#OrganizationId</code> dropdown populated থাকে — সবচেয়ে সহজ উপায়: আগে <code>page.goto(base + '/Exam/Exams/CreateExam')</code> করা।
+                    Name matching <strong>case-insensitive</strong> — exact match আগে, তারপর partial (যেমন <code>'Engineering Admission'</code> → <code>'Engineering Admission Program'</code> মেলে)।
                 </div>
             </div>
         </section>

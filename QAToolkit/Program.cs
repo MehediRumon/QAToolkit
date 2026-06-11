@@ -184,6 +184,24 @@ using (var scope = app.Services.CreateScope())
         "script-uploads");
     Directory.CreateDirectory(uploadDir);
 
+    // Deploy bundled script libraries (ScriptLibs/*.js, e.g. ums-helpers) into the
+    // Playwright working directory's node_modules so any script can require() them
+    // (the runner sets NODE_PATH to that folder).
+    try
+    {
+        var libSource = Path.Combine(app.Environment.ContentRootPath, "ScriptLibs");
+        if (Directory.Exists(libSource))
+        {
+            var nodeModulesDir = Path.Combine(
+                app.Configuration["Playwright:WorkingDirectory"] ?? @"C:\qa-scripts",
+                "node_modules");
+            Directory.CreateDirectory(nodeModulesDir);
+            foreach (var lib in Directory.GetFiles(libSource, "*.js"))
+                File.Copy(lib, Path.Combine(nodeModulesDir, Path.GetFileName(lib)), overwrite: true);
+        }
+    }
+    catch { /* non-fatal — scripts that don't use shared libs are unaffected */ }
+
     // Seed NextRunAt for any existing schedules that don't have it set
     var pendingSchedules = db.ScheduledRuns
         .Where(s => s.IsEnabled && s.NextRunAt == null && s.ScheduleType != "once")
