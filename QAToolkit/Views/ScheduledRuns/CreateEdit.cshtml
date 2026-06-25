@@ -82,19 +82,26 @@
                 <div class="sched-section @(schedType == "interval" ? "" : "d-none")" id="section-interval">
                     <label class="form-label fw-medium small">Repeat Every</label>
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <input type="number" name="intervalMinutes" id="intervalMinutes" class="form-control"
-                               style="max-width:110px" min="1" max="10080" placeholder="30"
+                        <input type="number" id="intervalValue" class="form-control"
+                               style="max-width:90px" min="1" placeholder="3" />
+                        <select id="intervalUnit" class="form-select" style="max-width:130px">
+                            <option value="1">minutes</option>
+                            <option value="60">hours</option>
+                            <option value="1440">days</option>
+                        </select>
+                        <!-- backend still receives intervalMinutes; JS keeps it in sync -->
+                        <input type="hidden" name="intervalMinutes" id="intervalMinutes"
                                value="@(Model?.IntervalMinutes?.ToString() ?? "")" />
-                        <span class="text-muted small">minutes</span>
                     </div>
-                    <div class="d-flex gap-1 flex-wrap">
-                        @foreach (var (m, lbl) in new[]{("15","15m"),("30","30m"),("60","1h"),("120","2h"),("360","6h"),("720","12h"),("1440","24h")})
+                    <div class="d-flex gap-1 flex-wrap mb-2">
+                        @foreach (var (v, u, lbl) in new[]{("30","1","30m"),("1","60","1h"),("6","60","6h"),("12","60","12h"),("1","1440","1d"),("2","1440","2d"),("3","1440","3d"),("7","1440","7d")})
                         {
-                            <button type="button" class="btn btn-ghost btn-sm py-0 px-2"
+                            <button type="button" class="btn btn-ghost btn-sm py-0 px-2 interval-preset"
                                     style="font-size:11px;border:1px solid var(--border-subtle)"
-                                    onclick="document.getElementById('intervalMinutes').value='@m'">@lbl</button>
+                                    data-value="@v" data-unit="@u">@lbl</button>
                         }
                     </div>
+                    <small class="text-muted" id="intervalSummary"></small>
                 </div>
             </div>
         </div>
@@ -207,6 +214,47 @@ document.querySelectorAll('.type-tab').forEach(tab => {
         document.getElementById('section-' + type).classList.remove('d-none');
     });
 });
+
+// ── Interval: value + unit (minutes/hours/days) → hidden intervalMinutes ───────
+(function () {
+    const valEl = document.getElementById('intervalValue');
+    const unitEl = document.getElementById('intervalUnit');
+    const hidden = document.getElementById('intervalMinutes');
+    const summary = document.getElementById('intervalSummary');
+    if (!valEl || !unitEl || !hidden) return;
+
+    const fmt = (mins) => {
+        if (mins % 1440 === 0) { const d = mins / 1440; return d + ' day' + (d > 1 ? 's' : ''); }
+        if (mins % 60 === 0) { const h = mins / 60; return h + ' hour' + (h > 1 ? 's' : ''); }
+        return mins + ' minute' + (mins > 1 ? 's' : '');
+    };
+    function recompute() {
+        const v = parseInt(valEl.value, 10), u = parseInt(unitEl.value, 10);
+        if (!v || v < 1) { hidden.value = ''; summary.textContent = ''; return; }
+        const mins = v * u;
+        hidden.value = mins;
+        summary.textContent = `= every ${fmt(mins)} (${mins} minutes)`;
+    }
+    // edit mode: decompose stored minutes into the largest whole unit
+    (function loadFromHidden() {
+        const mins = parseInt(hidden.value, 10);
+        if (mins && mins >= 1) {
+            const u = mins % 1440 === 0 ? 1440 : (mins % 60 === 0 ? 60 : 1);
+            valEl.value = mins / u;
+            unitEl.value = String(u);
+        }
+        recompute();
+    })();
+    valEl.addEventListener('input', recompute);
+    unitEl.addEventListener('change', recompute);
+    document.querySelectorAll('.interval-preset').forEach(b => {
+        b.addEventListener('click', () => {
+            valEl.value = b.dataset.value;
+            unitEl.value = b.dataset.unit;
+            recompute();
+        });
+    });
+})();
 
 // Default runOnce to now+5min if empty
 (function() {
