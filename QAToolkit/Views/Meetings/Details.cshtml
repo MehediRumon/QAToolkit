@@ -1,0 +1,113 @@
+@model QAToolkit.Models.Meeting
+@{
+    ViewData["Title"] = "Meeting Details";
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.Title</h1>
+        <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+            @if (!string.IsNullOrEmpty(Model.Source))
+            {
+                <span class="badge bg-secondary">@Model.Source</span>
+            }
+            <span class="text-muted small">
+                <i class="bi bi-calendar3"></i> @Model.MeetingDate.ToString("MMM dd, yyyy HH:mm")
+            </span>
+            @if (Model.DurationMinutes.HasValue)
+            {
+                <span class="text-muted small"><i class="bi bi-stopwatch"></i> @Model.DurationMinutes min</span>
+            }
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+              data-confirm="Delete this meeting and all its screen notes? This action cannot be undone." data-confirm-title="Delete meeting">
+            <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        </form>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="detail-meta">
+    <div class="detail-meta-item">
+        <span class="detail-meta-label">Participants</span>
+        <span class="detail-meta-value">@(string.IsNullOrEmpty(Model.Participants) ? "—" : Model.Participants)</span>
+    </div>
+    <div class="detail-meta-item">
+        <span class="detail-meta-label">Screen Notes</span>
+        <span class="detail-meta-value">@Model.ScreenNotes.Count</span>
+    </div>
+    <div class="detail-meta-item">
+        <span class="detail-meta-label">Received</span>
+        <span class="detail-meta-value">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.CreatedBy))
+    {
+        <div class="detail-meta-item">
+            <span class="detail-meta-label">Sent By</span>
+            <span class="detail-meta-value">@Model.CreatedBy</span>
+        </div>
+    }
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Summary))
+{
+    <div class="detail-section">
+        <div class="detail-section-title"><i class="bi bi-card-text"></i> Summary</div>
+        <div class="detail-content" style="white-space: pre-wrap;">@Model.Summary</div>
+    </div>
+}
+
+@if (Model.ScreenNotes.Any())
+{
+    <div class="detail-section">
+        <div class="detail-section-title"><i class="bi bi-images"></i> Screen Notes</div>
+        <div class="row g-3">
+            @foreach (var note in Model.ScreenNotes)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100">
+                        @if (!string.IsNullOrEmpty(note.ImagePath))
+                        {
+                            <a href="@note.ImagePath" target="_blank" title="Open full size">
+                                <img src="@note.ImagePath" class="card-img-top" alt="Screen capture" style="max-height: 220px; object-fit: contain; background: var(--color-gray-100, #f1f3f5);" />
+                            </a>
+                        }
+                        <div class="card-body py-2">
+                            @if (note.CapturedAt.HasValue)
+                            {
+                                <div class="text-muted small mb-1"><i class="bi bi-clock"></i> @note.CapturedAt.Value.ToString("HH:mm:ss")</div>
+                            }
+                            @if (!string.IsNullOrEmpty(note.Note))
+                            {
+                                <div class="small" style="white-space: pre-wrap;">@note.Note</div>
+                            }
+                            else if (string.IsNullOrEmpty(note.ImagePath))
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.Transcript))
+{
+    <div class="detail-section">
+        <div class="detail-section-title d-flex align-items-center justify-content-between">
+            <span><i class="bi bi-chat-square-text"></i> Transcript</span>
+            <button class="btn btn-sm btn-ghost" type="button" onclick="copyToClipboard(document.getElementById('transcriptText').innerText, this)" title="Copy transcript">
+                <i class="bi bi-clipboard"></i> Copy
+            </button>
+        </div>
+        <div class="detail-content" id="transcriptText" style="white-space: pre-wrap; max-height: 480px; overflow-y: auto;">@Model.Transcript</div>
+    </div>
+}

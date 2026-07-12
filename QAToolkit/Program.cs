@@ -178,6 +178,31 @@ using (var scope = app.Services.CreateScope())
         )");
     db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_HermesUserSettings_UserName ON HermesUserSettings (UserName)");
 
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS Meetings (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Title TEXT NOT NULL,
+            MeetingDate TEXT NOT NULL,
+            DurationMinutes INTEGER,
+            Participants TEXT,
+            Source TEXT,
+            Summary TEXT,
+            Transcript TEXT,
+            CreatedBy TEXT,
+            CreatedAt TEXT NOT NULL
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_Meetings_MeetingDate ON Meetings (MeetingDate)");
+
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS MeetingScreenNotes (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            MeetingId INTEGER NOT NULL,
+            CapturedAt TEXT,
+            Note TEXT,
+            ImagePath TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_MeetingScreenNotes_MeetingId ON MeetingScreenNotes (MeetingId)");
+
     // Ensure upload directory exists
     var uploadDir = Path.Combine(
         app.Configuration["Playwright:WorkingDirectory"] ?? @"C:\qa-scripts",

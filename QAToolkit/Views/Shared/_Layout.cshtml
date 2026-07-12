@@ -131,6 +131,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link @(currentController == "Meetings" ? "active" : "")"
+                       asp-controller="Meetings" asp-action="Index">
+                        <i class="bi bi-camera-video"></i><span>AI Meetings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link @(currentController == "Workflows" ? "active" : "")"
                        asp-controller="Workflows" asp-action="Index">
                         <i class="bi bi-diagram-3"></i><span>Workflows</span>

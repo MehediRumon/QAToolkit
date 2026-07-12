@@ -26,6 +26,8 @@ namespace QAToolkit.Data
         public DbSet<HermesActivity> HermesActivities { get; set; }
         public DbSet<HermesKnowledge> HermesKnowledges { get; set; }
         public DbSet<HermesUserSettings> HermesUserSettings { get; set; }
+        public DbSet<Meeting> Meetings { get; set; }
+        public DbSet<MeetingScreenNote> MeetingScreenNotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -70,6 +72,12 @@ namespace QAToolkit.Data
 
             modelBuilder.Entity<ScheduledRunLog>()
                 .HasIndex(l => l.ScheduledRunId);
+
+            modelBuilder.Entity<Meeting>()
+                .HasIndex(m => m.MeetingDate);
+
+            modelBuilder.Entity<MeetingScreenNote>()
+                .HasIndex(n => n.MeetingId);
         }
     }
 }
