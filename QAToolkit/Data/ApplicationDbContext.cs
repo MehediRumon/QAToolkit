@@ -76,6 +76,11 @@ namespace QAToolkit.Data
             modelBuilder.Entity<Meeting>()
                 .HasIndex(m => m.MeetingDate);
 
+            modelBuilder.Entity<Meeting>()
+                .HasIndex(m => m.Uuid)
+                .IsUnique()
+                .HasFilter("Uuid IS NOT NULL");
+
             modelBuilder.Entity<MeetingScreenNote>()
                 .HasIndex(n => n.MeetingId);
         }

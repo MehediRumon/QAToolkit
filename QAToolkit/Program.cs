@@ -182,6 +182,7 @@ using (var scope = app.Services.CreateScope())
         CREATE TABLE IF NOT EXISTS Meetings (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             Title TEXT NOT NULL,
+            Uuid TEXT,
             MeetingDate TEXT NOT NULL,
             DurationMinutes INTEGER,
             Participants TEXT,
@@ -192,6 +193,8 @@ using (var scope = app.Services.CreateScope())
             CreatedAt TEXT NOT NULL
         )");
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_Meetings_MeetingDate ON Meetings (MeetingDate)");
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE Meetings ADD COLUMN Uuid TEXT"); } catch { /* column already exists */ }
+    db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_Meetings_Uuid ON Meetings (Uuid) WHERE Uuid IS NOT NULL");
 
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS MeetingScreenNotes (

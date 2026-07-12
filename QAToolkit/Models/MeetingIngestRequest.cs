@@ -3,6 +3,7 @@ namespace QAToolkit.Models
     // JSON payload pushed by the AI meeting desktop app to POST /api/meetings/ingest
     public class MeetingIngestRequest
     {
+        public string? Uuid { get; set; }
         public string? Title { get; set; }
         public DateTime? MeetingDate { get; set; }
         public int? DurationMinutes { get; set; }

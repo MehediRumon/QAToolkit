@@ -119,22 +119,47 @@ namespace QAToolkit.Controllers
                 return BadRequest(new { ok = false, error = "Request body must be JSON." });
 
             var now = DateTimeHelper.BdNow;
-            var meeting = new Meeting
-            {
-                Title = string.IsNullOrWhiteSpace(request.Title)
-                    ? $"Meeting {now:MMM dd, yyyy HH:mm}"
-                    : request.Title.Trim(),
-                MeetingDate = request.MeetingDate ?? now,
-                DurationMinutes = request.DurationMinutes,
-                Participants = request.Participants,
-                Source = request.Source,
-                Summary = request.Summary,
-                Transcript = request.Transcript,
-                CreatedBy = request.CreatedBy,
-                CreatedAt = now
-            };
+            var uuid = string.IsNullOrWhiteSpace(request.Uuid) ? null : request.Uuid.Trim();
 
-            _context.Meetings.Add(meeting);
+            // Upsert on the sender's uuid so re-sends update instead of duplicating
+            Meeting? meeting = null;
+            var updated = false;
+            if (uuid != null)
+                meeting = await _context.Meetings
+                    .Include(m => m.ScreenNotes)
+                    .FirstOrDefaultAsync(m => m.Uuid == uuid);
+
+            if (meeting == null)
+            {
+                meeting = new Meeting { Uuid = uuid, MeetingDate = now, CreatedAt = now };
+                _context.Meetings.Add(meeting);
+            }
+            else
+            {
+                updated = true;
+                _context.MeetingScreenNotes.RemoveRange(meeting.ScreenNotes);
+                meeting.ScreenNotes.Clear();
+                try
+                {
+                    var oldDir = Path.Combine(_environment.WebRootPath, "uploads", "meetings", meeting.Id.ToString());
+                    if (Directory.Exists(oldDir))
+                        Directory.Delete(oldDir, recursive: true);
+                }
+                catch { /* orphaned images are harmless */ }
+            }
+
+            meeting.Title = string.IsNullOrWhiteSpace(request.Title)
+                ? $"Meeting {now:MMM dd, yyyy HH:mm}"
+                : request.Title.Trim();
+            if (request.MeetingDate.HasValue)
+                meeting.MeetingDate = request.MeetingDate.Value;
+            meeting.DurationMinutes = request.DurationMinutes;
+            meeting.Participants = request.Participants;
+            meeting.Source = request.Source;
+            meeting.Summary = request.Summary;
+            meeting.Transcript = request.Transcript;
+            meeting.CreatedBy = request.CreatedBy;
+
             await _context.SaveChangesAsync(); // need Id for the image folder
 
             var savedNotes = 0;
@@ -192,6 +217,7 @@ namespace QAToolkit.Controllers
             {
                 ok = true,
                 id = meeting.Id,
+                updated,
                 url = Url.Action(nameof(Details), "Meetings", new { id = meeting.Id }, Request.Scheme),
                 screenNotesSaved = savedNotes,
                 imagesSkipped = skippedImages

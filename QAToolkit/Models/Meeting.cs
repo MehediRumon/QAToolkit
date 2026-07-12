@@ -10,6 +10,9 @@ namespace QAToolkit.Models
         [StringLength(300)]
         public string Title { get; set; } = string.Empty;
 
+        [StringLength(100)]
+        public string? Uuid { get; set; } // sender's unique meeting id, used for dedup/upsert
+
         public DateTime MeetingDate { get; set; }
 
         public int? DurationMinutes { get; set; }
