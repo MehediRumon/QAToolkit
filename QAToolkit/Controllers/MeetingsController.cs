@@ -93,6 +93,90 @@ namespace QAToolkit.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // ===== Knowledge file (knowledge.json the desktop app fetches) =====
+
+        // GET: Meetings/Knowledge — upload/download page
+        public async Task<IActionResult> Knowledge()
+        {
+            var knowledge = await _context.MeetingKnowledges.FirstOrDefaultAsync();
+            ViewBag.ApiKey = _config["MeetingIngest:ApiKey"];
+            return View(knowledge);
+        }
+
+        // POST /admin/knowledge/upload
+        [HttpPost("admin/knowledge/upload")]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(10_485_760)]
+        public async Task<IActionResult> UploadKnowledge(IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Choose a file to upload.";
+                return RedirectToAction(nameof(Knowledge));
+            }
+
+            string content;
+            using (var reader = new StreamReader(file.OpenReadStream()))
+                content = await reader.ReadToEndAsync();
+
+            try
+            {
+                System.Text.Json.JsonDocument.Parse(content).Dispose();
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                TempData["Error"] = $"Upload rejected — not valid JSON: {ex.Message}";
+                return RedirectToAction(nameof(Knowledge));
+            }
+
+            var knowledge = await _context.MeetingKnowledges.FirstOrDefaultAsync();
+            if (knowledge == null)
+            {
+                knowledge = new MeetingKnowledge();
+                _context.MeetingKnowledges.Add(knowledge);
+            }
+
+            knowledge.Content = content;
+            knowledge.FileName = string.IsNullOrWhiteSpace(file.FileName)
+                ? "knowledge.json"
+                : Path.GetFileName(file.FileName);
+            knowledge.Version += 1;
+            knowledge.UpdatedAt = DateTimeHelper.BdNow;
+            knowledge.UpdatedBy = User.Identity?.Name;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Knowledge file uploaded — now version {knowledge.Version}.";
+            return RedirectToAction(nameof(Knowledge));
+        }
+
+        // GET /admin/knowledge/download
+        [HttpGet("admin/knowledge/download")]
+        public async Task<IActionResult> DownloadKnowledge()
+        {
+            var knowledge = await _context.MeetingKnowledges.FirstOrDefaultAsync();
+            if (knowledge == null)
+                return NotFound("No knowledge file uploaded yet.");
+
+            return File(System.Text.Encoding.UTF8.GetBytes(knowledge.Content),
+                "application/json", knowledge.FileName);
+        }
+
+        // GET /api/meetings/knowledge — the desktop app fetches the current file
+        [AllowAnonymous]
+        [HttpGet("api/meetings/knowledge")]
+        public async Task<IActionResult> KnowledgeApi()
+        {
+            if (!IsApiKeyValid(out var error))
+                return Unauthorized(new { ok = false, error });
+
+            var knowledge = await _context.MeetingKnowledges.FirstOrDefaultAsync();
+            if (knowledge == null)
+                return NotFound(new { ok = false, error = "No knowledge file uploaded yet." });
+
+            Response.Headers["X-Knowledge-Version"] = knowledge.Version.ToString();
+            return Content(knowledge.Content, "application/json");
+        }
+
         // ===== Push API for the AI meeting desktop app =====
 
         // GET /api/meetings/ping — connectivity + API key check for the desktop app

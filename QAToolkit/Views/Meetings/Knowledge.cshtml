@@ -1,0 +1,82 @@
+@model QAToolkit.Models.MeetingKnowledge?
+@{
+    ViewData["Title"] = "Meeting Knowledge";
+    var apiUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/api/meetings/knowledge";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Meeting Knowledge</h1>
+        <p>The knowledge.json file the AI meeting desktop app fetches. Upload a new file to replace it — version increments automatically.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Meetings
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="mb-3"><i class="bi bi-journal-code"></i> Current File</h6>
+                @if (Model != null)
+                {
+                    <div class="detail-meta mb-3">
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Version</span>
+                            <span class="detail-meta-value"><span class="badge bg-info">v@(Model.Version)</span></span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">Last Upload</span>
+                            <span class="detail-meta-value">@(Model.UpdatedAt?.ToString("MMM dd, yyyy HH:mm") ?? "—")</span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">By</span>
+                            <span class="detail-meta-value">@(Model.UpdatedBy ?? "—")</span>
+                        </div>
+                        <div class="detail-meta-item">
+                            <span class="detail-meta-label">File</span>
+                            <span class="detail-meta-value">@Model.FileName (@((Model.Content.Length / 1024.0).ToString("0.#")) KB)</span>
+                        </div>
+                    </div>
+                    <a asp-action="DownloadKnowledge" class="btn btn-outline-primary">
+                        <i class="bi bi-download"></i> Download (for editing)
+                    </a>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="bi bi-journal-code"></i></div>
+                        <h5>No knowledge file yet</h5>
+                        <p>Upload your first knowledge.json to make it available to the desktop app.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="mb-3"><i class="bi bi-upload"></i> Upload New Version</h6>
+                <form asp-action="UploadKnowledge" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <input type="file" name="file" class="form-control" accept=".json,application/json" required />
+                        <div class="form-text">JSON only, max 10 MB. Replaces the current file and bumps the version.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Upload
+                    </button>
+                </form>
+                <hr />
+                <label class="form-label small text-muted mb-1">Desktop app fetch endpoint (GET, with <code>X-Api-Key</code> header)</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control font-monospace" value="@apiUrl" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('@apiUrl', this)"><i class="bi bi-clipboard"></i></button>
+                </div>
+                <div class="form-text">Response is the raw JSON; current version is in the <code>X-Knowledge-Version</code> response header.</div>
+            </div>
+        </div>
+    </div>
+</div>

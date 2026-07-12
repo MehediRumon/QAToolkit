@@ -206,6 +206,16 @@ using (var scope = app.Services.CreateScope())
         )");
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_MeetingScreenNotes_MeetingId ON MeetingScreenNotes (MeetingId)");
 
+    db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS MeetingKnowledges (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            FileName TEXT NOT NULL DEFAULT 'knowledge.json',
+            Content TEXT NOT NULL DEFAULT '',
+            Version INTEGER NOT NULL DEFAULT 0,
+            UpdatedAt TEXT,
+            UpdatedBy TEXT
+        )");
+
     // Ensure upload directory exists
     var uploadDir = Path.Combine(
         app.Configuration["Playwright:WorkingDirectory"] ?? @"C:\qa-scripts",

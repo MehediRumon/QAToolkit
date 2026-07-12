@@ -28,6 +28,7 @@ namespace QAToolkit.Data
         public DbSet<HermesUserSettings> HermesUserSettings { get; set; }
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<MeetingScreenNote> MeetingScreenNotes { get; set; }
+        public DbSet<MeetingKnowledge> MeetingKnowledges { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
