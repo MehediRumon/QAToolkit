@@ -30,6 +30,7 @@ namespace QAToolkit.Data
         public DbSet<MeetingScreenNote> MeetingScreenNotes { get; set; }
         public DbSet<MeetingKnowledge> MeetingKnowledges { get; set; }
         public DbSet<LearningTopic> LearningTopics { get; set; }
+        public DbSet<TestCaseDoc> TestCaseDocs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -74,6 +75,9 @@ namespace QAToolkit.Data
 
             modelBuilder.Entity<ScheduledRunLog>()
                 .HasIndex(l => l.ScheduledRunId);
+
+            modelBuilder.Entity<TestCaseDoc>()
+                .HasIndex(t => t.Project);
 
             modelBuilder.Entity<Meeting>()
                 .HasIndex(m => m.MeetingDate);

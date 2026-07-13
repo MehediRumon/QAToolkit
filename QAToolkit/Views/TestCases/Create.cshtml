@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Add Test Cases";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Add Test Cases</h1>
+        <p>Upload a test case document (HTML) — it will be rendered exactly as-is.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g., QnA Payment Entry — Functional Test Cases" required />
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-medium">Project</label>
+                            <input type="text" name="project" class="form-control" list="projectList" placeholder="e.g., UMS" />
+                            <datalist id="projectList">
+                                <option>UMS</option>
+                                <option>Student Portal</option>
+                                <option>Teacher Portal</option>
+                                <option>OM</option>
+                                <option>Scheduler</option>
+                            </datalist>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label fw-medium">Module</label>
+                            <input type="text" name="module" class="form-control" placeholder="e.g., Teacher → Q&A Payment → Payment Entry" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="isPublic" value="true" class="form-check-input" id="isPublicCheck" />
+                            <label class="form-check-label fw-medium" for="isPublicCheck">
+                                Public <small class="text-muted fw-normal">— anyone with the link can view without logging in</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">HTML File <span class="text-danger">*</span></label>
+                        <input type="file" name="htmlFile" class="form-control" accept=".html,.htm" required id="htmlFileInput" />
+                        <small class="text-muted">Follow the Test Case Writing Guidelines format (Workflows #12)</small>
+                    </div>
+
+                    <!-- Preview -->
+                    <div id="previewSection" class="mb-4 d-none">
+                        <label class="form-label fw-medium">Preview</label>
+                        <div class="border rounded" style="max-height: 500px; overflow: auto;">
+                            <iframe id="previewFrame" style="width: 100%; height: 500px; border: none;"></iframe>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload me-1"></i> Upload Test Cases
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('htmlFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const frame = document.getElementById('previewFrame');
+                frame.srcdoc = ev.target.result;
+                document.getElementById('previewSection').classList.remove('d-none');
+            };
+            reader.readAsText(file);
+        }
+    });
+</script>
+}

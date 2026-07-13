@@ -222,6 +222,20 @@ using (var scope = app.Services.CreateScope())
         )");
 
     db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS TestCaseDocs (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Title TEXT NOT NULL,
+            Project TEXT,
+            Module TEXT,
+            HtmlContent TEXT NOT NULL DEFAULT '',
+            IsPublic INTEGER NOT NULL DEFAULT 0,
+            CreatedBy TEXT,
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT
+        )");
+    db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_TestCaseDocs_Project ON TestCaseDocs (Project)");
+
+    db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS MeetingKnowledges (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             FileName TEXT NOT NULL DEFAULT 'knowledge.json',

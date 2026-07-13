@@ -1,0 +1,59 @@
+@model QAToolkit.Models.TestCaseDoc
+@{
+    ViewData["Title"] = "Edit Test Cases";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Test Cases</h1>
+        <p>Update details, or upload a new HTML file to replace the document.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="@Model.Title" required />
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-medium">Project</label>
+                            <input type="text" name="project" class="form-control" value="@Model.Project" />
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label fw-medium">Module</label>
+                            <input type="text" name="module" class="form-control" value="@Model.Module" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="isPublic" value="true" class="form-check-input" id="isPublicCheck" checked="@Model.IsPublic" />
+                            <label class="form-check-label fw-medium" for="isPublicCheck">
+                                Public <small class="text-muted fw-normal">— anyone with the link can view without logging in</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Replace HTML File</label>
+                        <input type="file" name="htmlFile" class="form-control" accept=".html,.htm" />
+                        <small class="text-muted">Leave empty to keep the current document</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Update</button>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

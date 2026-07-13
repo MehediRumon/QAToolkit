@@ -131,6 +131,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link @(currentController == "TestCases" ? "active" : "")"
+                       asp-controller="TestCases" asp-action="Index">
+                        <i class="bi bi-clipboard2-check"></i><span>Test Cases</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link @(currentController == "Learning" ? "active" : "")"
                        asp-controller="Learning" asp-action="Index">
                         <i class="bi bi-mortarboard"></i><span>Learning</span>
