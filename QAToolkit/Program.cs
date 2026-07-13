@@ -238,7 +238,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS MeetingKnowledges (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
-            FileName TEXT NOT NULL DEFAULT 'knowledge.json',
+            FileName TEXT NOT NULL DEFAULT 'knowledge.md',
             Content TEXT NOT NULL DEFAULT '',
             Version INTEGER NOT NULL DEFAULT 0,
             UpdatedAt TEXT,

@@ -115,17 +115,20 @@ namespace QAToolkit.Controllers
                 return RedirectToAction(nameof(Knowledge));
             }
 
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (ext != ".md" && ext != ".markdown" && ext != ".txt")
+            {
+                TempData["Error"] = "Upload rejected — only Markdown (.md) files are allowed.";
+                return RedirectToAction(nameof(Knowledge));
+            }
+
             string content;
             using (var reader = new StreamReader(file.OpenReadStream()))
                 content = await reader.ReadToEndAsync();
 
-            try
+            if (string.IsNullOrWhiteSpace(content))
             {
-                System.Text.Json.JsonDocument.Parse(content).Dispose();
-            }
-            catch (System.Text.Json.JsonException ex)
-            {
-                TempData["Error"] = $"Upload rejected — not valid JSON: {ex.Message}";
+                TempData["Error"] = "Upload rejected — the file is empty.";
                 return RedirectToAction(nameof(Knowledge));
             }
 
@@ -138,7 +141,7 @@ namespace QAToolkit.Controllers
 
             knowledge.Content = content;
             knowledge.FileName = string.IsNullOrWhiteSpace(file.FileName)
-                ? "knowledge.json"
+                ? "knowledge.md"
                 : Path.GetFileName(file.FileName);
             knowledge.Version += 1;
             knowledge.UpdatedAt = DateTimeHelper.BdNow;
@@ -158,7 +161,7 @@ namespace QAToolkit.Controllers
                 return NotFound("No knowledge file uploaded yet.");
 
             return File(System.Text.Encoding.UTF8.GetBytes(knowledge.Content),
-                "application/json", knowledge.FileName);
+                "text/markdown", knowledge.FileName);
         }
 
         // GET /api/meetings/knowledge — the desktop app fetches the current file
@@ -174,7 +177,7 @@ namespace QAToolkit.Controllers
                 return NotFound(new { ok = false, error = "No knowledge file uploaded yet." });
 
             Response.Headers["X-Knowledge-Version"] = knowledge.Version.ToString();
-            return Content(knowledge.Content, "application/json");
+            return Content(knowledge.Content, "text/markdown; charset=utf-8");
         }
 
         // ===== Push API for the AI meeting desktop app =====

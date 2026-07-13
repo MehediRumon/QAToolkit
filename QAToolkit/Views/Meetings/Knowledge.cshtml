@@ -7,7 +7,7 @@
 <div class="page-header">
     <div>
         <h1>Meeting Knowledge</h1>
-        <p>The knowledge.json file the AI meeting desktop app fetches. Upload a new file to replace it — version increments automatically.</p>
+        <p>The knowledge markdown file the AI meeting desktop app fetches. Upload a new file to replace it — version increments automatically.</p>
     </div>
     <div class="page-header-actions">
         <a asp-action="Index" class="btn btn-secondary">
@@ -50,7 +50,7 @@
                     <div class="empty-state">
                         <div class="empty-state-icon"><i class="bi bi-journal-code"></i></div>
                         <h5>No knowledge file yet</h5>
-                        <p>Upload your first knowledge.json to make it available to the desktop app.</p>
+                        <p>Upload your first knowledge.md to make it available to the desktop app.</p>
                     </div>
                 }
             </div>
@@ -62,8 +62,8 @@
                 <h6 class="mb-3"><i class="bi bi-upload"></i> Upload New Version</h6>
                 <form asp-action="UploadKnowledge" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <input type="file" name="file" class="form-control" accept=".json,application/json" required />
-                        <div class="form-text">JSON only, max 10 MB. Replaces the current file and bumps the version.</div>
+                        <input type="file" name="file" class="form-control" accept=".md,.markdown,.txt,text/markdown" required />
+                        <div class="form-text">Markdown (.md) only, max 10 MB. Replaces the current file and bumps the version.</div>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-upload"></i> Upload
@@ -75,7 +75,7 @@
                     <input type="text" class="form-control font-monospace" value="@apiUrl" readonly>
                     <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('@apiUrl', this)"><i class="bi bi-clipboard"></i></button>
                 </div>
-                <div class="form-text">Response is the raw JSON; current version is in the <code>X-Knowledge-Version</code> response header.</div>
+                <div class="form-text">Response is the raw markdown; current version is in the <code>X-Knowledge-Version</code> response header.</div>
             </div>
         </div>
     </div>
