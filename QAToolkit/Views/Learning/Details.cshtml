@@ -1,0 +1,90 @@
+@model QAToolkit.Models.LearningTopic
+@{
+    ViewData["Title"] = "Learning Topic";
+    var statusClass = Model.Status switch
+    {
+        "Using in Work" => "success",
+        "Implemented" => "brand",
+        "Learning" => "warning",
+        "Not Started" => "danger",
+        _ => "muted"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.Title</h1>
+        <div class="d-flex align-items-center gap-2 mt-2">
+            @if (!string.IsNullOrEmpty(Model.Status))
+            {
+                <span class="badge-status @statusClass">@Model.Status</span>
+            }
+            <span class="text-muted small">
+                <i class="bi bi-calendar3"></i> @Model.CreatedAt.ToString("MMM dd, yyyy")
+            </span>
+        </div>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+              data-confirm="Delete this learning topic? This action cannot be undone." data-confirm-title="Delete learning topic">
+            <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        </form>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="detail-meta">
+    <div class="detail-meta-item">
+        <span class="detail-meta-label">Class Held By</span>
+        <span class="detail-meta-value">@(Model.HeldBy ?? "—")</span>
+    </div>
+    <div class="detail-meta-item">
+        <span class="detail-meta-label">Class Date</span>
+        <span class="detail-meta-value">@(Model.ClassDate?.ToString("MMM dd, yyyy") ?? "—")</span>
+    </div>
+    <div class="detail-meta-item">
+        <span class="detail-meta-label">Added By</span>
+        <span class="detail-meta-value">@(Model.CreatedBy ?? "—")</span>
+    </div>
+    @if (Model.UpdatedAt.HasValue)
+    {
+        <div class="detail-meta-item">
+            <span class="detail-meta-label">Updated</span>
+            <span class="detail-meta-value">@Model.UpdatedAt.Value.ToString("MMM dd, yyyy HH:mm")</span>
+        </div>
+    }
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="mb-3"><i class="bi bi-person-workspace"></i> How We Work Now</h6>
+                <div style="white-space: pre-wrap;">@(string.IsNullOrEmpty(Model.CurrentPractice) ? "—" : Model.CurrentPractice)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="mb-3"><i class="bi bi-globe2"></i> World Standard</h6>
+                <div style="white-space: pre-wrap;">@(string.IsNullOrEmpty(Model.WorldStandard) ? "—" : Model.WorldStandard)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.UsageNotes))
+{
+    <div class="detail-section">
+        <div class="detail-section-title"><i class="bi bi-check2-circle"></i> How We Use It</div>
+        <div class="detail-content" style="white-space: pre-wrap;">@Model.UsageNotes</div>
+    </div>
+}

@@ -1,0 +1,117 @@
+@model IEnumerable<QAToolkit.Models.LearningTopic>
+@{
+    ViewData["Title"] = "Learning";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Learning</h1>
+        <p>Learning topics — how we work now vs world standard, and what we've adopted.</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Topic
+        </a>
+    </div>
+</div>
+
+<form method="get" class="toolbar">
+    <span class="toolbar-label">Status</span>
+    <select name="status" class="form-select">
+        <option value="">All</option>
+        <option selected="@(ViewBag.SelectedStatus == "Not Started")">Not Started</option>
+        <option selected="@(ViewBag.SelectedStatus == "Learning")">Learning</option>
+        <option selected="@(ViewBag.SelectedStatus == "Implemented")">Implemented</option>
+        <option selected="@(ViewBag.SelectedStatus == "Using in Work")">Using in Work</option>
+    </select>
+    <button type="submit" class="btn btn-sm btn-secondary"><i class="bi bi-funnel"></i> Filter</button>
+    <a href="/Learning" class="btn btn-sm btn-ghost">Clear</a>
+</form>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center align-middle" style="width: 3%">#</th>
+                        <th class="align-middle" style="width: 30%">Topic</th>
+                        <th class="text-center align-middle" style="width: 12%">Status</th>
+                        <th class="text-center align-middle" style="width: 15%">Class Held By</th>
+                        <th class="text-center align-middle" style="width: 12%">Class Date</th>
+                        <th class="text-center align-middle" style="width: 13%">Added By</th>
+                        <th class="text-center align-middle" style="width: 15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        var index = 1;
+                        @foreach (var item in Model)
+                        {
+                            var statusClass = item.Status switch
+                            {
+                                "Using in Work" => "success",
+                                "Implemented" => "brand",
+                                "Learning" => "warning",
+                                "Not Started" => "danger",
+                                _ => "muted"
+                            };
+                            <tr>
+                                <td class="text-center align-middle">@index</td>
+                                <td class="align-middle">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="fw-medium text-decoration-none">@item.Title</a>
+                                </td>
+                                <td class="text-center align-middle">
+                                    @if (!string.IsNullOrEmpty(item.Status))
+                                    {
+                                        <span class="badge-status @statusClass">@item.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td class="text-center align-middle"><small>@(item.HeldBy ?? "-")</small></td>
+                                <td class="text-center align-middle">
+                                    <small>@(item.ClassDate?.ToString("MMM dd, yyyy") ?? "-")</small>
+                                </td>
+                                <td class="text-center align-middle"><small>@(item.CreatedBy ?? "-")</small></td>
+                                <td class="text-center align-middle">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                              data-confirm="Delete this learning topic? This action cannot be undone." data-confirm-title="Delete learning topic">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-mortarboard"></i></div>
+                                    <h5>No learning topics yet</h5>
+                                    <p>Add your first topic to track team learning and adoption.</p>
+                                    <a asp-action="Create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Topic</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

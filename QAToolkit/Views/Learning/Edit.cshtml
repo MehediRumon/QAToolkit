@@ -1,0 +1,68 @@
+@model QAToolkit.Models.LearningTopic
+@{
+    ViewData["Title"] = "Edit Learning Topic";
+}
+
+<div class="page-header">
+    <div><h1>Edit Learning Topic</h1></div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Topic <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CurrentPractice" class="form-label">How We Work Now</label>
+                        <textarea asp-for="CurrentPractice" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="WorldStandard" class="form-label">World Standard</label>
+                        <textarea asp-for="WorldStandard" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="UsageNotes" class="form-label">How We Use It</label>
+                        <textarea asp-for="UsageNotes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Status" class="form-label">Status</label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="">Select</option>
+                                <option>Not Started</option>
+                                <option>Learning</option>
+                                <option>Implemented</option>
+                                <option>Using in Work</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="HeldBy" class="form-label">Class Held By</label>
+                            <input asp-for="HeldBy" class="form-control" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="ClassDate" class="form-label">Class Date</label>
+                            <input asp-for="ClassDate" class="form-control" type="date" />
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Update Topic</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

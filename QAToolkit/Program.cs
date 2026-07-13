@@ -207,6 +207,21 @@ using (var scope = app.Services.CreateScope())
     db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_MeetingScreenNotes_MeetingId ON MeetingScreenNotes (MeetingId)");
 
     db.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS LearningTopics (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Title TEXT NOT NULL,
+            CurrentPractice TEXT,
+            WorldStandard TEXT,
+            Status TEXT,
+            UsageNotes TEXT,
+            HeldBy TEXT,
+            ClassDate TEXT,
+            CreatedBy TEXT,
+            CreatedAt TEXT NOT NULL,
+            UpdatedAt TEXT
+        )");
+
+    db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS MeetingKnowledges (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             FileName TEXT NOT NULL DEFAULT 'knowledge.json',

@@ -29,6 +29,7 @@ namespace QAToolkit.Data
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<MeetingScreenNote> MeetingScreenNotes { get; set; }
         public DbSet<MeetingKnowledge> MeetingKnowledges { get; set; }
+        public DbSet<LearningTopic> LearningTopics { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
