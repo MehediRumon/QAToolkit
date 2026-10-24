@@ -625,6 +625,7 @@ function buildForm(items) {
 
     container.innerHTML = html;
     setupUmsCascade();
+    setupSubjectGrids();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -775,9 +776,12 @@ async function umsLoadCourses() {
 //     Same list UMS CreateExam shows once an exam type is ticked (GetPartialView).
 //     Loaded when a course is chosen; only for scripts with such params.
 // ─────────────────────────────────────────────────────────────────────────────
+// subject / mcqSubject / onlineWrittenSubject … → live dropdown; …Subjects → chips or a row grid.
+const umsIsSingleSubjectKey = k => /^(subject|.+Subject)$/.test(k);
+
 function umsSubjectKeys() {
     return [...document.querySelectorAll('.param-input')].map(el => el.dataset.key)
-        .filter(k => k === 'subject' || /Subjects$/.test(k));
+        .filter(k => umsIsSingleSubjectKey(k) || /Subjects$/.test(k));
 }
 
 async function umsLoadSubjects() {
@@ -788,9 +792,16 @@ async function umsLoadSubjects() {
         umsStatus('Loading course subjects…');
         const data = await umsCall('Subjects', { ...umsCreds(), courseId });
         if (!data.success) { umsStatus(data.error || 'Failed to load subjects.', true); return; }
+        const names = data.items.map(i => i.name);
+        const inGrid = new Set();
+        for (const p of umsGridPrefixes()) {
+            umsSubjectGrid(p, names);
+            UMS_GRID_PARTS.forEach(part => inGrid.add(p + part));
+        }
         for (const key of umsSubjectKeys()) {
-            if (key === 'subject') umsToSelect(key, data.items);
-            else umsSubjectChips(key, data.items.map(i => i.name));
+            if (inGrid.has(key)) continue;
+            if (umsIsSingleSubjectKey(key)) umsToSelect(key, data.items);
+            else umsSubjectChips(key, names);
         }
         umsStatus(`All dropdowns loaded ✓ — ${data.items.length} subject(s) in this course`);
     } catch (e) { umsStatus('Error: ' + e.message, true); }
@@ -844,6 +855,200 @@ function umsPaintChips(bar, input) {
         `<button type="button" class="btn btn-sm btn-outline-danger ums-chip py-0 px-2" data-name="${esc(s)}"
                  title="Not offered by this course — click to remove"><i class="bi bi-x-circle me-1"></i>${esc(s)}</button>`
     ).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2d. SUBJECT ROW GRIDS  (UMS "Multiple" subject type — one row per subject)
+//     A prefix P with params PSubjects + PSequenceList (optionally PMarksList,
+//     PCompulsorySubjects, PSubjectType, PMaxSubjectCount) gets the rows UMS
+//     CreateExam shows: Subject | Qust. From | Qust. To | Total | Subject Marks |
+//     Compulsory. Rows write back into those params, which stay what the script
+//     receives — saved values, JSON view and scheduled runs keep working.
+// ─────────────────────────────────────────────────────────────────────────────
+const UMS_GRID_PARTS = ['Subjects', 'SequenceList', 'MarksList', 'CompulsorySubjects'];
+const umsParam = key => document.querySelector(`.param-input[data-key="${key}"]`);
+
+function umsGridPrefixes() {
+    return [...document.querySelectorAll('.param-input')].map(el => el.dataset.key)
+        .filter(k => /.Subjects$/.test(k)).map(k => k.slice(0, -'Subjects'.length))
+        .filter(p => umsParam(p + 'SequenceList'));
+}
+
+// Multi-subject fields only matter while PSubjectType is "multiple" (if the script has one).
+function umsGridIsMultiple(p) {
+    const type = umsParam(p + 'SubjectType');
+    return !type || /^multi/i.test(type.value);
+}
+
+// Prefixes with a PSubjectType switch (single field PSubject and/or a row grid).
+function umsTypePrefixes() {
+    return [...document.querySelectorAll('.param-input')].map(el => el.dataset.key)
+        .filter(k => /.SubjectType$/.test(k)).map(k => k.slice(0, -'SubjectType'.length));
+}
+
+function setupSubjectGrids() {
+    for (const p of umsTypePrefixes()) umsParam(p + 'SubjectType').addEventListener('change', refreshSubjectGrids);
+    refreshSubjectGrids();
+}
+
+// Re-sync visibility, and grid rows from the params (after saved values or JSON edits).
+function refreshSubjectGrids() {
+    // PSubject is the Single pick — hidden while PSubjectType is "multiple".
+    for (const p of umsTypePrefixes()) {
+        umsParam(p + 'Subject')?.closest('.param-field').classList.toggle('d-none', umsGridIsMultiple(p));
+    }
+    for (const p of umsGridPrefixes()) {
+        const multi = umsGridIsMultiple(p);
+        const grid = document.querySelector(`.ums-subject-grid[data-prefix="${p}"]`);
+        if (grid) { umsGridRender(grid); grid.classList.toggle('d-none', !multi); }
+        for (const part of [...UMS_GRID_PARTS, 'MaxSubjectCount']) {
+            const field = umsParam(p + part)?.closest('.param-field');
+            if (field) field.classList.toggle('d-none', !multi || (!!grid && part !== 'MaxSubjectCount'));
+        }
+    }
+}
+
+function umsSubjectGrid(p, names) {
+    let grid = document.querySelector(`.ums-subject-grid[data-prefix="${p}"]`);
+    if (!grid) {
+        const anchor = umsParam(p + 'Subjects').closest('.param-field');
+        grid = document.createElement('div');
+        grid.className = 'col-12 param-field ums-subject-grid';
+        grid.dataset.prefix = p;
+        if (anchor.dataset.condSection) grid.dataset.condSection = anchor.dataset.condSection;
+        grid.style.display = anchor.style.display;
+        anchor.before(grid);
+        grid.addEventListener('input', () => umsGridWrite(grid));
+        grid.addEventListener('change', () => umsGridWrite(grid));
+        // Keep the marks preview current when the marks it depends on change.
+        for (const k of [p + 'FullMarks', 'marksPerQuestion', 'negativeMarkPct']) {
+            umsParam(k)?.addEventListener('input', () => umsGridWrite(grid, false));
+        }
+    }
+    grid.subjectNames = names;
+    refreshSubjectGrids();
+}
+
+// Build the rows from the params: one row per course subject (like UMS), more if
+// the params list extra subjects (shown as "not in this course").
+function umsGridRender(grid) {
+    const p = grid.dataset.prefix, names = grid.subjectNames || [];
+    const marksEl = umsParam(p + 'MarksList'), compEl = umsParam(p + 'CompulsorySubjects');
+    const listed = umsSplitSubjects(umsParam(p + 'Subjects').value);
+    const tos = [];   // "Qust. To" per listed subject, from ranges ("1-4") or counts ("4")
+    let next = 1;
+    for (const item of umsSplitSubjects(umsParam(p + 'SequenceList').value)) {
+        const m = item.match(/^(\d+)\s*-\s*(\d+)$/);
+        const to = m ? Number(m[2]) : (/^\d+$/.test(item) ? next + Number(item) - 1 : NaN);
+        tos.push(Number.isFinite(to) ? to : '');
+        if (Number.isFinite(to)) next = to + 1;
+    }
+    const marks = marksEl ? umsSplitSubjects(marksEl.value) : [];
+    const compAll = compEl && /^\s*all\s*$/i.test(compEl.value);
+    const comp = new Set(compEl ? umsSplitSubjects(compEl.value).map(s => s.toLowerCase()) : []);
+    const ro = 'form-control form-control-sm bg-body-secondary';
+
+    let rows = '';
+    for (let i = 0; i < Math.max(names.length, listed.length); i++) {
+        const name = listed[i] || '';
+        const known = !name || names.some(n => n.toLowerCase() === name.toLowerCase());
+        const opts = names.map(n => `<option value="${esc(n)}"${n.toLowerCase() === name.toLowerCase() ? ' selected' : ''}>${esc(n)}</option>`).join('')
+                   + (known ? '' : `<option value="${esc(name)}" selected>${esc(name)} (not in this course)</option>`);
+        rows += `<tr>
+            <td><select class="form-select form-select-sm ug-subject"><option value="">Select Subject</option>${opts}</select></td>
+            <td><input class="${ro} ug-from" readonly tabindex="-1"></td>
+            <td><input type="number" min="1" class="form-control form-control-sm ug-to" placeholder="0" value="${name ? esc(String(tos[i] ?? '')) : ''}"></td>
+            <td><input class="${ro} ug-total" readonly tabindex="-1"></td>
+            ${marksEl ? `<td><input type="number" min="0" step="any" class="form-control form-control-sm ug-marks" placeholder="auto" value="${name ? esc(marks[i] ?? '') : ''}"></td>` : ''}
+            ${compEl ? `<td class="text-center"><input type="checkbox" class="form-check-input ug-comp"${name && (compAll || comp.has(name.toLowerCase())) ? ' checked' : ''}></td>` : ''}
+        </tr>`;
+    }
+    grid.innerHTML = `
+        <div class="param-label">${esc(humanize(p + 'Subjects'))} — pick subjects top to bottom; each row starts after the previous one</div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-1">
+                <thead><tr class="small text-muted">
+                    <th style="min-width:190px">Subject</th><th>Qust. From</th><th>Qust. To</th><th>Total Qust.</th>
+                    ${marksEl ? '<th>Subject Marks</th>' : ''}${compEl ? '<th class="text-center">Compulsory</th>' : ''}
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <div class="param-hint ug-hint"></div>`;
+    umsGridWrite(grid, false);
+}
+
+// Recompute From/Total down the chain, flag problems, and (unless just rendered)
+// write the rows back into the params.
+function umsGridWrite(grid, writeBack = true) {
+    const p = grid.dataset.prefix, names = (grid.subjectNames || []).map(n => n.toLowerCase());
+    const marksEl = umsParam(p + 'MarksList'), compEl = umsParam(p + 'CompulsorySubjects');
+    const rows = [...grid.querySelectorAll('tbody tr')].map(tr => ({
+        sel: tr.querySelector('.ug-subject'), from: tr.querySelector('.ug-from'), to: tr.querySelector('.ug-to'),
+        total: tr.querySelector('.ug-total'), marks: tr.querySelector('.ug-marks'), comp: tr.querySelector('.ug-comp'),
+    }));
+    const picked = rows.filter(r => r.sel.value);
+    const counts = new Map();
+    picked.forEach(r => counts.set(r.sel.value.toLowerCase(), (counts.get(r.sel.value.toLowerCase()) || 0) + 1));
+
+    let next = 1;
+    for (const r of rows) {
+        r.sel.classList.remove('is-invalid');
+        r.to.classList.remove('is-invalid');
+        if (!r.sel.value) { r.from.value = ''; r.total.value = ''; continue; }
+        const lower = r.sel.value.toLowerCase();
+        if (!names.includes(lower) || counts.get(lower) > 1) r.sel.classList.add('is-invalid');
+        r.from.value = Number.isFinite(next) ? next : '';
+        const to = parseInt(r.to.value, 10);
+        if (Number.isFinite(next) && to >= next) { r.total.value = to - next + 1; next = to + 1; }
+        else { r.total.value = ''; r.to.classList.add('is-invalid'); next = NaN; }
+    }
+
+    const marksVals = picked.map(r => (r.marks ? r.marks.value.trim() : ''));
+    const problems = [];
+    const missing = picked.filter(r => !names.includes(r.sel.value.toLowerCase())).map(r => r.sel.value);
+    if (missing.length) problems.push(`not in this course: ${missing.join(', ')}`);
+    if ([...counts.values()].some(c => c > 1)) problems.push('a subject is picked twice');
+    if (picked.some(r => r.to.classList.contains('is-invalid'))) problems.push('every "Qust. To" must be at least its "Qust. From"');
+    if (marksEl && marksVals.some(Boolean) && !marksVals.every(Boolean)) problems.push('fill Subject Marks on every row, or leave all blank to split the full marks');
+    // Marks preview — the same arithmetic the script uses.
+    const totalQ = problems.length || !picked.length ? 0 : next - 1;
+    const fullEl = umsParam(p + 'FullMarks'), mpqEl = umsParam('marksPerQuestion'), negEl = umsParam('negativeMarkPct');
+    const r2 = n => Math.round(n * 100) / 100;
+    let marksInfo = '';
+    rows.forEach(r => { if (r.marks) r.marks.placeholder = 'auto'; });
+    if (marksEl && totalQ) {
+        if (marksVals.every(Boolean)) {
+            marksInfo = `full marks = ${r2(marksVals.reduce((a, v) => a + Number(v), 0))} (sum of Subject Marks)`;
+        } else if (!marksVals.some(Boolean) && Number(fullEl?.value) > 0) {
+            // Blank Subject Marks: full marks split by question count, last row takes the rounding.
+            const full = Number(fullEl.value);
+            const auto = picked.map(r => r2(Number(r.total.value) * full / totalQ));
+            auto[auto.length - 1] = r2(full - auto.slice(0, -1).reduce((a, b) => a + b, 0));
+            picked.forEach((r, i) => { if (r.marks) r.marks.placeholder = `auto ${auto[i]}`; });
+            marksInfo = `Subject Marks blank → full marks ${full} split by question count (${r2(full / totalQ)} per question)`;
+        }
+    } else if (!marksEl && totalQ && mpqEl) {
+        // No per-row marks: every row gets the same marks per question and negative %.
+        const mpq = Number(mpqEl.value) || 0, entered = Number(fullEl?.value) || 0;
+        const neg = negEl ? `, negative ${Number(negEl.value) || 0}% on every row` : '';
+        marksInfo = entered > 0 && entered !== totalQ * mpq
+            ? `full marks ${entered} entered, but ${totalQ} questions × ${mpq} = ${totalQ * mpq}${neg}`
+            : `${totalQ} questions × ${mpq} marks = full marks ${totalQ * mpq}${neg}`;
+    }
+
+    const hint = grid.querySelector('.ug-hint');
+    hint.textContent = problems.length ? '⚠ ' + problems.join(' · ')
+                     : picked.length ? `${picked.length} subject(s), questions 1–${totalQ}${marksInfo ? ' · ' + marksInfo : ''}`
+                     : 'No subjects picked yet.';
+    hint.style.color = problems.length ? '#dc3545' : '';
+
+    if (!writeBack) return;
+    const join = list => list.join(list.some(s => s.includes(',')) ? '; ' : ', ');
+    umsParam(p + 'Subjects').value = join(picked.map(r => r.sel.value));
+    umsParam(p + 'SequenceList').value = picked.map(r => `${r.from.value || '?'}-${r.to.value.trim()}`).join(',');
+    if (marksEl) marksEl.value = marksVals.some(Boolean) ? marksVals.join(',') : '';
+    if (compEl) compEl.value = join(picked.filter(r => r.comp?.checked).map(r => r.sel.value));
 }
 
 async function uploadParamFile(input, paramKey) {
@@ -913,6 +1118,8 @@ function objToForm(obj) {
         if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === String(val))) el.dataset.pending = String(val);
         el.value = String(val);
     });
+    refreshSubjectGrids();
+    document.querySelectorAll('.ums-subject-chips').forEach(bar => umsPaintChips(bar, umsParam(bar.dataset.for)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -497,7 +497,8 @@ const __fn = (async (page) => {
                 <li><strong>Servers, Username, Password</strong> fill করো</li>
                 <li><strong>Load UMS dropdowns</strong> button-এ click করো — system server-side-এ UMS-এ login করে Organization list নিয়ে আসে</li>
                 <li>Organization select করলে Program load হয় → Program select করলে Session → Session select করলে Course</li>
-                <li>Course select করলে সেই course-এর subject list load হয় (UMS CreateExam-এর <code>GetPartialView</code> থেকে) — <code>subject</code> param dropdown হয়ে যায়, আর নাম <code>Subjects</code> দিয়ে শেষ হওয়া param-এর (যেমন <code>mcqSubjects</code>) নিচে click-to-add chip আসে; click-এর order-ই comma list-এর order</li>
+                <li>Course select করলে সেই course-এর subject list load হয় (UMS CreateExam-এর <code>GetPartialView</code> থেকে) — <code>subject</code> বা নাম <code>Subject</code> দিয়ে শেষ হওয়া param (যেমন <code>mcqSubject</code>, <code>onlineWrittenSubject</code>) dropdown হয়ে যায়, আর নাম <code>Subjects</code> দিয়ে শেষ হওয়া param-এর (যেমন <code>mcqSubjects</code>) নিচে click-to-add chip আসে; click-এর order-ই comma list-এর order। <code>PSubjectType</code> থাকলে <code>PSubject</code> শুধু <code>single</code>-এ দেখায়</li>
+                <li>কোনো prefix <code>P</code>-এর জন্য <code>PSubjects</code> + <code>PSequenceList</code> দুটোই থাকলে (optional: <code>PMarksList</code>, <code>PCompulsorySubjects</code>, <code>PSubjectType</code>, <code>PMaxSubjectCount</code>) chip-এর বদলে UMS-এর মতো row grid আসে — Subject | Qust. From | Qust. To | Total | Subject Marks | Compulsory। Grid শুধু <code>PSubjectType = multiple</code> হলে দেখায়, আর row গুলো ওই param গুলোতেই comma list হিসেবে লিখে দেয়</li>
                 <li>আগে থেকে field-এ value থাকলে (যেমন saved values) সেটা automatically preselect হয়</li>
             </ol>
 
