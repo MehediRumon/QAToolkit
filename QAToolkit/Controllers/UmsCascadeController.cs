@@ -27,6 +27,7 @@ namespace QAToolkit.Controllers
             public string? OrgId { get; set; }
             public string? ProgramId { get; set; }
             public string? SessionId { get; set; }
+            public string? CourseId { get; set; }
         }
 
         public record Item(string Id, string Name);
@@ -73,6 +74,23 @@ namespace QAToolkit.Controllers
                     ["programIds"] = req.ProgramId ?? "",
                     ["sessionIds"] = req.SessionId ?? ""
                 }));
+
+        // Subjects offered by a course — the list CreateExam loads into its MCQ /
+        // Online Written subject dropdowns when an exam type is ticked. Both partial
+        // views list the same course subjects, so the MCQ one is enough.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> Subjects([FromBody] CascadeRequest req) =>
+            WithSession(req, async client =>
+            {
+                var html = await PostAjax(client, "/Exam/Exams/GetPartialView",
+                    new Dictionary<string, string>
+                    {
+                        ["courseId"] = req.CourseId ?? "",
+                        ["viewName"] = "_McqSinglePartialView"
+                    }, "course subjects");
+                return ParseSelectOptions(html, "mcqSubject");
+            });
 
         // ── Core session/login handling ──────────────────────────────────────
 
@@ -173,6 +191,18 @@ namespace QAToolkit.Controllers
 
         private static async Task<List<Item>> PostAjaxList(HttpClient client, string path, Dictionary<string, string> form)
         {
+            var txt = await PostAjax(client, path, form, "Program/Session/Course");
+
+            var looksHtml = txt.TrimStart().StartsWith("<", StringComparison.Ordinal);
+            if (looksHtml)
+                throw new InvalidOperationException(
+                    "Unexpected response from UMS (not a data list) — likely a permission or session issue on this server.");
+
+            return ParseJsonList(txt);
+        }
+
+        private static async Task<string> PostAjax(HttpClient client, string path, Dictionary<string, string> form, string what)
+        {
             using var request = new HttpRequestMessage(HttpMethod.Post, path)
             {
                 Content = new FormUrlEncodedContent(form)
@@ -192,15 +222,10 @@ namespace QAToolkit.Controllers
             var finalUrl = resp.RequestMessage?.RequestUri?.AbsoluteUri ?? "";
             if (finalUrl.Contains("PermissionDenied", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(
-                    "Permission denied — this UMS account cannot load Program/Session/Course on this server. " +
+                    $"Permission denied — this UMS account cannot load {what} on this server. " +
                     "Ask a UMS admin to grant exam permission for this account on this server.");
 
-            var looksHtml = txt.TrimStart().StartsWith("<", StringComparison.Ordinal);
-            if (looksHtml)
-                throw new InvalidOperationException(
-                    "Unexpected response from UMS (not a data list) — likely a permission or session issue on this server.");
-
-            return ParseJsonList(txt);
+            return txt;
         }
 
         private static List<Item> ParseJsonList(string json)

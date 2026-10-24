@@ -581,7 +581,7 @@ function buildForm(items) {
         let inputHtml = '';
 
         if (def.type === 'select') {
-            const opts = def.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            const opts = def.options.map(o => `<option value="${esc(o)}"${o === defaultVal ? ' selected' : ''}>${esc(o)}</option>`).join('');
             inputHtml = `<select class="form-select form-select-sm param-input" data-key="${esc(key)}" data-type="select">
                             <option value="">— select —</option>${opts}
                          </select>`;
@@ -686,7 +686,7 @@ function umsStatus(msg, isError) {
 
 function umsToSelect(key, items, onChange) {
     const old = document.querySelector(`.param-input[data-key="${key}"]`);
-    const current = (old.value || '').toLowerCase();
+    const current = (old.value || old.dataset.pending || '').toLowerCase();
     const sel = document.createElement('select');
     sel.className = 'form-select form-select-sm param-input';
     sel.dataset.key = key;
@@ -764,9 +764,86 @@ async function umsLoadCourses() {
         umsStatus('Loading courses…');
         const data = await umsCall('Courses', { ...umsCreds(), programId, sessionId });
         if (!data.success) { umsStatus(data.error || 'Failed to load courses.', true); return; }
-        umsToSelect('cascadeCourse', data.items);
+        const sel = umsToSelect('cascadeCourse', data.items, () => umsLoadSubjects());
         umsStatus('All dropdowns loaded ✓');
+        if (sel.value) await umsLoadSubjects();
     } catch (e) { umsStatus('Error: ' + e.message, true); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2c. UMS COURSE SUBJECTS  (subject → live dropdown, *Subjects → click-to-add chips)
+//     Same list UMS CreateExam shows once an exam type is ticked (GetPartialView).
+//     Loaded when a course is chosen; only for scripts with such params.
+// ─────────────────────────────────────────────────────────────────────────────
+function umsSubjectKeys() {
+    return [...document.querySelectorAll('.param-input')].map(el => el.dataset.key)
+        .filter(k => k === 'subject' || /Subjects$/.test(k));
+}
+
+async function umsLoadSubjects() {
+    if (!umsSubjectKeys().length) return;
+    const courseId = umsSelectedId('cascadeCourse');
+    if (!courseId) return;
+    try {
+        umsStatus('Loading course subjects…');
+        const data = await umsCall('Subjects', { ...umsCreds(), courseId });
+        if (!data.success) { umsStatus(data.error || 'Failed to load subjects.', true); return; }
+        for (const key of umsSubjectKeys()) {
+            if (key === 'subject') umsToSelect(key, data.items);
+            else umsSubjectChips(key, data.items.map(i => i.name));
+        }
+        umsStatus(`All dropdowns loaded ✓ — ${data.items.length} subject(s) in this course`);
+    } catch (e) { umsStatus('Error: ' + e.message, true); }
+}
+
+// Comma list, or semicolon list when a subject name itself has a comma.
+function umsSplitSubjects(value) {
+    const v = value || '';
+    return v.split(v.includes(';') ? ';' : ',').map(s => s.trim()).filter(Boolean);
+}
+
+// Chips under a comma-list field: click adds the subject to the end of the list
+// (list order is question order), click again removes it. The box stays editable.
+function umsSubjectChips(key, names) {
+    const input = document.querySelector(`.param-input[data-key="${key}"]`);
+    if (!input) return;
+    let bar = input.parentElement.querySelector(`.ums-subject-chips[data-for="${key}"]`);
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.className = 'ums-subject-chips d-flex flex-wrap gap-1 mt-1';
+        bar.dataset.for = key;
+        input.after(bar);
+        input.addEventListener('input', () => umsPaintChips(bar, input));
+        bar.addEventListener('click', e => {
+            const chip = e.target.closest('.ums-chip');
+            if (!chip) return;
+            const name = chip.dataset.name, lower = name.toLowerCase();
+            let list = umsSplitSubjects(input.value).filter(s => s.toLowerCase() !== 'all');
+            list = list.some(s => s.toLowerCase() === lower) ? list.filter(s => s.toLowerCase() !== lower) : [...list, name];
+            input.value = list.join(list.some(s => s.includes(',')) ? '; ' : ', ');
+            umsPaintChips(bar, input);
+        });
+    }
+    bar.subjectNames = names;
+    umsPaintChips(bar, input);
+}
+
+function umsPaintChips(bar, input) {
+    const names = bar.subjectNames || [];
+    const typed = umsSplitSubjects(input.value);
+    const chosen = typed.map(s => s.toLowerCase());
+    const offered = new Set(names.map(n => n.toLowerCase()));
+    bar.innerHTML = names.map(n => {
+        const pos = chosen.indexOf(n.toLowerCase());
+        const badge = pos >= 0 ? `<span class="badge text-bg-light me-1">${pos + 1}</span>` : '';
+        return `<button type="button" class="btn btn-sm ${pos >= 0 ? 'btn-primary' : 'btn-outline-secondary'} ums-chip py-0 px-2"
+                        data-name="${esc(n)}">${badge}${esc(n)}</button>`;
+    }).join('') +
+    // Listed but not in this course (e.g. left over from another course) — click removes.
+    typed.filter(s => !offered.has(s.toLowerCase()) && s.toLowerCase() !== 'all').map(s =>
+        `<button type="button" class="btn btn-sm btn-outline-danger ums-chip py-0 px-2" data-name="${esc(s)}"
+                 title="Not offered by this course — click to remove"><i class="bi bi-x-circle me-1"></i>${esc(s)}</button>`
+    ).join('');
 }
 
 async function uploadParamFile(input, paramKey) {
@@ -831,6 +908,9 @@ function objToForm(obj) {
             else el.value = String(val);
             return;
         }
+        // A saved value missing from a static dropdown (e.g. a subject that only the
+        // live UMS list has) is kept so umsToSelect can pick it once that list loads.
+        if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === String(val))) el.dataset.pending = String(val);
         el.value = String(val);
     });
 }
